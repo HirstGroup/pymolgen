@@ -278,9 +278,10 @@ class Molecule:
 
     def get_single_bonds_not_h_not_c(self):
 
-        cycles = networkx.cycle_basis(self.graph)
+        cycles = networkx.cycle_basis(self.graph); print(cycles)
 
         for i in cycles:
+            print(len(i))
             if len(i) > 25:
                 return False
 

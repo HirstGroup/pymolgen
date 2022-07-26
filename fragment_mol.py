@@ -10,17 +10,33 @@ from networkx.algorithms import isomorphism
 
 home = os.path.expanduser("~")
 
+import signal
+from contextlib import contextmanager
+
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 def get_fragments_dataset(mol):
 
     single_bonds = mol.get_single_bonds_not_h_not_c()
-
+    print('line16')
     if single_bonds is False:
         return False, False, False
 
     fragments = split_mol(mol, single_bonds)
-
+    print('line21')
     new_fragments = [networkx.convert_node_labels_to_integers(fragment,first_label=0) for fragment in fragments]
-
+    print('line23')
     pairs = get_pairs(single_bonds, fragments)
 
     frag_mapping = []
@@ -114,7 +130,11 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
     index = []
 
-    map = get_canonical_mapping(fragment)
+    try:
+        with time_limit(10):
+            map = get_canonical_mapping(fragment)
+    except TimeoutException as e:
+        return False, False, False
 
     fragment_len = len(fragment)
 
@@ -258,6 +278,9 @@ def update_fragment_database(fragment_database, fragment, frequencies, frag_freq
 
     frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
 
+    if frag1_index is False:
+        return False, False
+
     if frag1_is_new: 
 
         frag_frequencies.append(1)
@@ -365,17 +388,32 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
         #split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
         fragments, pairs, bonds = get_fragments_dataset(mol)
+
         if fragments == False:
             continue
+
+        frag1_is_new_list = []
         frag1_index_list = []
         frag1_map_list = []
 
-        #update database of fragments, if fragment exists increase frag_frequency, otherwise add fragment
+        #loop first through all fragments to obtained indeces to allow for time out
         for fragment in fragments:
-            frag1_index, frag1_map = update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
 
+            frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
+
+            frag1_is_new_list.append(frag1_is_new)
             frag1_index_list.append(frag1_index)
             frag1_map_list.append(frag1_map)
+
+        #skip molecule if timed out
+        if False in frag1_index_list:
+            print('Timed out frag1', counter)
+            continue
+
+        #update database of fragments, if fragment exists increase frag_frequency, otherwise add fragment
+        for fragment in fragments:
+
+            frag1_index, frag1_map = update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
 
         for i in range(len(pairs)):
 
@@ -508,19 +546,19 @@ def map_mols(mol1, mol2):
 
 def get_canonical_mapping(fragment):
     gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
-
+    print('line511')
     all_mappings = []
 
     for mapping in gm.isomorphisms_iter():
         all_mappings.append(mapping)
-    
+    print('line516')
     canonical_mapping = all_mappings[0]
 
     for i in all_mappings:
         for key, val in i.items():
             if canonical_mapping[key] > val:
                 canonical_mapping[key] = val
-
+    print('line523')
     return canonical_mapping
 
 def renumber_fragment(fragment):

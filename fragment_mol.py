@@ -1,6 +1,7 @@
 import sys,os
 import networkx
 import time
+import argparse
 
 from pymolgen.molecule_formats import *
 from pymolgen.generate import *
@@ -535,16 +536,23 @@ def renumber_fragment(fragment):
 
 if __name__ == '__main__':
 
-    database_file = sys.argv[1]
+    parser = argparse.ArgumentParser(description='Fragment molecules in database')
+    parser.add_argument('-i','--input', help='Input database SDF file',required=True)
+    parser.add_argument('-o','--output', help='Subscript for output file names',required=True)
+    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output', required=False, default=False)
 
-    out_sub = sys.argv[2]
+    args = parser.parse_args()
+
+    database_file = args.input
+
+    out_sub = args.output
 
     fragments_sdf = 'fragments%s.sdf' %out_sub
     fragments_txt = 'fragments%s.txt' %out_sub
     frequencies_txt = 'frequencies%s.txt' %out_sub
     frag_frequencies_txt = 'frag_frequencies%s.txt' %out_sub
 
-    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
+    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt, verbose=args.verbose)
     print('Normal termination')
 
 

@@ -16,47 +16,15 @@ n_mol = int(args.n_mol)
 
 n = 0
 n_file = 0
-
-outfile = open('%s_0.sdf' %args.output, 'w')
+new = True
 
 for line in infile:
+	if new:
+		outfile = open('%s_%s.sdf' %(args.output, n_file), 'w')
+		new = False
 	outfile.write(line)
 	if '$$$$' in line:
 		n += 1
 		if n % n_mol == 0:
 			n_file += 1
-			outfile = open('%s_%s.sdf' %(args.output, n_file), 'w')
-
-
-sys.exit()
-
-n_mol = int(args.n_mol)
-
-mol_start_lines = []
-
-with open(args.input) as infile:
-	n = 0
-	for line in infile:
-		if 'V2000' in line:
-			mol_start_lines.append(n-3)
-		n += 1
-
-infile = open(args.input)
-
-print(mol_start_lines)
-
-n_line = 0
-i_mol = 0
-n_file = 0
-for line in infile:
-
-	if i_mol % n_mol == 0:
-		print('new file ', n_file)
-		outfile = open('%s_%s.sdf' %(args.output, n_file), 'w')
-		n_file += 1
-
-	if n_line == mol_start_lines[i_mol]:
-		i_mol += 1
-
-	outfile.write(line)
-	n_line += 1
+			new = True

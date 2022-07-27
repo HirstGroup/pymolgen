@@ -24,7 +24,7 @@ def time_limit(seconds):
     try:
         yield
     finally:
-        pass #signal.alarm(0)
+        signal.alarm(0)
 
 def get_fragments_dataset(mol):
 

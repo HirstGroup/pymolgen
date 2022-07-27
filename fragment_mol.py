@@ -399,7 +399,7 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
             #loop first through all fragments to obtained indeces to allow for time out
             for fragment in fragments:
 
-                with time_limit(2):
+                with time_limit(10):
                     frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
 
                 frag1_is_new_list_try.append(frag1_is_new)

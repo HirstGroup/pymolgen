@@ -24,19 +24,19 @@ def time_limit(seconds):
     try:
         yield
     finally:
-        signal.alarm(0)
+        pass #signal.alarm(0)
 
 def get_fragments_dataset(mol):
 
     single_bonds = mol.get_single_bonds_not_h_not_c()
-    print('line16')
+    
     if single_bonds is False:
         return False, False, False
 
     fragments = split_mol(mol, single_bonds)
-    print('line21')
+    
     new_fragments = [networkx.convert_node_labels_to_integers(fragment,first_label=0) for fragment in fragments]
-    print('line23')
+    
     pairs = get_pairs(single_bonds, fragments)
 
     frag_mapping = []
@@ -130,11 +130,8 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
     index = []
 
-    try:
-        with time_limit(10):
-            map = get_canonical_mapping(fragment)
-    except TimeoutException as e:
-        return False, False, False
+    with time_limit(2):
+        map = get_canonical_mapping(fragment)
 
     fragment_len = len(fragment)
 
@@ -166,6 +163,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
                 map = compound_dict(newmap, map)
 
     if len(index) > 1:
+        print(index)
         raise Exception('fragment in fragment_database more than once')
 
     if is_new is True:
@@ -274,12 +272,9 @@ def update_bond_database(pair, bond, fragment_database, fragments, frequencies, 
     update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
 
 
-def update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
+def update_fragment_database(frag1_is_new, frag1_index, frag1_map, fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
 
-    frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
-
-    if frag1_index is False:
-        return False, False
+    #frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
 
     if frag1_is_new: 
 
@@ -396,24 +391,58 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
         frag1_index_list = []
         frag1_map_list = []
 
-        #loop first through all fragments to obtained indeces to allow for time out
-        for fragment in fragments:
+        # need try lists for try execution, if only one new fragment then try lists will be correct, otherwise need to regenerate them
+        frag1_is_new_list_try = []
+        frag1_index_list_try = []
+        frag1_map_list_try = []
 
-            frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
+        try:
+            #loop first through all fragments to obtained indeces to allow for time out
+            for fragment in fragments:
 
-            frag1_is_new_list.append(frag1_is_new)
-            frag1_index_list.append(frag1_index)
-            frag1_map_list.append(frag1_map)
+                frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
 
-        #skip molecule if timed out
-        if False in frag1_index_list:
-            print('Timed out frag1', counter)
-            continue
+                frag1_is_new_list_try.append(frag1_is_new)
+                frag1_index_list_try.append(frag1_index)
+                frag1_map_list_try.append(frag1_map)
+
+        except TimeoutException:
+            print('Timed out', counter)
+            continue            
+
+        # count how many new fragments are present in current molecule (does not take equivalence into account)
+        new_counter = 0
+        for i in frag1_is_new_list_try:
+            if i is True:
+                new_counter += 1
 
         #update database of fragments, if fragment exists increase frag_frequency, otherwise add fragment
-        for fragment in fragments:
+        # if more than 1 new fragment need to loop through all fragments since indeces may change
+        if new_counter > 1:
 
-            frag1_index, frag1_map = update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
+            for fragment in fragments:
+
+                frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
+     
+                frag1_index_list.append(frag1_index)
+                frag1_map_list.append(frag1_map)
+
+                frag1_index, frag1_map = update_fragment_database(frag1_is_new, frag1_index, frag1_map, fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
+
+        # if only one new fragment the indeces will be correct (index of new fragment is len(fragment_database) + 1)
+        else:
+            # copy from try lists since they will be correct
+            frag1_is_new_list = frag1_is_new_list_try
+            frag1_index_list = frag1_index_list_try
+            frag1_map_list = frag1_map_list_try
+
+            for i in range(len(fragments)):
+
+                fragment = fragments[i]
+                frag1_is_new = frag1_is_new_list[i]
+                frag1_index = frag1_index_list[i]
+                frag1_map = frag1_map_list[i]
+                frag1_index, frag1_map = update_fragment_database(frag1_is_new, frag1_index, frag1_map, fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
 
         for i in range(len(pairs)):
 
@@ -546,19 +575,19 @@ def map_mols(mol1, mol2):
 
 def get_canonical_mapping(fragment):
     gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
-    print('line511')
+    
     all_mappings = []
 
     for mapping in gm.isomorphisms_iter():
         all_mappings.append(mapping)
-    print('line516')
+    
     canonical_mapping = all_mappings[0]
 
     for i in all_mappings:
         for key, val in i.items():
             if canonical_mapping[key] > val:
                 canonical_mapping[key] = val
-    print('line523')
+    
     return canonical_mapping
 
 def renumber_fragment(fragment):
@@ -592,11 +621,3 @@ if __name__ == '__main__':
 
     make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt, verbose=args.verbose)
     print('Normal termination')
-
-
-"""
-    fragments_sdf = sys.argv[2]
-    fragments_txt = sys.argv[3]
-    frequencies_txt = sys.argv[4]
-    frag_frequencies_txt = sys.argv[5]
-"""

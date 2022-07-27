@@ -130,7 +130,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
     index = []
 
-    with time_limit(2):
+    with time_limit(10):
         map = get_canonical_mapping(fragment)
 
     fragment_len = len(fragment)

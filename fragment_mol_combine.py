@@ -72,7 +72,7 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
 
 	save_fragments_txt(fragment_database, fragments_txt_out)
 
-def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
+def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
 
 	fragment_database_mol = get_fragment_database('%s0.sdf' %(fragments_sdf_in))
 
@@ -81,15 +81,15 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
 	for i in fragment_database_mol:
 		fragment_database.append(i.graph)
 
-	frequencies = get_bond_frequencies('%s0.txt' %frequencies_txt_in )
+	frequencies = get_bond_frequencies('%s%s.txt' %(frequencies_txt_in, first) )
 
-	frag_frequencies = get_frag_frequencies('%s0.txt' %frag_frequencies_txt_in)
+	frag_frequencies = get_frag_frequencies('%s%s.txt' %(frag_frequencies_txt_in, first))
 
-	frag_mapping = get_frag_mapping('%s0.txt' %fragments_txt_in )
+	frag_mapping = get_frag_mapping('%s%s.txt' %(fragments_txt_in, first) )
 
 	frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
-	for i in range(1, n):
+	for i in range(first, first+n):
 
 		fragments_sdf_2 = '%s%s.sdf' %(fragments_sdf_in, i)
 		fragments_txt_2 = '%s%s.txt' %(fragments_txt_in, i) 
@@ -117,6 +117,7 @@ if __name__ == '__main__':
 
 	in_sub = sys.argv[2]
 	out_sub = sys.argv[3]
+	first = int(sys.argv[4])
 
 	fragments_sdf_in = 'fragments%s_' %in_sub
 	fragments_txt_in = 'fragments%s_' %in_sub
@@ -127,7 +128,7 @@ if __name__ == '__main__':
 	frequencies_txt_out = 'frequencies%s.txt' %out_sub
 	frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
-	loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+	loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
 
 
 """

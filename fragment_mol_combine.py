@@ -91,7 +91,7 @@ def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_
 
 	frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
-	for i in range(first, first+n):
+	for i in range(first+1, first+n):
 
 		print('Loading %s' %i)
 

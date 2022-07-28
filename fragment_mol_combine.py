@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
 	in_sub = sys.argv[2]
 	out_sub = sys.argv[3]
-	first = int(sys.argv[4])
+	first = int(sys.argv[4]) * n
 
 	fragments_sdf_in = 'fragments%s_' %in_sub
 	fragments_txt_in = 'fragments%s_' %in_sub

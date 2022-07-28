@@ -74,7 +74,9 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
 
 def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
 
-	fragment_database_mol = get_fragment_database('%s0.sdf' %(fragments_sdf_in))
+	print('Loading %s' %first)
+
+	fragment_database_mol = get_fragment_database('%s%s.sdf' %(fragments_sdf_in, first))
 
 	fragment_database = []
 
@@ -90,6 +92,8 @@ def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_
 	frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
 	for i in range(first, first+n):
+
+		print('Loading %s' %i)
 
 		fragments_sdf_2 = '%s%s.sdf' %(fragments_sdf_in, i)
 		fragments_txt_2 = '%s%s.txt' %(fragments_txt_in, i) 

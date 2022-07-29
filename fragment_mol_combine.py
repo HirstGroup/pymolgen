@@ -3,7 +3,7 @@ import sys,os
 from pymolgen.fragment_mol import *
 from pymolgen.fragment_builder import *
 
-def combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, test=None):
+def combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None):
 
     fragment_database_mol2 = get_fragment_database(fragments_sdf_2)
 
@@ -24,9 +24,6 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
         print('Before limit ', len(fragment_database2))
         fragment_database2, frequencies2, frag_frequencies2, frag_mapping2 = update_limit(limit, fragment_database2, frequencies2, frag_frequencies2, frag_mapping2)
         print('After limit ', len(fragment_database2))     
-
-    if test:
-        return
 
     #mapping of fragment atom indeces from 2 to 1 (or 2 to 2 if new fragment)
     frag_mapping2to1 = []
@@ -129,7 +126,7 @@ def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_
 
         print(fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
 
-        combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit, test)
+        combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit)
 
 def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, frag_mapping):
 
@@ -139,23 +136,30 @@ def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, f
     new_fragment_database = []
     new_frag_frequencies = []
     new_frag_mapping = []
-
+    check = {}
+    j = 0
     for i in range(len(frag_frequencies)):
         if frag_frequencies[i] < limit:
             mapping.append(-1)
         else:
-            mapping.append(frag_frequencies[i])
+            mapping.append(j)
             new_fragment_database.append(fragment_database[i])
             new_frag_frequencies.append(frag_frequencies[i])
             new_frag_mapping.append(frag_mapping[i])
+            j += 1
 
     # update bond_frequencies
 
     new_bond_frequencies = {}
 
     for key, val in bond_frequencies.items():
-        if mapping[key[0]] != -1 and mapping[key[1]] != -1:
-            new_bond_frequencies[key] = val
+        i = key[0]
+        j = key[1]
+        k = key[2]
+        l = key[3]
+        if mapping[i] != -1 and mapping[j] != -1:
+            check[key] = val
+            new_bond_frequencies[mapping[i], mapping[j], k, l] = val
 
     return new_fragment_database, new_bond_frequencies, new_frag_frequencies, new_frag_mapping
 

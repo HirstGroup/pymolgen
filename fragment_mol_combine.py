@@ -3,173 +3,197 @@ import sys,os
 from pymolgen.fragment_mol import *
 from pymolgen.fragment_builder import *
 
-def combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
+def combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, test=None):
 
-	fragment_database_mol_2 = get_fragment_database(fragments_sdf_2)
+    fragment_database_mol2 = get_fragment_database(fragments_sdf_2)
 
-	fragment_database_2 = []
+    fragment_database2 = []
 
-	for i in fragment_database_mol_2:
-		fragment_database_2.append(i.graph)
+    for i in fragment_database_mol2:
+        fragment_database2.append(i.graph)
 
-	frequencies2 = get_bond_frequencies(frequencies_txt_2)
+    frequencies2 = get_bond_frequencies(frequencies_txt_2)
 
-	frag_mapping2 = get_frag_mapping(fragments_txt_2)
+    frag_mapping2 = get_frag_mapping(fragments_txt_2)
 
-	frequencies2 = update_bond_frequencies(frequencies2, frag_mapping2)
+    frequencies2 = update_bond_frequencies(frequencies2, frag_mapping2)
 
-	frag_frequencies2 = get_frag_frequencies(frag_frequencies_txt_2)
+    frag_frequencies2 = get_frag_frequencies(frag_frequencies_txt_2)
 
-	#mapping of fragment atom indeces from 2 to 1 (or 2 to 2 if new fragment)
-	frag_mapping2to1 = []
+    if limit is not None:
+        print('Before limit ', len(fragment_database2))
+        fragment_database2, frequencies2, frag_frequencies2 = update_limit(limit, fragment_database2, frequencies2, frag_frequencies2)
+        print('After limit ', len(fragment_database2))     
 
-	#map of fragment index from 2 to final database
-	frag_index_mapping = []
+    if test:
+        return
 
-	for i in range(len(fragment_database_2)):
+    #mapping of fragment atom indeces from 2 to 1 (or 2 to 2 if new fragment)
+    frag_mapping2to1 = []
 
-		fragment = fragment_database_2[i]
+    #map of fragment index from 2 to final database
+    frag_index_mapping = []
 
-		frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database)
+    for i in range(len(fragment_database2)):
 
-		if frag1_is_new: 
+        fragment = fragment_database2[i]
 
-			frag_frequencies.append(frag_frequencies2[i])
+        frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database)
 
-			frag_index_mapping.append(len(fragment_database))
+        if frag1_is_new: 
 
-			fragment_database.append(fragment)
+            frag_frequencies.append(frag_frequencies2[i])
 
-		else:
-			frag_frequencies[frag1_index] += frag_frequencies2[i]
+            frag_index_mapping.append(len(fragment_database))
 
-			frag_index_mapping.append(frag1_index)
+            fragment_database.append(fragment)
 
-		frag_mapping2to1.append(frag1_map)
+        else:
+            frag_frequencies[frag1_index] += frag_frequencies2[i]
 
-	for key, val in frequencies2.items():
+            frag_index_mapping.append(frag1_index)
 
-		frag1_index = key[0]
-		frag2_index = key[1]
-		frag1_bond = key[2]
-		frag2_bond = key[3]
+        frag_mapping2to1.append(frag1_map)
 
-		#get mapping for atom numbers
-		frag1_map = frag_mapping2to1[frag1_index]
-		frag2_map = frag_mapping2to1[frag2_index]
+    for key, val in frequencies2.items():
 
-		#convert frag indeces 
-		frag1_index = frag_index_mapping[key[0]]
-		frag2_index = frag_index_mapping[key[1]]
+        frag1_index = key[0]
+        frag2_index = key[1]
+        frag1_bond = key[2]
+        frag2_bond = key[3]
 
-		update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond, val)
+        #get mapping for atom numbers
+        frag1_map = frag_mapping2to1[frag1_index]
+        frag2_map = frag_mapping2to1[frag2_index]
 
-	save_frequencies_txt(frequencies, frequencies_txt_out)
+        #convert frag indeces 
+        frag1_index = frag_index_mapping[key[0]]
+        frag2_index = frag_index_mapping[key[1]]
 
-	save_fragments_sdf(fragment_database, fragments_sdf_out)
+        update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond, val)
 
-	save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt_out)
+    save_frequencies_txt(frequencies, frequencies_txt_out)
 
-	save_fragments_txt(fragment_database, fragments_txt_out)
+    save_fragments_sdf(fragment_database, fragments_sdf_out)
 
-def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
+    save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt_out)
 
-	print('Loading %s' %first)
+    save_fragments_txt(fragment_database, fragments_txt_out)
 
-	fragment_database_mol = get_fragment_database('%s%s.sdf' %(fragments_sdf_in, first))
+def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, test=None):
 
-	fragment_database = []
+    print('Loading %s' %first)
 
-	for i in fragment_database_mol:
-		fragment_database.append(i.graph)
+    fragment_database_mol = get_fragment_database('%s%s.sdf' %(fragments_sdf_in, first))
 
-	frequencies = get_bond_frequencies('%s%s.txt' %(frequencies_txt_in, first) )
+    fragment_database = []
 
-	frag_frequencies = get_frag_frequencies('%s%s.txt' %(frag_frequencies_txt_in, first))
+    for i in fragment_database_mol:
+        fragment_database.append(i.graph)
 
-	frag_mapping = get_frag_mapping('%s%s.txt' %(fragments_txt_in, first) )
+    frequencies = get_bond_frequencies('%s%s.txt' %(frequencies_txt_in, first) )
 
-	frequencies = update_bond_frequencies(frequencies, frag_mapping)
+    frag_frequencies = get_frag_frequencies('%s%s.txt' %(frag_frequencies_txt_in, first))
 
-	for i in range(first+1, first+n):
+    frag_mapping = get_frag_mapping('%s%s.txt' %(fragments_txt_in, first) )
 
-		print('Loading %s' %i)
+    frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
-		fragments_sdf_2 = '%s%s.sdf' %(fragments_sdf_in, i)
-		fragments_txt_2 = '%s%s.txt' %(fragments_txt_in, i) 
-		frequencies_txt_2 = '%s%s.txt' %(frequencies_txt_in, i) 
-		frag_frequencies_txt_2 = '%s%s.txt' %(frag_frequencies_txt_in, i)
+    if limit is not None:
+        print('Before limit ', len(fragment_database))
+        fragment_database, frequencies, frag_frequencies = update_limit(limit, fragment_database, frequencies, frag_frequencies)
+        print('After limit ', len(fragment_database))
 
-		print(fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+    for i in range(first+1, first+n):
 
-		combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+        print('Loading %s' %i)
+
+        fragments_sdf_2 = '%s%s.sdf' %(fragments_sdf_in, i)
+        fragments_txt_2 = '%s%s.txt' %(fragments_txt_in, i) 
+        frequencies_txt_2 = '%s%s.txt' %(frequencies_txt_in, i) 
+        frag_frequencies_txt_2 = '%s%s.txt' %(frag_frequencies_txt_in, i)
+
+        if test:
+            frag_frequencies2 = get_frag_frequencies(frag_frequencies_txt_2)
+            print('Before limit', len(frag_frequencies2))
+
+            limit_count = 0
+
+            for i in frag_frequencies2:
+                if i >= limit:
+                    limit_count += 1
+
+            print('After limit', limit_count)
+
+            continue
+
+        print(fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+
+        combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit, test)
 
 def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies):
 
-	# set mapping list and loop through elements of frag_frequencies, if element < limit then set mapping to -1
-	# create new fragment database with fragments that are within limit
-	mapping = []
-	new_fragment_database = []
-	new_frag_frequencies = []
+    # set mapping list and loop through elements of frag_frequencies, if element < limit then set mapping to -1
+    # create new fragment database with fragments that are within limit
+    mapping = []
+    new_fragment_database = []
+    new_frag_frequencies = []
 
-	for i in range(len(frag_frequencies)):
-		if frag_frequencies[i] < limit:
-			mapping.append(-1)
-		else:
-			mapping.append(frag_frequencies[i])
-			new_fragment_database.append(fragment_database[i])
-			new_frag_frequencies.append(frag_frequencies[i])
+    for i in range(len(frag_frequencies)):
+        if frag_frequencies[i] < limit:
+            mapping.append(-1)
+        else:
+            mapping.append(frag_frequencies[i])
+            new_fragment_database.append(fragment_database[i])
+            new_frag_frequencies.append(frag_frequencies[i])
 
-	# update bond_frequencies
+    # update bond_frequencies
 
-	new_bond_frequencies = {}
+    new_bond_frequencies = {}
 
-	for key, val in bond_frequencies.items():
-		if mapping[key[0]] != -1 and mapping[key[1]] != -1:
-			new_bond_frequencies[key] = val
+    for key, val in bond_frequencies.items():
+        if mapping[key[0]] != -1 and mapping[key[1]] != -1:
+            new_bond_frequencies[key] = val
 
-	return new_fragment_database, new_bond_frequencies, new_frag_frequencies
+    return new_fragment_database, new_bond_frequencies, new_frag_frequencies
 
 
 def renumber_frequencies(fragments_txt_in, frequencies_txt_in, frequencies_txt_out):
 
-	frequencies = get_bond_frequencies(frequencies_txt_in)
+    frequencies = get_bond_frequencies(frequencies_txt_in)
 
-	frag_mapping = get_frag_mapping(fragments_txt_in)
+    frag_mapping = get_frag_mapping(fragments_txt_in)
 
-	frequencies = update_bond_frequencies(frequencies, frag_mapping)
+    frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
-	save_frequencies_txt(frequencies, frequencies_txt_out)
+    save_frequencies_txt(frequencies, frequencies_txt_out)
 
 if __name__ == '__main__':
 
 
-	n = int(sys.argv[1])
+    parser = argparse.ArgumentParser(description='Combine fragmented molecules')
+    parser.add_argument('-n','--n_files', help='Number of fragment files to combine',required=True, type=int)
+    parser.add_argument('-i','--in_sub', help='Input subscript',required=True)
+    parser.add_argument('-o','--out_sub', help='Output subscript',required=True)
+    parser.add_argument('-f','--first', help='First file index to consider',required=True, type=int)
+    parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider',required=False, type=int)
+    parser.add_argument('--test', action='store_true', help='Test run', required=False)
 
-	in_sub = sys.argv[2]
-	out_sub = sys.argv[3]
-	first = int(sys.argv[4]) * n
+    args = parser.parse_args()
 
-	fragments_sdf_in = 'fragments%s_' %in_sub
-	fragments_txt_in = 'fragments%s_' %in_sub
-	frequencies_txt_in = 'frequencies%s_' %in_sub
-	frag_frequencies_txt_in = 'frag_frequencies%s_' %in_sub
-	fragments_sdf_out = 'fragments%s.sdf' %out_sub
-	fragments_txt_out = 'fragments%s.txt' %out_sub
-	frequencies_txt_out = 'frequencies%s.txt' %out_sub
-	frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
+    n = args.n_files
 
-	loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+    in_sub = args.in_sub
+    out_sub = args.out_sub
+    first = args.first * n
 
+    fragments_sdf_in = 'fragments%s_' %in_sub
+    fragments_txt_in = 'fragments%s_' %in_sub
+    frequencies_txt_in = 'frequencies%s_' %in_sub
+    frag_frequencies_txt_in = 'frag_frequencies%s_' %in_sub
+    fragments_sdf_out = 'fragments%s.sdf' %out_sub
+    fragments_txt_out = 'fragments%s.txt' %out_sub
+    frequencies_txt_out = 'frequencies%s.txt' %out_sub
+    frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
-"""
-	
-	fragments_sdf_in = sys.argv[2]
-	fragments_txt_in = sys.argv[3]
-	frequencies_txt_in = sys.argv[4]
-	frag_frequencies_txt_in = sys.argv[5]
-	fragments_sdf_out = sys.argv[6]
-	fragments_txt_out = sys.argv[7]
-	frequencies_txt_out = sys.argv[8]
-	frag_frequencies_txt_out = sys.argv[9]
-"""
+    loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=args.limit, test=args.test)

@@ -104,6 +104,33 @@ def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_
 
 		combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
 
+def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies):
+
+	# set mapping list and loop through elements of frag_frequencies, if element < limit then set mapping to -1
+	# create new fragment database with fragments that are within limit
+	mapping = []
+	new_fragment_database = []
+	new_frag_frequencies = []
+
+	for i in range(len(frag_frequencies)):
+		if frag_frequencies[i] < limit:
+			mapping.append(-1)
+		else:
+			mapping.append(frag_frequencies[i])
+			new_fragment_database.append(fragment_database[i])
+			new_frag_frequencies.append(frag_frequencies[i])
+
+	# update bond_frequencies
+
+	new_bond_frequencies = {}
+
+	for key, val in bond_frequencies.items():
+		if mapping[key[0]] != -1 and mapping[key[1]] != -1:
+			new_bond_frequencies[key] = val
+
+	return new_fragment_database, new_bond_frequencies, new_frag_frequencies
+
+
 def renumber_frequencies(fragments_txt_in, frequencies_txt_in, frequencies_txt_out):
 
 	frequencies = get_bond_frequencies(frequencies_txt_in)

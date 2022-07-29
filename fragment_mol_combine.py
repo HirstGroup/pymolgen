@@ -31,9 +31,11 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
     #map of fragment index from 2 to final database
     frag_index_mapping = []
 
-    for i in range(len(fragment_database2)):
+    fragment_database2_len = len(fragment_database2)
 
-        if i % 100 == 0:
+    for i in range(fragment_database2_len):
+
+        if i % (fragment_database2_len // 10) == 0:
             print(i)
 
         fragment = fragment_database2[i]

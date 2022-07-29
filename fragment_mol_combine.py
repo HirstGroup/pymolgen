@@ -1,4 +1,5 @@
 import sys,os
+import numpy as np
 
 from pymolgen.fragment_mol import *
 from pymolgen.fragment_builder import *
@@ -153,7 +154,7 @@ def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, f
             new_frag_mapping.append(frag_mapping[i])
             j += 1
 
-    # update bond_frequencies
+    # update bond_frequencies: remove frequencies for removed fragments and update fragment numbers according to mapping
 
     new_bond_frequencies = {}
 
@@ -168,6 +169,42 @@ def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, f
 
     return new_fragment_database, new_bond_frequencies, new_frag_frequencies, new_frag_mapping
 
+def sort_fragments(fragment_database, bond_frequencies, frag_frequencies, frag_mapping):
+
+    frag_frequencies_np = np.array(frag_frequencies)
+    sort_index = list(np.argsort(-1*frag_frequencies_np))
+
+    mapping = {}
+
+    for i in range(len(sort_index)):
+        mapping[sort_index[i]] = i
+
+    new_fragment_database = []
+    new_bond_frequencies = {}
+    new_frag_frequencies = []
+    new_frag_mapping = []
+
+    # add fragments to new_fragment_database according to sorted order, same for new_frag_mapping
+    for i in range(len(sort_index)):
+        new_fragment_database.append(fragment_database[sort_index[i]])
+        new_frag_mapping.append(frag_mapping[sort_index[i]])
+
+    new_frag_frequencies = sorted(frag_frequencies, reverse=True)
+
+    # update bond frequencies for new fragment indeces, larger index should be j
+    for key, val in bond_frequencies.items():
+
+        i = mapping[key[0]]
+        j = mapping[key[1]]
+        k = key[2]
+        l = key[3]
+
+        if i <= j:
+            new_bond_frequencies[i,j,k,l] = val            
+        else:
+            new_bond_frequencies[j,i,l,k] = val
+
+    return new_fragment_database, new_bond_frequencies, new_frag_frequencies, new_frag_mapping
 
 def renumber_frequencies(fragments_txt_in, frequencies_txt_in, frequencies_txt_out):
 

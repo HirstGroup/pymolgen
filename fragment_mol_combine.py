@@ -83,7 +83,7 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
 
     save_fragments_txt(fragment_database, fragments_txt_out)
 
-def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, test=None):
+def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, test=None, sort=None):
 
     print('Loading %s' %first)
 
@@ -101,6 +101,20 @@ def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_
     frag_mapping = get_frag_mapping('%s%s.txt' %(fragments_txt_in, first) )
 
     frequencies = update_bond_frequencies(frequencies, frag_mapping)
+
+    if sort:
+        fragment_database, frequencies, frag_frequencies, frag_mapping = sort_fragments(fragment_database, frequencies, frag_frequencies, frag_mapping)
+
+        save_frequencies_txt(frequencies, frequencies_txt_out)
+
+        save_fragments_sdf(fragment_database, fragments_sdf_out)
+
+        save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt_out)
+
+        save_fragments_txt(fragment_database, fragments_txt_out)
+
+        sys.exit('Fragment data sorted')
+
 
     if limit is not None:
         print('Before limit ', len(fragment_database))
@@ -226,6 +240,7 @@ if __name__ == '__main__':
     parser.add_argument('-f','--first', help='First file index to consider',required=True, type=int)
     parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider',required=False, type=int)
     parser.add_argument('--test', action='store_true', help='Test run', required=False)
+    parser.add_argument('--sort', action='store_true', help='Sort fragment data and exit', required=False)
 
     args = parser.parse_args()
 
@@ -244,4 +259,4 @@ if __name__ == '__main__':
     frequencies_txt_out = 'frequencies%s.txt' %out_sub
     frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
-    loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=args.limit, test=args.test)
+    loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=args.limit, test=args.test, sort=args.sort)

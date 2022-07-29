@@ -390,7 +390,9 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
         with open('rules.smi', 'w') as outfile:
             outfile.write('%s\n' %smi)
 
-        result = subprocess.run(['/home/pczbf/Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb rules.smi'], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+        home = os.path.expanduser('~/')
+
+        result = subprocess.run([home + 'Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb rules.smi'], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if result == '':
             print('Failed rules', smi)

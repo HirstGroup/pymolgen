@@ -146,7 +146,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, remove_hydrogens, remove_hydrogens_parent_fragment_list, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False):
 
     # build pains_database if using filters
     if filters:
@@ -176,32 +176,49 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_mw = Molecule.molecular_weight(parent_mol)
 
-    parent_fragment = molecule_from_sdf(parent_fragment_file)
+    parent_fragment_list = []
+    for i in parent_fragment_file_list:
+        parent_fragment_list.append(molecule_from_sdf(i))
 
-    smi = molecule_to_smiles(parent_fragment)
+    #smi = molecule_to_smiles(parent_fragment)
 
-    print('Parent fragment', smi)
+    #print('Parent fragment', smi)
 
-    for i in remove_hydrogens_parent_fragment:
-        parent_fragment = parent_fragment.remove_atom(i)
+    for i in range(len(remove_hydrogens_parent_fragment_list)):
+        for j in i:
+            parent_fragment_list[i] = parent_fragment_list[i].remove_atom(j)
 
-    parent_fragment_original = parent_fragment
+    parent_fragment_original_list = []
 
-    parent_fragment_i = find_fragment(parent_fragment, fragment_database)
+    for i in parent_fragment_list:
+        parent_fragment_original_list.append(i)
 
-    if parent_fragment_i is False:
-        sys.exit('Parent fragment not found')
+    parent_fragment_i_list = []
+    for i in range(len(parent_fragment_list)):
+        j = find_fragment(parent_fragment_list[i], fragment_database)
 
-    parent_fragment = fragment_database[parent_fragment_i]
+        parent_fragment_i_list.append(j)
 
-    print_molecule(parent_fragment_original)
-    print_molecule(parent_fragment)
+        if j is False:
+            sys.exit('Parent fragment not found')
 
-    parent_mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
+    parent_fragment_list = []
 
-    print('parent_fragment')
-    print_molecule(parent_fragment)
-    print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
+    for i in parent_fragment_i_list:
+        parent_fragment_list.append(fragment_database[i])
+
+    for i in range(len(parent_fragment_list)):
+        print_molecule(parent_fragment_original_list[i])
+        print_molecule(parent_fragment_list[i])
+
+    parent_mapping_list = []
+
+    for i in range(len(parent_fragment_list)):
+        parent_mapping_list.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
+
+        print('parent_fragment', i)
+        print_molecule(parent_fragment_list[i])
+        print('parent_fragment_list[i].free_valence_list =', parent_fragment_list[i].free_valence_list)
 
     with open(outfile_name, 'w') as outfile:
         print('Writing to', outfile_name)
@@ -212,6 +229,15 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     n = 1
     while n <= n_mol:
+
+        if nofreq:
+
+            for i in remove_hydrogens:
+                parent_mol = parent_mol.remove_atom(i)
+
+            parent_mw = Molecule.molecular_weight(parent_mol)
+
+
 
         mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules)
 

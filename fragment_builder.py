@@ -7,6 +7,9 @@ import subprocess
 import networkx
 from networkx.algorithms import isomorphism
 
+from functools import partial
+print = partial(print, flush=True)
+
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies, compound_dict

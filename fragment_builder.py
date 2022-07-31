@@ -149,7 +149,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None):
 
     mapping_dict = {}
 
@@ -225,7 +225,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     n = 1
     while n <= n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file)
 
         if mol is not None:
 
@@ -399,7 +399,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
 
     if rules:
         smi = molecule_to_smiles(mol)
-        with open('rules.smi', 'w') as outfile:
+        with open(rules_file, 'w') as outfile:
             outfile.write('%s\n' %smi)
 
         home = os.path.expanduser('~/')
@@ -472,6 +472,7 @@ if __name__ == '__main__':
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
     parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
+    parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)
     parser.add_argument('--filters', action='store_true', help='Use filters', required=False)
 
     args = parser.parse_args()
@@ -482,7 +483,7 @@ if __name__ == '__main__':
     if args.unique:
         print('Unique not fully working since does not take symmetry into account')
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters)
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file)
 
 
 

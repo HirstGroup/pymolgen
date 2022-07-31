@@ -9,7 +9,7 @@ from networkx.algorithms import isomorphism
 
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
-from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies
+from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies, compound_dict
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
@@ -146,7 +146,15 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False):
+
+    mapping_dict = {}
+
+    for i in range(0,len(mapping),2):
+        mapping_dict[mapping[i]] = mapping[i+1]
+    print(mapping_dict)
+
+    pains_database = None
 
     # build pains_database if using filters
     if filters:
@@ -198,6 +206,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     print_molecule(parent_fragment)
 
     parent_mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
+    parent_mapping = compound_dict(mapping_dict, parent_mapping)
     print('Parent mapping =', parent_mapping)
     print('parent_fragment')
     print_molecule(parent_fragment)
@@ -454,11 +463,13 @@ if __name__ == '__main__':
     parser.add_argument('-x','--parent_fragment_file', help='Parent Fragment Structure File to search fragment database in SDF format',required=True)
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=True)
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
+    parser.add_argument('-m','--mapping', type=int, nargs='+', help='Space-separated mapping of atoms between parent and parent fragment, numbered from 0',required=True)
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
     parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
+    parser.add_argument('--filters', action='store_true', help='Use filters', required=False)
 
     args = parser.parse_args()
 
@@ -468,10 +479,7 @@ if __name__ == '__main__':
     if args.unique:
         print('Unique not fully working since does not take symmetry into account')
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, 
-        parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens, 
-        remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, outfile_name=args.outfile_name, n_mol=args.n_mol, 
-        unique=args.unique, rules=args.rules, filters=True)
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters)
 
 
 

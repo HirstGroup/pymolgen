@@ -264,7 +264,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None):
 
     #prepare parent fragment
     frag_list = []

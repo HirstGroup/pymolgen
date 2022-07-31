@@ -404,7 +404,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
 
         home = os.path.expanduser('~/')
 
-        result = subprocess.run([home + 'Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb rules.smi'], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+        result = subprocess.run([home + 'Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb %' %rules_file], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
         if result == '':
             print('Failed rules', smi)

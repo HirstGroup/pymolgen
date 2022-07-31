@@ -198,7 +198,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     print_molecule(parent_fragment)
 
     parent_mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
-
+    print('Parent mapping =', parent_mapping)
     print('parent_fragment')
     print_molecule(parent_fragment)
     print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)

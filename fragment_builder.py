@@ -13,6 +13,7 @@ print = partial(print, flush=True)
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies, compound_dict
+from pymolgen.newmol import count_generated_molecules
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
@@ -149,7 +150,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False):
 
     mapping_dict = {}
 
@@ -215,14 +216,17 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     print_molecule(parent_fragment)
     print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
 
-    with open(outfile_name, 'w') as outfile:
-        print('Writing to', outfile_name)
+    if restart is False:
+        n = 1
+        with open(outfile_name, 'w') as outfile:
+            print('Writing to', outfile_name)
+    else:
+        n = count_generated_molecules(outfile_name)
 
     if figure is not None:
         with open(figure, 'w') as outfile:
             print('Writing to figure', figure)
 
-    n = 1
     while n <= n_mol:
 
         mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file)
@@ -484,7 +488,7 @@ if __name__ == '__main__':
     if args.unique:
         print('Unique not fully working since does not take symmetry into account')
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file)
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart)
 
 
 

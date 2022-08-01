@@ -221,7 +221,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         with open(outfile_name, 'w') as outfile:
             print('Writing to', outfile_name)
     else:
-        n = count_generated_molecules(outfile_name)
+        n = count_generated_molecules(outfile_name) + 1
 
     if figure is not None:
         with open(figure, 'w') as outfile:

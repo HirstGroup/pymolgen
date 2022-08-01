@@ -474,6 +474,7 @@ if __name__ == '__main__':
     parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
     parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)
     parser.add_argument('--filters', action='store_true', help='Use filters', required=False)
+    parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
 
     args = parser.parse_args()
 

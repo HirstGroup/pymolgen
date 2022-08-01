@@ -124,6 +124,27 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
 
     return new_frag_i, new_frag_i_atom
 
+def get_random_neighbour_np(fragment_i, fragment_bond_frequencies):
+
+    keys = fragment_bond_frequencies[0]
+    vals = fragment_bond_frequencies[1]
+
+    draw = random.choices(population=keys, weights=vals, k=1)[0]
+
+    if fragment_i == draw[0]:
+
+        new_frag_i = draw[1]
+        fragment_i_atom = draw[2]
+        new_frag_i_atom = draw[3]
+
+    if fragment_i == draw[1]:
+
+        new_frag_i = draw[0]
+        fragment_i_atom = draw[3]
+        new_frag_i_atom = draw[2]
+
+    return new_frag_i, new_frag_i_atom
+
 def get_length(list):
 
     length = 0
@@ -150,6 +171,46 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
+def bond_frequencies_to_np(bond_frequencies):
+
+    n = len(bond_frequencies)
+
+    a = np.zeros((n,4), dtype=int)
+
+    b = np.zeros(n, dtype=int)
+
+    n = 0
+    for key, val in bond_frequencies.items():
+        a[n] = np.array(key)
+        b[n] = val
+        n += 1
+
+    return a, b
+
+def get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np):
+    frag = np.array([fragment_i,atom_i_can])
+
+    key = bond_frequencies_np[0]
+    val = bond_frequencies_np[1]
+
+    freq_left = key[:,[0,2]]
+
+    equal_left = freq_left == frag
+
+    equal_left = np.logical_and(equal_left[:,0], equal_left[:,1] )
+
+    freq_right = key[:,[1,3]]
+
+    equal_right = freq_right == frag
+
+    equal_right = np.logical_and(equal_right[:,0], equal_right[:,1] )
+
+    equal = np.logical_or(equal_left, equal_right )
+    key_filtered = key[equal]
+    val_filered = val[equal]
+
+    return key_filtered, val_filered
+
 def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False):
 
     mapping_dict = {}
@@ -172,7 +233,14 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     fragment_database = get_fragment_database(fragments_sdf)
     frag_mapping = get_frag_mapping(fragments_txt)
     bond_frequencies = get_bond_frequencies(frequencies_txt)   
+
+    print('Length bond_frequencies =', len(bond_frequencies))
+
     bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
+
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    bond_frequencies = None
 
     if unique:
         candidate_list = []
@@ -229,7 +297,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     while n <= n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file)
 
         if mol is not None:
 
@@ -268,7 +336,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None):
 
     #prepare parent fragment
     frag_list = []
@@ -313,9 +381,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
                 atom_i_can = parent_mapping[atom_i]
 
-                #print('fragment bond frequencies =', get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies))
-
-
             else:
                 # get mol for fragment_i
                 fragment_i_mol = fragment_database[fragment_i]
@@ -327,7 +392,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 atom_i_can = canonical_mapping[atom_i]
 
             # get bond frequencies for fragment_i
-            fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies)
+            fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np)
 
             # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
             # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
@@ -339,7 +404,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 print_molecule(fragment_database[fragment_i])
 
             # choose random neighbour
-            new_frag_i, new_frag_i_atom = get_random_neighbour(fragment_i, fragment_bond_frequencies)
+            new_frag_i, new_frag_i_atom = get_random_neighbour_np(fragment_i, fragment_bond_frequencies)
 
             # generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
@@ -361,7 +426,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
                 try: new_free_valence_list.remove(new_frag_i_atom)
                 except: 
-                    #print_fragments([new_frag])
                     smi = molecule_to_smiles(new_frag)
                     print(smi)
                     print_molecule(new_frag)

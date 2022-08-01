@@ -59,3 +59,29 @@ def test_filters_final_mol():
     pains_database = gen_pains_database()
     print(filters_final_mol(mol, pains_database))
 
+def test_bond_frequencies_to_np():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt') 
+
+    a, b = bond_frequencies_to_np(bond_frequencies)
+
+    print(a, b)
+
+    new_bond_frequencies = {}
+
+    for i in range(len(a)):
+        new_bond_frequencies[tuple(a[i])] = b[i]
+
+    print(new_bond_frequencies)
+
+    assert bond_frequencies == new_bond_frequencies
+
+def test_get_fragment_bond_frequencies_np():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    get_fragment_bond_frequencies_np(0, 0, bond_frequencies_np)
+
+test_get_fragment_bond_frequencies_np()

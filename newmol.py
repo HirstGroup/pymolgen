@@ -418,8 +418,6 @@ def filters_final_mol(mol, pains_database):
         print("Failed MW filter", smi)
         return False  
 
-    smi = molecule_to_smiles(mol)
-
     # generate openeye molecule and run filters on it
     #try:
     oemol = oechem.OEGraphMol()

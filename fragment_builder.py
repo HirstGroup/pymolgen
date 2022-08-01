@@ -108,7 +108,12 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
         print('fragment bond frequencies =', fragment_bond_frequencies)
         print('fragment_i =', fragment_i)
 
-    draw = random.choices(population=keys, weights=vals, k=1)[0]
+    try:
+        draw = random.choices(population=keys, weights=vals, k=1)[0]
+    except:
+        print('keys =', keys)
+        print('vals =', vals)
+        return None
 
     if fragment_i == draw[0]:
 
@@ -211,7 +216,7 @@ def get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np
 
     return key_filtered, val_filered
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False):
 
     mapping_dict = {}
 
@@ -301,9 +306,12 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         if mol is not None:
 
-            smi = molecule_to_smiles(mol)
-            mw = mol.molecular_weight()
-            print('NEW_CANDIDATE %s %s %.1f' % (n, smi, mw))            
+            if verbose:
+                smi = molecule_to_smiles(mol)
+                mw = mol.molecular_weight()
+                print('NEW_CANDIDATE %s %s %.1f' % (n, smi, mw))            
+            else:
+                print('NEW_CANDIDATE %s' %n )
 
             lines = molecule_to_sdf(mol)
 
@@ -336,7 +344,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None, verbose=False):
 
     #prepare parent fragment
     frag_list = []
@@ -404,7 +412,13 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 print_molecule(fragment_database[fragment_i])
 
             # choose random neighbour
-            new_frag_i, new_frag_i_atom = get_random_neighbour_np(fragment_i, fragment_bond_frequencies)
+            get_random_neighbour_out = get_random_neighbour_np(fragment_i, fragment_bond_frequencies)
+
+            if get_random_neighbour_out is not None:
+                new_frag_i = get_random_neighbour_out[0]
+                new_frag_i_atom = get_random_neighbour_out[1]
+            else:
+                return None
 
             # generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
@@ -543,6 +557,8 @@ if __name__ == '__main__':
     parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)
     parser.add_argument('--filters', action='store_true', help='Use filters', required=False)
     parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
+    parser.add_argument('--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
 
     args = parser.parse_args()
 
@@ -552,7 +568,7 @@ if __name__ == '__main__':
     if args.unique:
         print('Unique not fully working since does not take symmetry into account')
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart)
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose)
 
 
 

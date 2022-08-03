@@ -53,6 +53,31 @@ def get_fragment_bond_frequencies(fragment_i, atom_i, bond_frequencies):
 
     return fragment_bond_frequencies
 
+def get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np):
+
+    frag = np.array([fragment_i,atom_i_can])
+
+    key = bond_frequencies_np[0]
+    val = bond_frequencies_np[1]
+
+    freq_left = key[:,[0,2]]
+
+    equal_left = freq_left == frag
+
+    equal_left = np.logical_and(equal_left[:,0], equal_left[:,1] )
+
+    freq_right = key[:,[1,3]]
+
+    equal_right = freq_right == frag
+
+    equal_right = np.logical_and(equal_right[:,0], equal_right[:,1] )
+
+    equal = np.logical_or(equal_left, equal_right )
+    key_filtered = key[equal]
+    val_filered = val[equal]
+
+    return key_filtered, val_filered
+
 def save_neighbours(fragment_i, fragment_bond_frequencies, fragment_database, outfile_name):
 
     neighbours = []
@@ -192,31 +217,7 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np):
-    frag = np.array([fragment_i,atom_i_can])
-
-    key = bond_frequencies_np[0]
-    val = bond_frequencies_np[1]
-
-    freq_left = key[:,[0,2]]
-
-    equal_left = freq_left == frag
-
-    equal_left = np.logical_and(equal_left[:,0], equal_left[:,1] )
-
-    freq_right = key[:,[1,3]]
-
-    equal_right = freq_right == frag
-
-    equal_right = np.logical_and(equal_right[:,0], equal_right[:,1] )
-
-    equal = np.logical_or(equal_left, equal_right )
-    key_filtered = key[equal]
-    val_filered = val[equal]
-
-    return key_filtered, val_filered
-
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True):
 
     mapping_dict = {}
 
@@ -243,9 +244,8 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
 
-    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
-
-    bond_frequencies = None
+    if use_numpy:
+        bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
     if unique:
         candidate_list = []
@@ -312,7 +312,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         if try_counter > n * 100:
             sys.exit('Too many tries, try_counter = %s, n = %s' %(try_counter, n))
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file, verbose, use_numpy)
 
         if mol is not None:
 
@@ -354,7 +354,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None, verbose=False):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None, verbose=False, use_numpy=True):
 
     #prepare parent fragment
     frag_list = []
@@ -374,6 +374,8 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
 
         counter += 1
         if counter == 100:
+            if verbose:
+                print('counter =', counter)
             return None
 
         # choose random position of constituent fragments in molecule
@@ -410,25 +412,47 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 atom_i_can = canonical_mapping[atom_i]
 
             # get bond frequencies for fragment_i
-            fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np)
+            if use_numpy:
+                fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_i, atom_i_can, bond_frequencies_np)
 
-            # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
-            # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
-            # but there could be errors in the database
-            if len(fragment_bond_frequencies[0]) == 0:
-                return None
+                # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
+                # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
+                # but there could be errors in the database
+                if len(fragment_bond_frequencies[0]) == 0:
+                    if verbose:
+                        print('fragment_bond_frequencies[0] = 0')
+                        print(fragment_bond_frequencies)
+                    return None
+
+                # choose random neighbour
+                get_random_neighbour_out = get_random_neighbour_np(fragment_i, fragment_bond_frequencies)
+
+            else:
+                fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies_np)
+
+                # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
+                # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
+                # but there could be errors in the database
+                if len(fragment_bond_frequencies) == 0:
+                    if verbose:
+                        print('fragment_bond_frequencies = 0')
+                        print(fragment_bond_frequencies)
+                    return None
+
+                # choose random neighbour
+                get_random_neighbour_out = get_random_neighbour(fragment_i, fragment_bond_frequencies)
 
             if fragment_i == -1:
                 print_molecule(fragment_database[fragment_i])
-
-            # choose random neighbour
-            get_random_neighbour_out = get_random_neighbour_np(fragment_i, fragment_bond_frequencies)
 
             if get_random_neighbour_out is not None:
                 new_frag_i = get_random_neighbour_out[0]
                 new_frag_i_atom = get_random_neighbour_out[1]
             else:
+                if verbose:
+                    print('get_random_neighbour_out is None')
                 return None
+
 
             # generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
@@ -569,6 +593,7 @@ if __name__ == '__main__':
     parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
+    parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
 
     args = parser.parse_args()
 
@@ -578,7 +603,9 @@ if __name__ == '__main__':
     if args.unique:
         print('Unique not fully working since does not take symmetry into account')
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose)
+    use_numpy = not args.no_numpy
+
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy)
 
 
 

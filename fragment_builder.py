@@ -300,7 +300,14 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         with open(figure, 'w') as outfile:
             print('Writing to figure', figure)
 
+    if verbose:
+        try_counter = 0
+
     while n <= n_mol:
+
+        if verbose:
+            print('Try', try_counter)
+            try_counter += 1
 
         mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file)
 

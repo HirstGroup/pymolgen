@@ -412,7 +412,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
             # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
             # but there could be errors in the database
-            if len(fragment_bond_frequencies) == 0:
+            if len(fragment_bond_frequencies[0]) == 0:
                 return None
 
             if fragment_i == -1:

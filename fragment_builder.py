@@ -217,7 +217,7 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, remove_hydrogens, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True):
 
     mapping_dict = {}
 
@@ -261,33 +261,24 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_mw = Molecule.molecular_weight(parent_mol)
 
-    parent_fragment = molecule_from_sdf(parent_fragment_file)
+    parent_fragment_list = [molecule_from_sdf(i) for i in parent_fragment_file_list]
 
-    smi = molecule_to_smiles(parent_fragment)
+    parent_fragment_original_list = [i for i in parent_fragment_i_list]
 
-    print('Parent fragment', smi)
+    parent_fragment_i_list = []
+    for i in parent_fragment_i_list:
+        parent_fragment_i = find_fragment(i, fragment_database)
 
-    for i in remove_hydrogens_parent_fragment:
-        parent_fragment = parent_fragment.remove_atom(i)
+        if parent_fragment_i is False:
+            sys.exit('Parent fragment not found')
 
-    parent_fragment_original = parent_fragment
+        parent_fragment_i_list.append(parent_fragment_i)
 
-    parent_fragment_i = find_fragment(parent_fragment, fragment_database)
+    parent_fragment_list = [fragment_database[i] for i in parent_fragment_i_list]
 
-    if parent_fragment_i is False:
-        sys.exit('Parent fragment not found')
-
-    parent_fragment = fragment_database[parent_fragment_i]
-
-    print_molecule(parent_fragment_original)
-    print_molecule(parent_fragment)
-
-    parent_mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
-    parent_mapping = compound_dict(mapping_dict, parent_mapping)
-    print('Parent mapping =', parent_mapping)
-    print('parent_fragment')
-    print_molecule(parent_fragment)
-    print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
+    parent_mapping_list = [] 
+    for i in range(len(parent_fragment_list)):
+        parent_mapping_list.append(compound_dict(mapping_dict[i], map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph)))
 
     if restart is False:
         n = 1
@@ -312,7 +303,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         if try_counter > n * 100:
             sys.exit('Too many tries, try_counter = %s, n = %s' %(try_counter, n))
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file, verbose, use_numpy)
+        mol = build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, fragment_database, bond_frequencies, parent_mapping_list, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file, verbose, use_numpy)
 
         if mol is not None:
 
@@ -354,7 +345,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None, verbose=False, use_numpy=True):
+def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, fragment_database, bond_frequencies_np, parent_mapping_list, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None, verbose=False, use_numpy=True):
 
     #prepare parent fragment
     frag_list = []
@@ -579,10 +570,9 @@ if __name__ == '__main__':
     parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
     parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
-    parser.add_argument('-x','--parent_fragment_file', help='Parent Fragment Structure File to search fragment database in SDF format',required=True)
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File List to search fragment database in SDF format',required=True)
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=True)
-    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
-    parser.add_argument('-m','--mapping', type=int, nargs='+', help='Space-separated mapping of atoms between parent and parent fragment, numbered from 0',required=True)
+    parser.add_argument('-m','--mapping', type=int, nargs='+', help='Space-separated mapping of atoms between parent and parent fragment list, numbered from 0',required=True)
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
@@ -605,7 +595,7 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy)
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy)
 
 
 

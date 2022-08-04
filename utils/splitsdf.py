@@ -22,6 +22,8 @@ for line in infile:
 	if new:
 		outfile = open('%s_%s.sdf' %(args.output, n_file), 'w')
 		new = False
+	if 'Molecule' in line:
+		line = '%s\n' %n
 	outfile.write(line)
 	if '$$$$' in line:
 		n += 1

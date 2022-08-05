@@ -26,9 +26,10 @@ def time_limit(seconds):
     finally:
         signal.alarm(0)
 
-def get_fragments_dataset(mol):
+def get_fragments_dataset(mol, carbonyl=False):
 
-    single_bonds = mol.get_single_bonds_not_h_not_c()
+    if carbonyl: single_bonds = mol.get_single_bonds_not_h_not_c_not_carbonyl()
+    else: single_bonds = mol.get_single_bonds_not_h_not_c()
     
     if single_bonds is False:
         return False, False, False
@@ -326,7 +327,7 @@ def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, fra
     #if (i,j,k,l) is new make new entry into dictionary
     frequencies[(i,j,k,l)] = val
 
-def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False, fragment_database=None, frequencies=None, frag_frequencies=None):
+def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False, fragment_database=None, frequencies=None, frag_frequencies=None, carbonyl=False):
 
     if fragments_sdf is not None:
         outfile = open(fragments_sdf, 'w')
@@ -381,7 +382,7 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
         mol = dataset.load_molecule(i)
 
         #split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
-        fragments, pairs, bonds = get_fragments_dataset(mol)
+        fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl)
 
         if fragments == False:
             continue
@@ -607,6 +608,7 @@ if __name__ == '__main__':
     parser.add_argument('-i','--input', help='Input database SDF file',required=True)
     parser.add_argument('-o','--output', help='Subscript for output file names',required=True)
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output', required=False, default=False)
+    parser.add_argument('--no_carbonyl', action='store_true', help='Cut bonds between heteroatom and carbonyl analogue', required=False, default=False)
 
     args = parser.parse_args()
 
@@ -619,5 +621,7 @@ if __name__ == '__main__':
     frequencies_txt = 'frequencies%s.txt' %out_sub
     frag_frequencies_txt = 'frag_frequencies%s.txt' %out_sub
 
-    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt, verbose=args.verbose)
+    carbonyl = not args.no_carbonyl
+
+    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt, verbose=args.verbose, carbonyl=carbonyl)
     print('Normal termination')

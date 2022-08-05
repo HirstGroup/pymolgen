@@ -38,6 +38,36 @@ def test_is_hydrogen():
     for i in range(len(hydrogen_list)):
         assert check[i] == hydrogen_list[i]
 
+def test_is_heteroatom():
+    mol = molecule_from_sdf('mol-1.sdf')
+
+    smi = molecule_to_smiles(mol)
+
+    heteroatom_list = []
+
+    for i in mol.graph.nodes:
+        if mol.is_heteroatom(i):
+            heteroatom_list.append(i)
+
+
+    assert heteroatom_list == [4, 6, 8, 9, 10, 13, 22, 23, 29, 32, 34, 35]
+
+def test_is_carbonyl_analogue():
+    mol = molecule_from_sdf('mol-1.sdf')
+
+    carbonyl_list = []
+
+    for i in mol.graph.nodes:
+        if mol.is_carbonyl_analogue(i):
+            carbonyl_list.append(i)
+
+    print(carbonyl_list)
+
+    list2 = [i+1 for i in carbonyl_list]
+    print(list2)
+
+    assert carbonyl_list == [3, 5, 6, 8, 9, 10, 21, 22, 34]
+
 def test_get_hydrogen_neighbours():
     mol = molecule_from_sdf('mol-1.sdf')
 
@@ -85,6 +115,45 @@ def test_get_fragments():
 
     assert n_equal == 16
 
+def test_get_fragments_carbonyl():
+
+    mol = molecule_from_sdf('mol-1.sdf')
+
+    single_bonds = mol.get_single_bonds_not_h_not_c_not_carbonyl()
+
+    assert single_bonds == [[0, 1], [3, 4], [5, 7], [7, 8], [8, 11], [13, 14], [14, 15], [19, 20], [28, 29], [31, 32]]
+
+    new = split_mol(mol, single_bonds)
+
+    assert len(new) == 11
+
+    mol2 = molecule_from_sdf('mol-1-can.sdf')
+
+    bonds2 = mol2.get_single_bonds_not_h_not_c_not_carbonyl()
+
+    assert bonds2 == [[3, 7], [7, 11], [9, 47], [19, 23], [21, 24], [22, 26], [23, 27], [27, 31], [34, 36], [42, 43]]
+
+    new2 = split_mol(mol2, bonds2)
+
+    assert len(new2) == 11
+
+    n_equal = 0
+
+    for i in new:
+        for j in new2:
+            
+            if get_atom_list(i) == get_atom_list(j):
+
+                n_equal += 1
+
+                equal = networkx.is_isomorphic(i,j)
+
+                assert equal is True
+
+    print(n_equal)
+
+    assert n_equal == 15
+
 def test_get_fragments_mol1():
 
     mol = molecule_from_sdf('mol-1.sdf')
@@ -104,7 +173,7 @@ def test_get_fragments_mol1():
     print(new_nodes_view)
 
 
-    print_fragments(new)
+    print(print_fragments(new))
 
     saved_fragments = [[0, 36, 37, 38],[1, 2, 3, 34, 35, 39],[40, 4],[5, 6],[41, 42, 7],[8, 9, 10],[33, 11, 12, 13, 43, 53, 54, 26, 27, 28, 30, 31],[44, 45, 14],[46, 15, 16, 17, 18, 19, 52, 47, 48, 25],[49, 50, 51, 20, 21, 22, 23, 24],[29],[32]]
 
@@ -371,6 +440,68 @@ def test_mol_bond_frequencies_11_20_3():
 '''
 
     assert print_fragments(fragment_database) == check
+
+def test_mol_bond_frequencies_11_20_1_carbonyl():
+
+    fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database11-20.sdf', max_n=1, carbonyl=True)
+
+    for key, val in frequencies.items():
+        print(key,val)
+
+    assert frag_frequencies == [2, 2, 1, 2, 3, 1, 1]
+
+    check = '''[0, 1, 2, 3] ['C', 'H', 'H', 'H']
+[0] ['O']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] ['C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'N', 'C', 'C', 'C']
+[0, 1] ['N', 'H']
+[0, 1, 2] ['H', 'C', 'H']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H']
+[0] ['Cl']
+'''
+
+    assert print_fragments(fragment_database) == check
+
+    print(frag_frequencies)
+
+    print(print_fragments(fragment_database))
+
+    print(frequencies)
+
+    assert frequencies == {(0, 1, 0, 0): 2, (1, 2, 0, 2): 1, (2, 3, 4, 0): 1, (3, 4, 0, 1): 2, (4, 4, 1, 1): 2, (3, 5, 0, 0): 1, (5, 6, 4, 0): 1, (1, 5, 0, 11): 1}
+
+def test_mol_bond_frequencies_11_20_2_carbonyl():
+
+    fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database11-20.sdf', max_n=2, carbonyl=True)
+
+    for key, val in frequencies.items():
+        print(key,val)
+
+    assert frag_frequencies == [3, 2, 1, 2, 7, 1, 1, 1, 1, 2, 1, 1, 2, 1, 3]
+
+    check = '''[0, 1, 2, 3] ['C', 'H', 'H', 'H']
+[0] ['O']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] ['C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'N', 'C', 'C', 'C']
+[0, 1] ['N', 'H']
+[0, 1, 2] ['H', 'C', 'H']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H']
+[0] ['Cl']
+[0] ['N']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] ['C', 'C', 'N', 'C', 'N', 'C', 'N', 'C', 'C', 'N', 'H']
+[0, 1, 2] ['H', 'N', 'H']
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] ['H', 'H', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H']
+[0, 1, 2, 3] ['C', 'O', 'N', 'H']
+[0, 1] ['C', 'H']
+[0, 1, 2, 3, 4, 5] ['H', 'N', 'N', 'C', 'O', 'H']
+[0, 1, 2, 3] ['O', 'O', 'H', 'C']
+'''
+
+    assert print_fragments(fragment_database) == check
+
+    print(frag_frequencies)
+
+    print(frequencies)
+
+    assert frequencies == {(0, 1, 0, 0): 2, (1, 2, 0, 2): 1, (2, 3, 4, 0): 1, (3, 4, 0, 1): 2, (4, 4, 1, 1): 3, (3, 5, 0, 0): 1, (5, 6, 4, 0): 1, (1, 5, 0, 11): 1, (0, 7, 0, 0): 1, (4, 7, 1, 0): 1, (7, 10, 0, 4): 1, (4, 8, 1, 0): 1, (8, 9, 5, 1): 1, (8, 9, 7, 1): 1, (10, 11, 4, 0): 1, (11, 12, 2, 0): 1, (4, 12, 1, 0): 2, (12, 14, 0, 3): 2, (4, 13, 1, 1): 1, (12, 13, 0, 1): 1, (4, 14, 1, 3): 1}
 
 def test_split_mol():
 

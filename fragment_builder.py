@@ -302,6 +302,8 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     try_counter = 0
 
+    output_mol_list = []
+
     while n <= n_mol:
 
         if verbose:
@@ -312,49 +314,96 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         if try_counter > n * 100:
             sys.exit('Too many tries, try_counter = %s, n = %s' %(try_counter, n))
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules, rules_file, verbose, use_numpy)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy)
 
         if mol is not None:
 
-            if verbose:
-                smi = molecule_to_smiles(mol)
-                mw = mol.molecular_weight()
-                print('NEW_CANDIDATE %s %s %.1f' % (n, smi, mw))            
-            else:
-                print('NEW_CANDIDATE %s' %n )
+            output_mol_list.append(mol)
 
-            lines = molecule_to_sdf(mol)
+        if len(output_mol_list) == min(5, n_mol - n):
 
-            with open(outfile_name, 'a') as outfile:
-                for line in lines:
-                    outfile.write(line)
+            if rules:
+                output_mol_list = rules_batch(output_mol_list, rules_file)                
 
-                outfile.write('$$$$\n')
+            for mol in output_mol_list:
 
-            if figure is not None:
+                if verbose:
+                    smi = molecule_to_smiles(mol)
+                    mw = mol.molecular_weight()
+                    print('NEW_CANDIDATE %s %s %.1f' % (n, smi, mw))            
+                else:
+                    print('NEW_CANDIDATE %s' %n )
 
-                newatoms = []
-                for i in mol.graph.nodes:
-                    if i >= 44:
-                        newatoms.append(i)
+                lines = molecule_to_sdf(mol)
 
-                fig = mol.get_fragment(newatoms)
-                #fig.hydrogenate()
-                smi = molecule_to_smiles(fig)
-                #print('ATTACHED ', smi)
-                print_molecule(fig)
-
-                lines = molecule_to_sdf(fig)
-
-                with open(figure, 'a') as outfile:
+                with open(outfile_name, 'a') as outfile:
                     for line in lines:
                         outfile.write(line)
 
-                    outfile.write('$$$$\n')               
+                    outfile.write('$$$$\n')
 
-            n += 1
+                if figure is not None:
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False, rules_file=None, verbose=False, use_numpy=True):
+                    newatoms = []
+                    for i in mol.graph.nodes:
+                        if i >= 44:
+                            newatoms.append(i)
+
+                    fig = mol.get_fragment(newatoms)
+                    #fig.hydrogenate()
+                    smi = molecule_to_smiles(fig)
+                    #print('ATTACHED ', smi)
+                    print_molecule(fig)
+
+                    lines = molecule_to_sdf(fig)
+
+                    with open(figure, 'a') as outfile:
+                        for line in lines:
+                            outfile.write(line)
+
+                        outfile.write('$$$$\n')               
+
+                n += 1
+
+            output_mol_list = []
+
+def rules_batch(output_mol_list, rules_file):
+
+    n = 0
+
+    with open(rules_file, 'w') as outfile:
+        pass
+
+    for mol in output_mol_list:
+
+        smi = molecule_to_smiles(mol)
+        with open(rules_file, 'a') as outfile:
+            outfile.write('%s %s\n' %(smi, n) )
+
+        n += 1
+
+    home = os.path.expanduser('~/')
+
+    result = subprocess.run([home + 'Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb %s' %rules_file], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+    print(result)
+
+    new_output_mol_list = []
+
+    print(len(output_mol_list))
+
+    for line in result.split('\n'):
+        if not line.strip():
+            continue
+        print('line =', line)
+        i_mol = int(line.split()[1])
+        print(i_mol)
+
+        new_output_mol_list.append(output_mol_list[i_mol])
+
+    return new_output_mol_list
+
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, verbose=False, use_numpy=True):
 
     #prepare parent fragment
     frag_list = []
@@ -368,6 +417,9 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
         frag_free_valence_list[0].append(i)
 
     frag_list.append(-1)
+
+    if get_length(frag_free_valence_list) == 0:
+        print('frag_free_valence_list = 0')
 
     counter = 0
     while get_length(frag_free_valence_list) != 0:
@@ -511,19 +563,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             smi = molecule_to_smiles(mol)
             print('Could not run filters', smi)
         if filter_pass is False:
-            return None
-
-    if rules:
-        smi = molecule_to_smiles(mol)
-        with open(rules_file, 'w') as outfile:
-            outfile.write('%s\n' %smi)
-
-        home = os.path.expanduser('~/')
-
-        result = subprocess.run([home + 'Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb %s' %rules_file], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
-
-        if result == '':
-            print('Failed rules', smi)
             return None
 
     return mol

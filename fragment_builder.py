@@ -13,7 +13,17 @@ print = partial(print, flush=True)
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies, compound_dict
-from pymolgen.newmol import count_generated_molecules
+
+def count_generated_molecules(outfile_name):
+    """
+    Count the number of generated molecules in an SDF file
+    """
+    generated_molecules = 0
+    with open(outfile_name) as f:
+        for line in f:
+            if 'V2000' in line:
+                generated_molecules += 1
+    return generated_molecules
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]

@@ -227,6 +227,12 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
+def canonical_bond_frequencies(fragment_database, bond_frequencies):
+
+    new_bond_frequencies = {}
+
+
+
 def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True, batch_size=None):
 
     mapping_dict = {}
@@ -312,11 +318,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     output_mol_list = []
 
+    canonical_mapping_dict = {}
+
     while n < n_mol:
 
         #print('len(output_mol_list) =', len(output_mol_list), 'n =', n, 'n_mol =', n_mol)
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy)
+        mol = build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy)
 
         if mol is not None:
 
@@ -399,7 +407,17 @@ def rules_batch(output_mol_list, rules_file):
 
     return new_output_mol_list
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, verbose=False, use_numpy=True):
+def get_canonical_mapping_dict(fragment_i, fragment, canonical_mapping_dict):
+
+    if fragment_i not in canonical_mapping_dict:
+        mapping = get_canonical_mapping(fragment)
+        canonical_mapping_dict[fragment_i] = mapping
+        return mapping
+
+    else:
+        return canonical_mapping_dict[fragment_i]
+
+def build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, verbose=False, use_numpy=True):
 
     #prepare parent fragment
     frag_list = []
@@ -454,7 +472,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 fragment_i_mol = fragment_database[fragment_i]
 
                 # get canonical mapping
-                canonical_mapping = get_canonical_mapping(fragment_i_mol.graph)
+                canonical_mapping = get_canonical_mapping_dict(fragment_i, fragment_i_mol.graph, canonical_mapping_dict)
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
                 atom_i_can = canonical_mapping[atom_i]

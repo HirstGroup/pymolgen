@@ -575,6 +575,7 @@ def map_mols(mol1, mol2):
     return mapping
 
 def get_canonical_mapping(fragment):
+    
     gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
     
     all_mappings = []

@@ -401,9 +401,10 @@ def filters_final(oemol, smi, pains_database):
         print("Failed PFI filter", smi)
         return False
 
-    if pains_filter(oemol, pains_database) == False:
-        print("Failed PAINS_filter", smi)
-        return False
+    if pains_database is not None:
+        if pains_filter(oemol, pains_database) == False:
+            print("Failed PAINS_filter", smi)
+            return False
 
     return True
 

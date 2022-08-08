@@ -233,7 +233,7 @@ def canonical_bond_frequencies(fragment_database, bond_frequencies):
 
 
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True, batch_size=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, use_pains=None, batch_size=None):
 
     mapping_dict = {}
 
@@ -246,10 +246,11 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     # build pains_database if using filters
     if filters:
         from pymolgen.newmol import gen_pains_database
-        try:
-            pains_database = gen_pains_database()
-        except:
-            raise Exception("Could not generate pains database")
+        if use_pains:
+            try:
+                pains_database = gen_pains_database()
+            except:
+                raise Exception("Could not generate pains database")
 
     #make databases and update atom numberings
     fragment_database = get_fragment_database(fragments_sdf)
@@ -324,7 +325,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         #print('len(output_mol_list) =', len(output_mol_list), 'n =', n, 'n_mol =', n_mol)
 
-        mol = build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy)
+        mol = build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy, mw_check)
 
         if mol is not None:
 
@@ -417,13 +418,15 @@ def get_canonical_mapping_dict(fragment_i, fragment, canonical_mapping_dict):
     else:
         return canonical_mapping_dict[fragment_i]
 
-def build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, verbose=False, use_numpy=True):
+def build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies_np, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, verbose=False, use_numpy=True, mw_check=False):
 
     #prepare parent fragment
     frag_list = []
     frag_mol_list = [parent_mol]
     frag_bond_list = []
     frag_free_valence_list = []
+
+    if mw_check: mw = parent_mol.molecular_weight()
 
     frag_free_valence_list.append([])
 
@@ -437,6 +440,11 @@ def build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent
 
     counter = 0
     while get_length(frag_free_valence_list) != 0:
+
+        if mw_check:
+            if mw > 490.0: 
+                print('Failed mw_check')
+                return None
 
         counter += 1
         if counter == 100:
@@ -530,6 +538,10 @@ def build_mol_single(canonical_mapping_dict, parent_mol, parent_fragment, parent
 
                 # add neighbour index in fragment_database to frag_list
                 frag_list.append(new_frag_i)
+
+                if mw_check:
+                    # update total mass of all fragments
+                    mw += fragment_database[i].molecular_weight()
 
                 # add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
                 frag_bond_list.append((i, j, atom_i, new_frag_i_atom))
@@ -647,6 +659,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
     parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
+    parser.add_argument('--no_pains', action='store_true', help='Do not use pains filters')
     parser.add_argument('--batch_size', type=int, help='Batch size for rules')
 
     args = parser.parse_args()
@@ -659,7 +672,9 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy, batch_size=args.batch_size)
+    use_pains = not args.no_pains
+
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, mw_check=args.mw_check, use_numpy=use_numpy, use_pains=use_pains, batch_size=args.batch_size)
 
 
 

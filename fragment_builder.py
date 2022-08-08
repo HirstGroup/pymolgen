@@ -217,7 +217,7 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, mapping, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True, batch_size=None):
 
     mapping_dict = {}
 
@@ -290,29 +290,21 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
 
     if restart is False:
-        n = 1
+        n = 0
         with open(outfile_name, 'w') as outfile:
             print('Writing to', outfile_name)
     else:
-        n = count_generated_molecules(outfile_name) + 1
+        n = count_generated_molecules(outfile_name)
 
     if figure is not None:
         with open(figure, 'w') as outfile:
             print('Writing to figure', figure)
 
-    try_counter = 0
-
     output_mol_list = []
 
-    while n <= n_mol:
+    while n < n_mol:
 
-        if verbose:
-            print('Try', try_counter)
-
-        try_counter += 1
-
-        if try_counter > n * 100:
-            sys.exit('Too many tries, try_counter = %s, n = %s' %(try_counter, n))
+        #print('len(output_mol_list) =', len(output_mol_list), 'n =', n, 'n_mol =', n_mol)
 
         mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy)
 
@@ -320,12 +312,14 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             output_mol_list.append(mol)
 
-        if len(output_mol_list) == min(5, n_mol - n):
+        if len(output_mol_list) == min(batch_size, n_mol - n):
 
             if rules:
                 output_mol_list = rules_batch(output_mol_list, rules_file)                
 
             for mol in output_mol_list:
+
+                n += 1
 
                 if verbose:
                     smi = molecule_to_smiles(mol)
@@ -363,8 +357,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
                         outfile.write('$$$$\n')               
 
-                n += 1
-
             output_mol_list = []
 
 def rules_batch(output_mol_list, rules_file):
@@ -379,25 +371,19 @@ def rules_batch(output_mol_list, rules_file):
         smi = molecule_to_smiles(mol)
         with open(rules_file, 'a') as outfile:
             outfile.write('%s %s\n' %(smi, n) )
-
+        print(smi)
         n += 1
 
     home = os.path.expanduser('~/')
 
     result = subprocess.run([home + 'Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb %s' %rules_file], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
-    print(result)
-
     new_output_mol_list = []
-
-    print(len(output_mol_list))
 
     for line in result.split('\n'):
         if not line.strip():
             continue
-        print('line =', line)
         i_mol = int(line.split()[1])
-        print(i_mol)
 
         new_output_mol_list.append(output_mol_list[i_mol])
 
@@ -633,6 +619,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
     parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
+    parser.add_argument('--batch_size', type=int, help='Batch size for rules')
 
     args = parser.parse_args()
 
@@ -644,7 +631,7 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy)
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens,      remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, mapping=args.mapping, outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, filters=args.filters, rules_file=args.rules_file, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy, batch_size=args.batch_size)
 
 
 

@@ -4,6 +4,9 @@ import numpy as np
 from pymolgen.fragment_mol import *
 from pymolgen.fragment_builder import *
 
+from functools import partial
+print = partial(print, flush=True)
+
 def combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None):
 
     fragment_database_mol2 = get_fragment_database(fragments_sdf_2)
@@ -260,3 +263,5 @@ if __name__ == '__main__':
     frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
     loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=args.limit, test=args.test, sort=args.sort)
+
+    print('Normal termination')

@@ -224,7 +224,7 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True, batch_size=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name=None, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True, batch_size=None):
 
     if batch_size is None:
         batch_size = 1
@@ -336,13 +336,12 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     print('line 251 parent_mapping =', parent_mapping)
 
-    with open(outfile_name, 'w') as outfile:
-        print('Writing to', outfile_name)
+    if outfile_name is not None:
+        with open(outfile_name, 'w') as outfile:
+            print('Writing to', outfile_name)
 
     if restart is False:
         n = 0
-        with open(outfile_name, 'w') as outfile:
-            print('Writing to', outfile_name)
     else:
         n = count_generated_molecules(outfile_name)
 
@@ -351,6 +350,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             print('Writing to figure', figure)
 
     output_mol_list = []
+
+    if n_mol is None:
+        n_mol = np.inf
 
     while n < n_mol:
 
@@ -376,34 +378,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 else:
                     print('NEW_CANDIDATE %s' %n )
 
-                lines = molecule_to_sdf(mol)
-
-                with open(outfile_name, 'a') as outfile:
-                    for line in lines:
-                        outfile.write(line)
-
-                    outfile.write('$$$$\n')
-
-                if figure is not None:
-
-                    newatoms = []
-                    for i in mol.graph.nodes:
-                        if i >= 44:
-                            newatoms.append(i)
-
-                    fig = mol.get_fragment(newatoms)
-                    #fig.hydrogenate()
-                    smi = molecule_to_smiles(fig)
-                    #print('ATTACHED ', smi)
-                    print_molecule(fig)
-
-                    lines = molecule_to_sdf(fig)
-
-                    with open(figure, 'a') as outfile:
-                        for line in lines:
-                            outfile.write(line)
-
-                        outfile.write('$$$$\n')               
+            yield output_mol_list
 
             output_mol_list = []
 
@@ -648,6 +623,42 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
     return mol
 
+def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, use_numpy=True, batch_size=None):
+
+    for mol_list in build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy, batch_size=args.batch_size):
+
+        for mol in mol_list:
+
+            lines = molecule_to_sdf(mol)
+
+            with open(outfile_name, 'a') as outfile:
+                for line in lines:
+                    outfile.write(line)
+
+                outfile.write('$$$$\n')
+
+            if figure is not None:
+
+                newatoms = []
+                for i in mol.graph.nodes:
+                    if i >= 44:
+                        newatoms.append(i)
+
+                fig = mol.get_fragment(newatoms)
+                #fig.hydrogenate()
+                smi = molecule_to_smiles(fig)
+                #print('ATTACHED ', smi)
+                print_molecule(fig)
+
+                lines = molecule_to_sdf(fig)
+
+                with open(figure, 'a') as outfile:
+                    for line in lines:
+                        outfile.write(line)
+
+                    outfile.write('$$$$\n')
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
@@ -683,8 +694,9 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
-    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy, batch_size=args.batch_size)
+    fragment_builder(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy, batch_size=args.batch_size)
 
+    print('Normal termination')
 
 
 

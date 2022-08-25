@@ -225,7 +225,7 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name=None, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
 
     if batch_size is None:
         batch_size = 1
@@ -334,10 +334,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         n += 1
 
     print('line 251 parent_mapping =', parent_mapping)
-
-    if outfile_name is not None:
-        with open(outfile_name, 'w') as outfile:
-            print('Writing to', outfile_name)
 
     if restart is False:
         n = 0
@@ -623,7 +619,11 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
 def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
 
-    for mol_list in build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=args.batch_size):
+    if outfile_name is not None:
+        with open(outfile_name, 'w') as outfile:
+            print('Writing to', outfile_name)
+
+    for mol_list in build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=args.batch_size):
 
         for mol in mol_list:
 

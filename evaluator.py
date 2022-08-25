@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 from fragment_builder import build_molecule
-from pymolgen.molecule_formats import molecule_to_smiles
+from pymolgen.molecule_formats import molecule_to_smiles, molecule_to_inchi
 
 from rdkit import Chem
 from PP_ML_models.predictive_models.ml_model_gcnn_ens import Ensemble_Model_DC

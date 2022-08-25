@@ -256,11 +256,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
     if unique:
-        candidate_list = []
-        candidate_bond_list = []
+        candidate_list = set()
     else:
         candidate_list = None
-        candidate_bond_list = None
 
     parent_mol = molecule_from_sdf(parent_file)
 
@@ -356,7 +354,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     while n < n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, verbose, use_numpy)
+        mol = build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, figure, verbose, use_numpy)
 
         if mol is not None:
 
@@ -412,7 +410,7 @@ def rules_batch(output_mol_list, rules_file):
 
     return new_output_mol_list
 
-def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, verbose=False, use_numpy=True):
+def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, figure=None, verbose=False, use_numpy=True):
 
     #prepare parent fragment
     frag_list = []
@@ -555,15 +553,15 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
     for i in frag_list[1:]:
         frag_mol_list.append(fragment_database[i])
 
-    if candidate_list is not None:
-        if is_new_candidate(frag_list, frag_bond_list, candidate_list, candidate_bond_list) is True:
-            candidate_list.append(frag_list)
-            candidate_bond_list.append(frag_bond_list)
-        else:
-            print("Not unique")
-            return None
-
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+
+    if candidate_list is not None:
+        inchi = molecule_to_inchi(mol)
+        if inchi not in candidate_list:
+            candidate_list.add(inchi)
+        else:
+            print("Not unique", repeat_counter, inchi)
+            return None
 
     if filters:
         from pymolgen.newmol import filters_final_mol
@@ -578,15 +576,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
             return None
 
     return mol
-
-def is_new_candidate(frag_list, frag_bond_list, candidate_list, candidate_bond_list):
-
-    for i in range(len(candidate_list)):
-        if frag_list == candidate_list[i]:
-            if frag_bond_list == candidate_bond_list[i]:
-                return False
-
-    return True
 
 def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
@@ -688,9 +677,6 @@ if __name__ == '__main__':
 
     if args.seed is not None:
         random.seed(args.seed)
-
-    if args.unique:
-        print('Unique not fully working since does not take symmetry into account')
 
     use_numpy = not args.no_numpy
 

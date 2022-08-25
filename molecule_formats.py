@@ -67,6 +67,20 @@ def molecule_to_smiles(mol: Molecule) -> str:
     from rdkit import Chem
     return Chem.MolToSmiles(molecule_to_rdkit(mol))
 
+def molecule_to_inchi(mol: Molecule) -> str:
+    """
+    Converts a molecule to an inchi string
+    Parameters
+    ----------
+    mol
+        Molecule to convert
+
+    Returns
+    -------
+    Inchi string of the molecule
+    """
+    from rdkit import Chem
+    return Chem.MolToInchi(molecule_to_rdkit(mol), options='-SNon')
 
 def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]], valences: List[int]=None) -> 'Networkx graph':
     """

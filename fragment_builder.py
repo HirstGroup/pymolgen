@@ -682,7 +682,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='Verbose output', required=False)
     parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
     parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
-    parser.add_argument('--batch_size', type=int, help='Batch size for rules')
+    parser.add_argument('--batch_size', type=int, help='Batch size for rules', required=False)
 
     args = parser.parse_args()
 

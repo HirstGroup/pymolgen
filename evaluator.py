@@ -1,8 +1,24 @@
 import sys,os
 import argparse
+import numpy as np
 
 from fragment_builder import build_molecule
 from pymolgen.molecule_formats import molecule_to_smiles
+
+from rdkit import Chem
+from PP_ML_models.predictive_models.ml_model_gcnn_ens import Ensemble_Model_DC
+
+# Import Openeye Modules
+from openeye import oechem
+from openeye import oemolprop as mp
+
+from os.path import expanduser
+home = expanduser("~")
+
+# Add path so the predictive_models and properties modules can be found
+head_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(head_path)
+sys.path.append(home + '/PP_ML_models')
 
 def oracle(mol):
 
@@ -10,6 +26,23 @@ def oracle(mol):
 
     if mw < 500:
         return True
+
+# Calculate logP:
+def oeLogP(smi):
+    mol = oechem.OEGraphMol()
+    if not oechem.OESmilesToMol(mol, smi):
+        print('ERROR: {}'.format(smi))
+    else:
+        logp = mp.OEGetXLogP(mol, atomxlogps=None)
+    return logp
+
+def oeLogP_oemol(oemol):
+    mol = oechem.OEGraphMol()
+    if not oechem.OESmilesToMol(mol, smi):
+        print('ERROR: {}'.format(smi))
+    else:
+        logp = mp.OEGetXLogP(mol, atomxlogps=None)
+    return logp
 
 if __name__ == '__main__':
 
@@ -34,7 +67,8 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='Verbose output', required=False)
     parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
     parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
-    parser.add_argument('--batch_size', type=int, help='Batch size for rules')
+    parser.add_argument('--batch_size', type=int, help='Batch size for rules', required=False)
+    parser.add_argument('--mpo', type=float, help='MPO threshold', required=True)
 
     args = parser.parse_args()
 
@@ -46,6 +80,16 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
+    pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
+    print(pIC50_pred_model.info)
+    print(pIC50_pred_model.version)
+    # Run prediction model once to initialise:
+    _ = pIC50_pred_model.predict('C')[0]
+    out_file = 'pymolgen_predictions.csv'
+
+    out = open(out_file, 'w')
+    out.write('smi,pIC50_pred,mpo,pfi,logp,n_aromatic\n')
+
     n = 0
 
     for mol_list in build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, use_numpy=use_numpy, batch_size=args.batch_size):
@@ -55,11 +99,29 @@ if __name__ == '__main__':
             smi = molecule_to_smiles(mol)
             mw = mol.molecular_weight()
 
-            if oracle(mol):
+            try:
+                pIC50_pred = pIC50_pred_model.predict(smi)[0]
+
+                oemol = oechem.OEGraphMol()
+                logp = mp.OEGetXLogP(oemol, atomxlogps=None)
+
+                n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
+            except:
+                print('Could not calculate properties for', smi)
+                continue
+
+            pfi = n_aromatic + logp
+            mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
+
+
+            if mpo < args.mpo:
 
                 n += 1
 
                 print(n, mw, smi)
+
+                out.write('{},{},{},{},{},{}\n'.format(smi, pIC50_pred, mpo, pfi, logp, n_aromatic))
+                out.flush()
 
                 if n == args.n_mol:
                     sys.exit('Normal termination')

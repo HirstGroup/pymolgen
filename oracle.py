@@ -1,13 +1,21 @@
+import sys,os
 import pandas as pd
 import numpy as np
 import sys
 from datetime import datetime
 from rdkit import Chem
-from predictive_models.ml_model_gcnn_ens import Ensemble_Model_DC
+from PP_ML_models.predictive_models.ml_model_gcnn_ens import Ensemble_Model_DC
 
 import openeye.oechem as oe
 from openeye import oemolprop as mp
 
+from os.path import expanduser
+home = expanduser("~")
+
+# Add path so the predictive_models and properties modules can be found
+head_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(head_path)
+sys.path.append(home + '/PP_ML_models')
 
 # Calculate logP:
 def oeLogP(smi):
@@ -19,7 +27,7 @@ def oeLogP(smi):
     return logp
 
 
-pIC50_pred_model = Ensemble_Model_DC('pIC50.pk')
+pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
 print(pIC50_pred_model.info)
 print(pIC50_pred_model.version)
 # Run prediction model once to initialise:

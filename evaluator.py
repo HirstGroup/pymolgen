@@ -89,7 +89,7 @@ if __name__ == '__main__':
     out_file = 'pymolgen_predictions.csv'
 
     out = open(out_file, 'w')
-    out.write('smi,pIC50_pred,mpo,pfi,logp,n_aromatic\n')
+    out.write('inchi,pIC50_pred,mpo,pfi,logp,n_aromatic\n')
 
     n = 0
 
@@ -114,6 +114,7 @@ if __name__ == '__main__':
             pfi = n_aromatic + logp
             mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
 
+            inchi = molecule_to_inchi(mol)
 
             if mpo < args.mpo:
 
@@ -121,7 +122,7 @@ if __name__ == '__main__':
 
                 print(n, mw, smi)
 
-                out.write('{},{},{},{},{},{}\n'.format(smi, pIC50_pred, mpo, pfi, logp, n_aromatic))
+                out.write('{},{},{},{},{},{}\n'.format(inchi, pIC50_pred, mpo, pfi, logp, n_aromatic))
                 out.flush()
 
                 if n == args.n_mol:

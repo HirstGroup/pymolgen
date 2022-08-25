@@ -76,6 +76,8 @@ if __name__ == '__main__':
 
     if args.seed is not None:
         random.seed(args.seed)
+        if args.n_mol > 1000:
+            sys.exit('Cannot run with seed and n_mol > 1000')
 
     if args.unique:
         print('Unique not fully working since does not take symmetry into account')

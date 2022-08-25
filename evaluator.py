@@ -60,6 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
+    parser.add_argument('-l','--log', help='Log file name',required=True)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
     parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
     parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)
@@ -86,9 +87,8 @@ if __name__ == '__main__':
     print(pIC50_pred_model.version)
     # Run prediction model once to initialise:
     _ = pIC50_pred_model.predict('C')[0]
-    out_file = 'pymolgen_predictions.csv'
 
-    out = open(out_file, 'w')
+    out = open(args.log, 'w')
     out.write('inchi,pIC50_pred,mpo,pfi,logp,n_aromatic\n')
 
     n = 0

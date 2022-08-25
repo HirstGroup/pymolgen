@@ -5,7 +5,7 @@ import filecmp
 from pymolgen.newmol import newmol_mw_attachment_points_loop, newmol_mw_attachment_points_loop_large
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-
+"""
 def test_phenylisoxazole():
     newmol_mw_attachment_points_loop_large(dataset_file='../datasets/database1000/database1000.sdf', 
         parent_file='../datasets/phenylisoxazole/phenylisoxazole.sdf',
@@ -17,3 +17,4 @@ def test_phenylisoxazole():
     #assert compare is True
 
     compare = filecmp.cmp('test_gen.sdf', '../datasets/phenylisoxazole/pymolgen0.sdf', shallow=False)
+"""

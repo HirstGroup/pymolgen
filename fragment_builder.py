@@ -225,7 +225,7 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
 
     if batch_size is None:
         batch_size = 1
@@ -236,7 +236,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         new_dict[parent_mapping_1[i]] = parent_mapping_1[i+1]
 
     parent_mapping_1 = new_dict
-    print('parent mapping 1 =', parent_mapping_1)
 
     pains_database = None
     # build pains_database if using filters
@@ -272,7 +271,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 attachment_points.append(j)
 
     parent_mw = Molecule.molecular_weight(parent_mol)
-    print(parent_fragment_file_list)
     parent_fragment_list = []
 
     for i in parent_fragment_file_list:
@@ -280,9 +278,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     for i in range(len(parent_fragment_list)):
         parent_fragment_list[i] = parent_fragment_list[i].remove_atom(remove_hydrogens_parent_fragment[i])
-
-    for i in parent_fragment_list:
-        print(print_fragments([i.graph]))
 
     parent_fragment_original_list = []
 
@@ -294,7 +289,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     new_dict = {}
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
-        new_dict[parent_fragment_i_dict[i]] = j
+        new_dict[attachment_points[i]] = j
         parent_fragment_i_list.append(j)
 
         lines = molecule_to_sdf(fragment_database[j])
@@ -304,7 +299,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 outfile.write(line)
 
             outfile.write('$$$$\n')
-
 
         if j is False:
             sys.exit('Parent fragment not found')
@@ -316,28 +310,16 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     for i in parent_fragment_i_list:
         parent_fragment_list.append(fragment_database[i])
 
-    for i in range(len(parent_fragment_list)):
-        print_molecule(parent_fragment_original_list[i])
-        print_molecule(parent_fragment_list[i])
-
     parent_mapping_2 = []
 
     for i in range(len(parent_fragment_list)):
         parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
 
-        print('parent_fragment', i)
-        print_molecule(parent_fragment_list[i])
-        print('parent_fragment_list[i].free_valence_list =', parent_fragment_list[i].free_valence_list)
-
-    print(parent_mapping_2)
-    print('parent_mapping_2 =', parent_mapping_2)
     parent_mapping = {}
     n = 0
     for key, val in parent_mapping_1.items():
         parent_mapping[key] = parent_mapping_2[n][val]
         n += 1
-
-    print('line 251 parent_mapping =', parent_mapping)
 
     if restart is False:
         n = 0
@@ -393,7 +375,6 @@ def rules_batch(output_mol_list, rules_file):
         smi = molecule_to_smiles(mol)
         with open(rules_file, 'a') as outfile:
             outfile.write('%s %s\n' %(smi, n) )
-        print(smi)
         n += 1
 
     home = os.path.expanduser('~/')
@@ -436,8 +417,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
         counter += 1
         if counter == 100:
-            if verbose:
-                print('counter =', counter)
             return None
 
         # choose random position of constituent fragments in molecule
@@ -450,7 +429,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
             # get atom from fragment_i to build on
             atom_i = random.choice(frag_free_valence_list[i])
-            if verbose: print('frag_free_valence_list=', frag_free_valence_list)
             # get fragment_i (index in fragment_database)
             fragment_i = frag_list[i]
 
@@ -463,9 +441,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
                 atom_i_can = parent_mapping[atom_i]
-
-                #print('fragment bond frequencies =', get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies))
-
 
             else:
                 # get mol for fragment_i
@@ -485,9 +460,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
                 # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
                 # but there could be errors in the database
                 if len(fragment_bond_frequencies[0]) == 0:
-                    if verbose:
-                        print('fragment_bond_frequencies[0] = 0')
-                        print(fragment_bond_frequencies)
                     return None
 
                 # choose random neighbour
@@ -507,9 +479,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
                 # choose random neighbour
                 get_random_neighbour_out = get_random_neighbour(fragment_i, fragment_bond_frequencies)
-
-            if fragment_i == -1:
-                print_molecule(fragment_database[fragment_i])
 
             if get_random_neighbour_out is not None:
                 new_frag_i = get_random_neighbour_out[0]
@@ -544,7 +513,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
                 # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
                 try: new_free_valence_list.remove(new_frag_i_atom)
                 except: 
-                    #print_fragments([new_frag])
                     smi = molecule_to_smiles(new_frag)
                     print(smi)
                     print_molecule(new_frag)
@@ -621,13 +589,13 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
     return mol
 
-def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1, parent_fragment_i_dict, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
+def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
 
     if outfile_name is not None:
         with open(outfile_name, 'w') as outfile:
             print('Writing to', outfile_name)
 
-    for mol_list in build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=args.batch_size):
+    for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size):
 
         for mol in mol_list:
 
@@ -670,7 +638,6 @@ if __name__ == '__main__':
     parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
     parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
     parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
-    parser.add_argument('--dict', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
@@ -695,7 +662,7 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
-    fragment_builder(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, parent_fragment_i_dict=args.dict, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, mw_check=args.mw_check, use_numpy=use_numpy, batch_size=args.batch_size)
+    fragment_builder(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, restart=args.restart, verbose=args.verbose, mw_check=args.mw_check, use_numpy=use_numpy, batch_size=args.batch_size)
 
     print('Normal termination')
 

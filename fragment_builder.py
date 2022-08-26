@@ -263,8 +263,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_mol = molecule_from_sdf(parent_file)
 
+    attachment_points = []
+
     for i in remove_hydrogens:
         parent_mol = parent_mol.remove_atom(i)
+        for j in parent_mol.free_valence_list:
+            if j not in attachment_points:
+                attachment_points.append(j)
 
     parent_mw = Molecule.molecular_weight(parent_mol)
     print(parent_fragment_file_list)
@@ -285,6 +290,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         parent_fragment_original_list.append(i)
 
     parent_fragment_i_list = []
+
     new_dict = {}
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
@@ -304,8 +310,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             sys.exit('Parent fragment not found')
 
     parent_fragment_i_dict = new_dict
-
-    print('line 223 parent_fragment_i_dict =', parent_fragment_i_dict)
 
     parent_fragment_list = []
 

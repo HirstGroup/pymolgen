@@ -2,6 +2,7 @@ import sys,os
 import argparse
 import numpy as np
 import random
+import time
 
 from fragment_builder import build_molecule
 from pymolgen.molecule_formats import molecule_to_smiles, molecule_to_inchi
@@ -79,9 +80,6 @@ if __name__ == '__main__':
         if args.n_mol > 1000:
             sys.exit('Cannot run with seed and n_mol > 1000')
 
-    if args.unique:
-        print('Unique not fully working since does not take symmetry into account')
-
     use_numpy = not args.no_numpy
 
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
@@ -91,7 +89,10 @@ if __name__ == '__main__':
     _ = pIC50_pred_model.predict('C')[0]
 
     out = open(args.log, 'w')
-    out.write('inchi;pIC50_pred;mpo;pfi;logp;n_aromatic\n')
+    out.write('inchi;pIC50_pred;mpo;pfi;logp;n_aromatic;time\n')
+
+    start_time = time.time()
+    current_time = start_time
 
     n = 0
 
@@ -122,9 +123,13 @@ if __name__ == '__main__':
 
                 n += 1
 
-                print(n, mw, smi)
+                previous_time = current_time
+                current_time = time.time() - start_time
+                interval_time = current_time - previous_time
 
-                out.write('{};{};{};{};{};{}\n'.format(inchi, pIC50_pred, mpo, pfi, logp, n_aromatic))
+                print(n, mw, smi, '%.2f' %interval_time)
+
+                out.write('{};{};{};{};{};{};{:.2f}\n'.format(inchi, pIC50_pred, mpo, pfi, logp, n_aromatic, interval_time))
                 out.flush()
 
                 if n == args.n_mol:

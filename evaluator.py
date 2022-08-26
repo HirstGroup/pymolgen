@@ -91,7 +91,7 @@ if __name__ == '__main__':
     _ = pIC50_pred_model.predict('C')[0]
 
     out = open(args.log, 'w')
-    out.write('inchi,pIC50_pred,mpo,pfi,logp,n_aromatic\n')
+    out.write('inchi;pIC50_pred;mpo;pfi;logp;n_aromatic\n')
 
     n = 0
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
                 print(n, mw, smi)
 
-                out.write('{},{},{},{},{},{}\n'.format(inchi, pIC50_pred, mpo, pfi, logp, n_aromatic))
+                out.write('{};{};{};{};{};{}\n'.format(inchi, pIC50_pred, mpo, pfi, logp, n_aromatic))
                 out.flush()
 
                 if n == args.n_mol:

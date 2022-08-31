@@ -106,6 +106,9 @@ if __name__ == '__main__':
                 pIC50_pred = pIC50_pred_model.predict(smi)[0]
 
                 oemol = oechem.OEGraphMol()
+                oechem.OESmilesToMol(oemol, smi)
+                oechem.OEAddExplicitHydrogens(oemol)
+                
                 logp = mp.OEGetXLogP(oemol, atomxlogps=None)
 
                 n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))

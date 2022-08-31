@@ -126,7 +126,7 @@ if __name__ == '__main__':
                 current_time = time.time() - start_time
                 interval_time = current_time - previous_time
 
-                print('EVALUATOR', n, mw, smi, '%.2f' %interval_time)
+                print(f'EVALUATOR {n} {mw:.2f} {smi} {interval_time:.2f}')
 
                 out.write('{};{};{};{};{};{};{:.2f}\n'.format(inchi, pIC50_pred, mpo, pfi, logp, n_aromatic, interval_time))
                 out.flush()

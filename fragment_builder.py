@@ -227,6 +227,10 @@ def bond_frequencies_to_np(bond_frequencies):
 
 def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
 
+
+    if filters:
+        from pymolgen.newmol import filters_final_mol
+
     if batch_size is None:
         batch_size = 1
 
@@ -344,6 +348,39 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             output_mol_list.append(mol)
 
         if len(output_mol_list) == min(batch_size, n_mol - n):
+
+            if candidate_list is not None:
+
+                new_output_mol_list = []
+
+                for mol in output_mol_list:
+                    inchi = molecule_to_inchi(mol)
+                    if inchi not in candidate_list:
+                        candidate_list.add(inchi)
+                        new_output_mol_list.append(mol)
+                    else:
+                        print("Not unique", inchi)
+                        continue
+
+                output_mol_list = new_output_mol_list
+
+            if filters:
+
+                new_output_mol_list = []
+
+                for mol in output_mol_list:
+                    try:
+                        filter_pass = filters_final_mol(mol, pains_database)
+                    except:
+                        filter_pass = False
+                        smi = molecule_to_smiles(mol)
+                        print('Could not run filters', smi)
+                    if filter_pass is False:
+                        continue
+                    else:
+                        new_output_mol_list.append(mol)
+
+                output_mol_list = new_output_mol_list            
 
             if rules:
                 output_mol_list = rules_batch(output_mol_list, rules_file)                
@@ -531,26 +568,6 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
         frag_mol_list.append(fragment_database[i])
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
-
-    if candidate_list is not None:
-        inchi = molecule_to_inchi(mol)
-        if inchi not in candidate_list:
-            candidate_list.add(inchi)
-        else:
-            print("Not unique", inchi)
-            return None
-
-    if filters:
-        from pymolgen.newmol import filters_final_mol
-        
-        try:
-            filter_pass = filters_final_mol(mol, pains_database)
-        except:
-            filter_pass = False
-            smi = molecule_to_smiles(mol)
-            print('Could not run filters', smi)
-        if filter_pass is False:
-            return None
 
     return mol
 

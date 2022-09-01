@@ -3,7 +3,6 @@
 test/.cache/
 test/test_gen.sdf
 test/test_logfile.txt
-test/outputs/fragments.txt
-test/outputs/frequencies.txt
+test/outputs/
 test/profile.out
 test/profile.png

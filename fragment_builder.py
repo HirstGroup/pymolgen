@@ -348,7 +348,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         output_mol_list = []
 
-        p = Pool(processes=1)
+        p = Pool(processes=40)
 
         size = min(batch_size, n_mol - n)
 

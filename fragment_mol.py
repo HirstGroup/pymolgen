@@ -2,6 +2,7 @@ import sys,os
 import networkx
 import time
 import argparse
+from functools import partial
 
 from pymolgen.molecule_formats import *
 from pymolgen.generate import *
@@ -12,6 +13,8 @@ home = os.path.expanduser("~")
 
 import signal
 from contextlib import contextmanager
+
+print = partial(print, flush=True)
 
 class TimeoutException(Exception): pass
 

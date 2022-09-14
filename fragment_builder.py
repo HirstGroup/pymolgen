@@ -3,6 +3,8 @@ import random
 import numpy as np
 import argparse
 import subprocess
+from multiprocessing import Pool
+from functools import partial
 
 import networkx
 from networkx.algorithms import isomorphism
@@ -11,6 +13,8 @@ from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies
 from pymolgen.newmol import WEIGHT_THRESHOLD
+
+print = partial(print, flush=True)
 
 def count_generated_molecules(outfile_name):
     """
@@ -227,7 +231,6 @@ def bond_frequencies_to_np(bond_frequencies):
 
 def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
 
-
     if filters:
         from pymolgen.newmol import filters_final_mol
 
@@ -339,15 +342,25 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     if n_mol is None:
         n_mol = np.inf
 
+    build_mol_single_partial = partial(build_mol_single,parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, figure, verbose, mw_check, use_numpy)
+
     while n < n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, figure, verbose, mw_check, use_numpy)
+        output_mol_list = []
 
-        if mol is not None:
+        p = Pool(processes=1)
 
-            output_mol_list.append(mol)
+        size = min(batch_size, n_mol - n)
 
-        if len(output_mol_list) == min(batch_size, n_mol - n):
+        output_mol_list = p.map(build_mol_single_partial, range(size) )
+
+        p.close()
+
+        print(output_mol_list)
+
+        output_mol_list = [i for i in output_mol_list if i is not None]
+
+        if True: #len(output_mol_list) == min(batch_size, n_mol - n):
 
             if candidate_list is not None:
 
@@ -429,7 +442,33 @@ def rules_batch(output_mol_list, rules_file):
 
     return new_output_mol_list
 
-def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, figure=None, verbose=False, mw_check=False, use_numpy=True):
+def build_mol_single_batch(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, figure=None, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
+
+    if batch_size is None:
+        batch_size = 1
+
+    output_mol_list = []
+
+    while len(output_mol_list) < batch_size:
+
+        mol = build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, figure, verbose, mw_check, use_numpy)
+
+        if mol is not None:
+
+            if candidate_list is not None:
+
+                inchi = molecule_to_inchi(mol)
+
+                if inchi not in candidate_list:
+                    output_mol_list.append(mol)
+
+            else:
+                output_mol_list.append(mol)
+
+    return output_mol_list        
+
+
+def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, figure=None, verbose=False, mw_check=False, use_numpy=True, dummy=None):
 
     #prepare parent fragment
     frag_list = []
@@ -453,7 +492,8 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
     while get_length(frag_free_valence_list) != 0:
 
         counter += 1
-        if counter == 100:
+        if counter == 1000:
+            if verbose: print('MAX counter')
             return None
 
         # choose random position of constituent fragments in molecule
@@ -497,6 +537,7 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
                 # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
                 # but there could be errors in the database
                 if len(fragment_bond_frequencies[0]) == 0:
+                    if verbose: print('len(fragment_bond_frequencies[0]) == 0')
                     return None
 
                 # choose random neighbour
@@ -545,6 +586,7 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
                 if mw_check:
                     mw += new_frag.molecular_weight()
                     if mw > WEIGHT_THRESHOLD:
+                        if verbose: print('Failed mw_check')
                         return None
 
                 # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points

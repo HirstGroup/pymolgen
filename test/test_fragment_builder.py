@@ -89,6 +89,6 @@ def test_fragment_builder():
 
     random.seed(100)
 
-    fragment_builder(fragments_sdf='../datasets/database1000/fragments1000.sdf', fragments_txt='../datasets/database1000/fragments1000.txt', frequencies_txt='../datasets/database1000/frequencies1000.txt', parent_file='../datasets/database1000/phenylisoxazole.sdf', parent_fragment_file_list=['../datasets/database1000/benzene.sdf','../datasets/database1000/benzene.sdf'], parent_mapping_1=[16,0,15,0], remove_hydrogens=[20,21], remove_hydrogens_parent_fragment=[11,11],outfile_name='outputs/fragment_builder.sdf', n_mol=4000, unique=False, rules=False, rules_file=None, filters=False, restart=False, verbose=True, mw_check=True, use_numpy=True, batch_size=200)
+    fragment_builder(fragments_sdf='../datasets/database1000/fragments1000.sdf', fragments_txt='../datasets/database1000/fragments1000.txt', frequencies_txt='../datasets/database1000/frequencies1000.txt', parent_file='../datasets/database1000/phenylisoxazole.sdf', parent_fragment_file_list=['../datasets/database1000/benzene.sdf','../datasets/database1000/benzene.sdf'], parent_mapping_1=[16,0,15,0], remove_hydrogens=[20,21], remove_hydrogens_parent_fragment=[11,11],outfile_name='outputs/fragment_builder.sdf', n_mol=10000, unique=False, rules=False, rules_file=None, filters=False, restart=False, verbose=True, mw_check=True, use_numpy=True, batch_size=80)
 
 test_fragment_builder()

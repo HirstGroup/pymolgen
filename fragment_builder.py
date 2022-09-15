@@ -348,7 +348,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         output_mol_list = []
 
-        p = Pool(processes=40)
+        p = Pool(processes=8)
 
         size = min(batch_size, n_mol - n)
 
@@ -364,18 +364,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             if candidate_list is not None:
 
-                new_output_mol_list = []
+                output_mol_list, new_inchi_set = unique_mol_list(output_mol_list)
 
-                for mol in output_mol_list:
-                    inchi = molecule_to_inchi(mol)
-                    if inchi not in candidate_list:
-                        candidate_list.add(inchi)
-                        new_output_mol_list.append(mol)
-                    else:
-                        print("Not unique", inchi)
-                        continue
-
-                output_mol_list = new_output_mol_list
+                candidate_list.update(new_inchi_set)
 
             if filters:
 
@@ -412,6 +403,24 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             yield output_mol_list
 
             output_mol_list = []
+
+def unique_mol_list(mol_list):
+
+    inchi_set = set()
+
+    output_mol_list = []
+
+    for mol in mol_list:
+        inchi = molecule_to_inchi(mol)
+        if inchi not in inchi_set:
+            inchi_set.add(inchi)
+            output_mol_list.append(mol)
+        else:
+            print('Not unique', inchi)
+
+    return output_mol_list, inchi_set
+
+
 
 def rules_batch(output_mol_list, rules_file):
 
@@ -610,6 +619,12 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
         frag_mol_list.append(fragment_database[i])
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+
+    if candidate_list is not None:
+        inchi = molecule_to_inchi(mol)
+        if inchi in candidate_list:
+            if verbose: print('Not unique')
+            return None
 
     return mol
 

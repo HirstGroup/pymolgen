@@ -735,7 +735,7 @@ if __name__ == '__main__':
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
-    parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
+    parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=False)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
     parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
     parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)

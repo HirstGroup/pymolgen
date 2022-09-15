@@ -3,6 +3,8 @@ import random
 import numpy as np
 import argparse
 import subprocess
+import time
+
 from multiprocessing import Pool
 from functools import partial
 
@@ -344,6 +346,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     build_mol_single_partial = partial(build_mol_single,parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, figure, verbose, mw_check, use_numpy)
 
+    start_time = time.time()
+    current_time = start_time
+
     while n < n_mol:
 
         output_mol_list = []
@@ -356,8 +361,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         p.close()
 
-        print(output_mol_list)
-
         output_mol_list = [i for i in output_mol_list if i is not None]
 
         if True: #len(output_mol_list) == min(batch_size, n_mol - n):
@@ -367,6 +370,12 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 output_mol_list, new_inchi_set = unique_mol_list(output_mol_list)
 
                 candidate_list.update(new_inchi_set)
+
+            if len(output_mol_list) > 0:
+                previous_time = current_time
+                current_time = time.time() - start_time
+                interval_time = (current_time - previous_time) / batch_size
+                print('TIME %.2f' %interval_time)
 
             if filters:
 

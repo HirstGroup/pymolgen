@@ -365,9 +365,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         output_mol_list = [i for i in output_mol_list if i is not None]
 
-        print(output_mol_list)
-        print(len(output_mol_list))
-
         if candidate_list is not None:
 
             output_mol_list, new_inchi_set = unique_mol_list(output_mol_list)
@@ -379,9 +376,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                     for inchi in new_inchi_set:
                         outfile.write('%s\n' %inchi)
 
-        print('PEPE')
-        print('line382', output_mol_list)
-        print(len(output_mol_list))
 
         if len(output_mol_list) > 0:
             previous_time = current_time

@@ -1,19 +1,29 @@
 from multiprocessing import Pool
 from itertools import product
 from functools import partial
+import time
 
-def test(a, b, c, d=None):
-    print(a,b,c,d)
-    return a, b
+def test(a, b):
+    time.sleep(1)
+    return a + b
 
+a = 0
 
-a = 1
-b = 2
-c = 3
-
-func = partial(test,a,b,c)
-
+func = partial(test,a)
+"""
 p = Pool(8)
-outputs = p.map(func, range(5) )
+outputs = p.map(func, range(100) )
+"""
 
-print(outputs)
+for i in range(100):
+    test(a,i)
+
+print('DONE')
+"""
+c = []
+
+for i in range(100000000):
+    c.append(a + i)
+
+print('DONE')
+"""

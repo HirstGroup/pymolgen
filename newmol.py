@@ -408,7 +408,7 @@ def filters_final(oemol, smi, pains_database):
     return True
 
 
-def filters_final_mol(mol, pains_database):
+def filters_final_mol(pains_database, mol):
 
     mw = mol.molecular_weight()
 
@@ -419,29 +419,38 @@ def filters_final_mol(mol, pains_database):
         return False  
 
     # generate openeye molecule and run filters on it
-    #try:
-    oemol = oechem.OEGraphMol()
-    oechem.OESmilesToMol(oemol, smi)
+    try:
+        oemol = oechem.OEGraphMol()
+        oechem.OESmilesToMol(oemol, smi)
 
-    oechem.OEAddExplicitHydrogens(oemol)
+        oechem.OEAddExplicitHydrogens(oemol)
 
-    filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
+        filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
 
-    if filters_additive_pass == False:
+        if filters_additive_pass == False:
+            return False
+
+        filters_final_pass = filters_final(oemol, smi, pains_database)
+
+        if filters_final_pass == False:
+            return False
+
+        return True
+
+    except Exception as e:
+        print("filters_final_mol failed with ", smi)
+        print(e)
         return False
 
-    filters_final_pass = filters_final(oemol, smi, pains_database)
 
-    if filters_final_pass == False:
-        return False
+def filters_final_mol_return_mol(pains_database, mol):
 
-    return True
+    filters_pass = filters_final_mol(pains_database, mol)
 
-    #except Exception as e:
-    #    print("filters_final_mol failed with ", smi)
-    #    print(e)
-    #    return False
-
+    if filters_pass is True:
+        return mol
+    else:
+        return None
 
 def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw=500,
                                      seed=None):

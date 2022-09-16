@@ -234,7 +234,7 @@ def bond_frequencies_to_np(bond_frequencies):
 def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None, cpu=1, candidate_file=None, cap=False):
 
     if filters:
-        from pymolgen.newmol import filters_final_mol
+        from pymolgen.newmol import filters_final_mol, filters_final_mol_return_mol
 
     if batch_size is None:
         batch_size = 1
@@ -393,21 +393,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                     
             if filters:
 
-                new_output_mol_list = []
+                filters_final_mol_return_mol_partial = partial(filters_final_mol_return_mol, pains_database)
 
-                for mol in output_mol_list:
-                    try:
-                        filter_pass = filters_final_mol(mol, pains_database)
-                    except:
-                        filter_pass = False
-                        smi = molecule_to_smiles(mol)
-                        print('Could not run filters', smi)
-                    if filter_pass is False:
-                        continue
-                    else:
-                        new_output_mol_list.append(mol)
+                p = Pool(processes=cpu)
 
-                output_mol_list = new_output_mol_list            
+                new_output_mol_list = p.map(filters_final_mol_return_mol_partial, output_mol_list )
+
+                output_mol_list = [i for i in new_output_mol_list if i is not None]
 
             if rules:
                 output_mol_list = rules_batch(output_mol_list, rules_file)                

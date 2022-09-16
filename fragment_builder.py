@@ -361,8 +361,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         output_mol_list_parallel = p.map(build_mol_single_partial, range(size) )
 
-        print(output_mol_list_parallel)
-
         for i in output_mol_list_parallel:
             if i is not None:
                 output_mol_list.extend(i)

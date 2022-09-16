@@ -759,7 +759,9 @@ if __name__ == '__main__':
 
     if args.seed is not None:
         random.seed(args.seed)
-        if args.n_mol > 10000:
+        if args.n_mol is None:
+            sys.exit('Cannot run with seed and n_mol infinite')
+        elif args.n_mol > 10000:
             sys.exit('Cannot run with seed and n_mol > 1000')
 
     use_numpy = not args.no_numpy

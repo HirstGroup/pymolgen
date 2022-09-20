@@ -14,7 +14,8 @@ from networkx.algorithms import isomorphism
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies
-from pymolgen.newmol import WEIGHT_THRESHOLD
+
+WEIGHT_THRESHOLD = 500.0
 
 print = partial(print, flush=True)
 
@@ -355,19 +356,24 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     while n < n_mol:
 
-        p = Pool(processes=cpu)
+        if cpu > 1:
 
-        size = min(batch_size, n_mol - n)
+            p = Pool(processes=cpu)
 
-        output_mol_list_parallel = p.map(build_mol_single_partial, range(size) )
+            size = min(batch_size, n_mol - n)
 
-        for i in output_mol_list_parallel:
-            if i is not None:
-                output_mol_list.extend(i)
+            output_mol_list_parallel = p.map(build_mol_single_partial, range(size) )
 
-        p.close()
+            for i in output_mol_list_parallel:
+                if i is not None:
+                    output_mol_list.extend(i)
 
-        output_mol_list = [i for i in output_mol_list if i is not None]
+            p.close()
+
+            output_mol_list = [i for i in output_mol_list if i is not None]
+
+        else:
+            output_mol_list = [build_mol_single_partial]
 
         if candidate_list is not None:
 

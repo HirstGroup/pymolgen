@@ -412,7 +412,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                     new_output_mol_list = []
 
                     for mol in output_mol_list:
-                        new_output_mol_list.append(filters_final_mol_return_mol_partial, mol)
+                        new_output_mol_list.append(filters_final_mol_return_mol(pains_database, mol))
 
                 output_mol_list = [i for i in new_output_mol_list if i is not None]
 

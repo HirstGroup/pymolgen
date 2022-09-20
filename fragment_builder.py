@@ -373,7 +373,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             output_mol_list = [i for i in output_mol_list if i is not None]
 
         else:
-            output_mol_list = [build_mol_single_partial]
+            output_mol_list = build_mol_single_partial()
 
         if candidate_list is not None:
 
@@ -399,11 +399,20 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
                 filters_final_mol_return_mol_partial = partial(filters_final_mol_return_mol, pains_database)
 
-                p = Pool(processes=cpu)
+                if cpu > 1:
 
-                new_output_mol_list = p.map(filters_final_mol_return_mol_partial, output_mol_list )
+                    p = Pool(processes=cpu)
 
-                p.close()
+                    new_output_mol_list = p.map(filters_final_mol_return_mol_partial, output_mol_list )
+
+                    p.close()
+
+                else:
+
+                    new_output_mol_list = []
+
+                    for mol in output_mol_list:
+                        new_output_mol_list.append(filters_final_mol_return_mol_partial, mol)
 
                 output_mol_list = [i for i in new_output_mol_list if i is not None]
 

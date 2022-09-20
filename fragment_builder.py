@@ -375,6 +375,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         else:
             output_mol_list = build_mol_single_partial()
 
+        if output_mol_list is None:
+            continue
+
         if candidate_list is not None:
 
             output_mol_list, new_inchi_set = unique_mol_list(output_mol_list)

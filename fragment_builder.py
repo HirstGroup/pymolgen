@@ -232,7 +232,17 @@ def bond_frequencies_to_np(bond_frequencies):
 
     return a, b
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None, cpu=1, candidate_file=None, cap=False, intermediates=False):
+def read_candidates(candidate_file):
+
+    candidate_list = set()
+
+    with open(candidate_file) as infile:
+        for line in infile:
+            candidate_list.add(line.strip('\n'))
+
+    return candidate_list
+
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name=None, n=None, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None, cpu=1, candidate_file=None, cap=False, intermediates=False):
 
     if filters:
         from pymolgen.newmol import filters_final_mol, filters_final_mol_return_mol
@@ -333,8 +343,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     if restart is False:
         n = 0
+        if candidate_file is not None:
+            with open(candidate_file, 'w') as outfile:
+                print('Writing candidates to', candidate_file)
     else:
-        n = count_generated_molecules(outfile_name)
+        if candidate_file is not None:
+            n = count_generated_molecules(outfile_name)
+            candidate_list = read_candidates(candidate_file)
 
     if figure is not None:
         with open(figure, 'w') as outfile:
@@ -349,10 +364,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     start_time = time.time()
     current_time = start_time
-
-    if candidate_file is not None:
-        with open(candidate_file, 'w') as outfile:
-            print('Writing candidates to', candidate_file)
 
     while n < n_mol:
 
@@ -740,11 +751,12 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
 def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None, cpu=1, candidate_file=None, cap=False, intermediates=False):
 
-    if outfile_name is not None:
-        with open(outfile_name, 'w') as outfile:
-            print('Writing to', outfile_name)
+    if restart is False:
+        if outfile_name is not None:
+            with open(outfile_name, 'w') as outfile:
+                print('Writing to', outfile_name)
 
-    for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size, cpu=cpu, candidate_file=candidate_file, cap=cap, intermediates=intermediates):
+    for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, outfile_name=outfile_name, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size, cpu=cpu, candidate_file=candidate_file, cap=cap, intermediates=intermediates):
 
         for mol in mol_list:
 

@@ -381,10 +381,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             p.close()
 
-            output_mol_list = [i for i in output_mol_list if i is not None]
-
         else:
-            output_mol_list = build_mol_single_partial()
+            output_mol_list_single = build_mol_single_partial()
+
+            if output_mol_list_single is not None:
+                output_mol_list.extend(output_mol_list_single)
+
+        output_mol_list = [i for i in output_mol_list if i is not None]
 
         if output_mol_list is None:
             continue
@@ -399,7 +402,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 with open(candidate_file, 'a') as outfile:
                     for inchi in new_inchi_set:
                         outfile.write('%s\n' %inchi)
-
 
         if len(output_mol_list) > 0:
             previous_time = current_time

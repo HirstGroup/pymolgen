@@ -1,0 +1,11 @@
+name: pymolgen
+channels:
+  - conda-forge
+  - rdkit
+  - openeye
+  - openeye-toolkits
+dependencies:
+  - networkx
+  - rdkit
+  - numpy
+  - pandas

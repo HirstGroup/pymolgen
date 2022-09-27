@@ -86,6 +86,25 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
 
     save_fragments_txt(fragment_database, fragments_txt_out)
 
+def filter(fragment_database):
+
+    filter_list = []
+
+    for i in range(len(fragment_database)):
+
+        mol = fragment_database[i]
+
+        inchi = molecule_to_inchi(mol)
+
+        rdmol = Chem.AddHs(Chem.MolFromSmiles(inchi))
+
+        n = rdkit.Chem.rdMolDescriptors.CalcNumAliphaticRings(rdmol)
+
+        if n > 2:
+            print(i)
+
+
+
 def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, test=None, sort=None):
 
     print('Loading %s' %first)
@@ -118,6 +137,10 @@ def loop(n, first, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_
 
         sys.exit('Fragment data sorted')
 
+
+    if filter:
+        filter(fragment_database)
+        sys.exit('Fragment database filetered')
 
     if limit is not None:
         print('Before limit ', len(fragment_database))
@@ -242,8 +265,9 @@ if __name__ == '__main__':
     parser.add_argument('-o','--out_sub', help='Output subscript',required=True)
     parser.add_argument('-f','--first', help='First file index to consider',required=True, type=int)
     parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider',required=False, type=int)
-    parser.add_argument('--test', action='store_true', help='Test run', required=False)
+    parser.add_argument('--filter', action='store_true', help='Filter fragment database', required=False)
     parser.add_argument('--sort', action='store_true', help='Sort fragment data and exit', required=False)
+    parser.add_argument('--test', action='store_true', help='Test run', required=False)
 
     args = parser.parse_args()
 

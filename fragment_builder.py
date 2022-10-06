@@ -394,13 +394,15 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         if candidate_list is not None:
 
-            output_mol_list, new_inchi_set = unique_mol_list(output_mol_list)
+            output_mol_list, new_inchi_list = unique_mol_list(output_mol_list)
+
+            new_inchi_set = set(new_inchi_list)
 
             candidate_list.update(new_inchi_set)
 
             if candidate_file is not None:
                 with open(candidate_file, 'a') as outfile:
-                    for inchi in new_inchi_set:
+                    for inchi in new_inchi_list:
                         outfile.write('%s\n' %inchi)
 
         if len(output_mol_list) > 0:
@@ -452,6 +454,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
 def unique_mol_list(mol_list):
 
+    inchi_list = []
     inchi_set = set()
 
     output_mol_list = []
@@ -460,11 +463,12 @@ def unique_mol_list(mol_list):
         inchi = molecule_to_inchi(mol)
         if inchi not in inchi_set:
             inchi_set.add(inchi)
+            inchi_list.append(inchi)
             output_mol_list.append(mol)
         else:
             print('Not unique', inchi)
 
-    return output_mol_list, inchi_set
+    return output_mol_list, inchi_list
 
 
 

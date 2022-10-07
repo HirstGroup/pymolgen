@@ -91,21 +91,6 @@ def combine_fragment_databases(fragment_database, frequencies, frag_frequencies,
 
     save_fragments_txt(fragment_database, fragments_txt_out)
 
-"""
-cycles = networkx.cycle_basis(mol.graph)
-
-        for cycle in cycles:
-            if len(cycle) > 10:
-
-                with open('cycles.sdf', 'a') as outfile:
-                    lines = molecule_to_sdf(mol)
-
-                    for line in lines:
-                        outfile.write(line)
-
-                    outfile.write('$$$$\n')
-            continue
-"""
 
 def remove_bond_frequencies(bond_frequencies, fragment_list):
     """
@@ -132,6 +117,46 @@ def remove_bond_frequencies(bond_frequencies, fragment_list):
 
     return d
 
+
+def remove_bond_frequencies_halogen(bond_frequencies, aromatic_list, halogen_list):
+    """
+    Remove aliphatic bonds
+
+    aromatic_list: list of aromatic fragments
+    halogen_list: list of halogen fragments
+    """
+
+    aromatic_list = set(aromatic_list)
+    halogen_list = set(halogen_list)
+
+    d = {}
+
+    for key, val in bond_frequencies.items():
+
+        i = key[0]
+        j = key[1]
+
+        k = key[2]
+        l = key[3]
+
+        if i in halogen_list:
+            if j not in aromatic_list:
+                if val > 1000: print('HALOGEN OUT', i, j, k, l, val)
+                continue
+            else:
+                if val > 1000: print('HALOGEN IN', i, j, k, l, val)
+
+        if j in halogen_list:
+            if i not in aromatic_list:
+                if val > 1000: print('HALOGEN OUT', i, j, k, l, val)
+                continue
+            else:
+                if val > 1000: print('HALOGEN IN', i, j, k, l, val)
+
+            d[(i,j,k,l)] = val
+
+    return d
+
 def list_elements(mol):
 
     elements = set()
@@ -140,6 +165,7 @@ def list_elements(mol):
         elements.add(mol.graph.nodes[i]["element"])
 
     return elements
+
 
 def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
@@ -330,6 +356,15 @@ def is_sulfur(mol):
         if mol.graph.nodes[i]["element"] == 'S':
             return True
 
+    return False
+
+def has_halogen(mol):
+
+    for i in mol.graph.nodes:
+        if mol.graph.nodes[i]["element"] in ['F', 'Cl', 'Br', 'I']:
+            return True
+
+    return False
 
 def is_cyclic_sulfur(mol):
 
@@ -368,6 +403,57 @@ def is_thioether(mol):
                     return True
 
     return False
+
+def exclude_aliphatic_halogen_bonds(fragment_database_mol, fragment_bond_frequencies):
+
+    with open('aromatic.sdf', 'w') as outfile:
+        print('Writing to aromatic.sdf')
+
+    with open('halogen.sdf', 'w') as outfile:
+        print('Writing to halogen.sdf')
+
+    halogen_list = []
+
+    aromatic_list = []
+
+    for i in range(len(fragment_database_mol)):
+
+        mol = fragment_database_mol[i]
+        inchi = molecule_to_inchi(mol)
+        rdmol = Chem.MolFromInchi(inchi) 
+
+        if has_halogen(mol):
+            halogen_list.append(i)
+            save_mol_to_sdf('halogen.sdf', mol)
+            continue
+
+        if rdmol is None:
+            continue
+
+        aromatic_carbons = get_aromatic_carbons(rdmol)
+
+        aromatic = False
+
+        for j in mol.attach_points:
+            if j in aromatic_carbons:
+                aromatic = True
+
+        if aromatic:
+            aromatic_list.append(i)
+            save_mol_to_sdf('aromatic.sdf', mol)
+
+    remove_bond_frequencies_halogen(fragment_bond_frequencies, aromatic_list, halogen_list)
+
+    return fragment_bond_frequencies
+
+def get_aromatic_carbons(rdmol):
+
+    aromatic_carbon = Chem.MolFromSmarts("c")
+
+    aromatic_carbons = rdmol.GetSubstructMatches(aromatic_carbon)
+    aromatic_carbons = [i[0] for i in aromatic_carbons]
+
+    return aromatic_carbons
 
 def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, filter=False, first=None, inchi_filter=None, pains=False, sort=False, test=False):
 
@@ -414,6 +500,10 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
 
 
     if filter:
+
+        frequencies = exclude_aliphatic_halogen_bonds(fragment_database_mol, frequencies)
+        sys.exit('exclude_aliphatic_halogen_bonds')
+
         filter_list = filter_database(fragment_database_mol, inchi_filter, pains)
 
         with open('filter_in.sdf', 'w') as outfile:

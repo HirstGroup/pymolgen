@@ -294,6 +294,19 @@ class Molecule:
 
         return self.graph.nodes[0]["element"] == "F"
 
+    def is_halogen(self) -> bool:
+        """
+        Returns true if a molecule is a halide
+
+        Returns
+        -------
+        True if the node is a halide
+        """
+
+        if self.graph.nodes[0]["element"] in ['F', 'Cl', 'Br', 'I']:
+            return True
+        return False
+
     def get_hydrogen_neighbours(self, i: int) -> List[int]:
         """
         Returns list of hydrogen neighbours bonded to a particular node i

@@ -11,6 +11,8 @@ d = set()
 
 for input in args.input:
 
+    print(input)
+
     infile = open(input)
 
     a = []

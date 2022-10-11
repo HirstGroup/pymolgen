@@ -54,19 +54,16 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    print('line55')
-
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
     print(pIC50_pred_model.info)
     print(pIC50_pred_model.version)
     # Run prediction model once to initialise:
     _ = pIC50_pred_model.predict('C')[0]
 
-    outfile = open(args.output  , 'w')
+    with open(args.output  , 'w') as outfile:
+        print('Writing to', args.output)
 
     infile = open(args.input)
-
-    print('line67')
 
     for line in infile:
 
@@ -77,9 +74,34 @@ if __name__ == '__main__':
             rdmol = Chem.MolFromInchi(inchi)
             smi = Chem.MolToSmiles(rdmol)
 
+            pIC50_pred = pIC50_pred_model.predict(smi)[0]
+
+            oemol = oechem.OEGraphMol()
+            oechem.OESmilesToMol(oemol, smi)
+            oechem.OEAddExplicitHydrogens(oemol)
+
+            logp = mp.OEGetXLogP(oemol, atomxlogps=None)
+
+            n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
+
+
         except:
+            print('Could not calculate properties for', inchi)
             continue
-        print(smi)
+
+        pfi = n_aromatic + logp
+        mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
+
+        n_rot_bonds = num_rot_bond(oemol)
+
+        n_chiral = num_chiral_centres(oemol)
+
+        h_acc = num_lipinsky_acceptors(oemol)
+
+        h_don = num_lipinsky_donors(oemol)
+
+        with open(args.output, 'a') as out:
+            out.write(f'{inchi};{smi};{pIC50_pred};{mpo};{pfi};{psa};{logp};{n_aromatic};{n_rot_bonds};{n_chiral};{h_acc};{mw:.2f};{h_don}\n')
 
     sys.exit('Normal termination')
 

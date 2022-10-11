@@ -70,6 +70,8 @@ if __name__ == '__main__':
 
         smi = Chem.MolToSmiles(rdmol)
 
+        print(smi)
+
     sys.exit('Normal termination')
 
             

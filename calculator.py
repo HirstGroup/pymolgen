@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # Run prediction model once to initialise:
     _ = pIC50_pred_model.predict('C')[0]
 
-    outfile = open(args.output, 'w')
+    outfile = open(args.output  , 'w')
 
     infile = open(args.input)
 
@@ -70,9 +70,8 @@ if __name__ == '__main__':
 
     for line in infile:
 
-        print('line71')
-
         inchi = line.strip('\n')
+        print(inchi)
 
         rdmol = Chem.MolFromInchi(inchi)
 

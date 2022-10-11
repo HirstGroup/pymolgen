@@ -7,6 +7,8 @@ parser = argparse.ArgumentParser(description='Remove Duplicates from List of inc
 parser.add_argument('-i', nargs='+', help='Space-separated list of inchi input files',required=True)
 parser.add_argument('-o', help='Output file',required=True)
 
+args = parser.parse_args()
+
 d = set()
 
 for input in args.input:

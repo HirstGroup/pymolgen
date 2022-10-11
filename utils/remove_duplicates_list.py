@@ -1,7 +1,7 @@
 import sys,os
 import pandas as pd
 import numpy as np
-import argsparse
+import argparse
 
 parser = argparse.ArgumentParser(description='Remove Duplicates from List of inchi files')
 parser.add_argument('-i', nargs='+', help='Space-separated list of inchi input files',required=True)

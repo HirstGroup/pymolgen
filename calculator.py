@@ -80,31 +80,33 @@ if __name__ == '__main__':
             oechem.OESmilesToMol(oemol, smi)
             oechem.OEAddExplicitHydrogens(oemol)
 
+            logp = mp.OEGetXLogP(oemol, atomxlogps=None)
+
+            n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
+
+            pfi = n_aromatic + logp
+            mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
+
+            mw = Chem.Descriptors.MolWt(rdmol)
+
+            psa = mp.OEGet2dPSA(oemol,atomPSA = None)
+
+            n_rot_bonds = num_rot_bond(oemol)
+
+            n_chiral = num_chiral_centres(oemol)
+
+            h_acc = num_lipinsky_acceptors(oemol)
+
+            h_don = num_lipinsky_donors(oemol)
+
+            with open(args.output, 'a') as out:
+                out.write(f'{inchi};{smi};{pIC50_pred};{mpo};{pfi};{psa};{logp};{n_aromatic};{n_rot_bonds};{n_chiral};{h_acc};{mw:.2f};{h_don}\n')
+
         except:
             print('Could not calculate properties for', inchi)
             continue
 
-        logp = mp.OEGetXLogP(oemol, atomxlogps=None)
 
-        n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
-
-        pfi = n_aromatic + logp
-        mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
-
-        mw = Chem.Descriptors.MolWt(rdmol)
-
-        psa = mp.OEGet2dPSA(oemol,atomPSA = None)
-
-        n_rot_bonds = num_rot_bond(oemol)
-
-        n_chiral = num_chiral_centres(oemol)
-
-        h_acc = num_lipinsky_acceptors(oemol)
-
-        h_don = num_lipinsky_donors(oemol)
-
-        with open(args.output, 'a') as out:
-            out.write(f'{inchi};{smi};{pIC50_pred};{mpo};{pfi};{psa};{logp};{n_aromatic};{n_rot_bonds};{n_chiral};{h_acc};{mw:.2f};{h_don}\n')
 
     sys.exit('Normal termination')
 

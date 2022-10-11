@@ -73,7 +73,8 @@ if __name__ == '__main__':
         inchi = line.strip('\n')
         print(inchi)
 
-        rdmol = Chem.MolFromInchi(inchi)
+        try: rdmol = Chem.MolFromInchi(inchi)
+        except: continue
 
         smi = Chem.MolToSmiles(rdmol)
 

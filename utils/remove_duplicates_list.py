@@ -4,8 +4,8 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser(description='Remove Duplicates from List of inchi files')
-parser.add_argument('-i', nargs='+', help='Space-separated list of inchi input files',required=True)
-parser.add_argument('-o', help='Output file',required=True)
+parser.add_argument('-i', '--input', nargs='+', help='Space-separated list of inchi input files',required=True)
+parser.add_argument('-o', '--output', help='Output file',required=True)
 
 args = parser.parse_args()
 

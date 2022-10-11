@@ -15,6 +15,9 @@ from PP_ML_models.predictive_models.ml_model_gcnn_ens import Ensemble_Model_DC
 from openeye import oechem
 from openeye import oemolprop as mp
 
+from functools import partial
+print = partial(print, flush=True)
+
 from os.path import expanduser
 home = expanduser("~")
 

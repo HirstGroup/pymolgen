@@ -52,6 +52,8 @@ if __name__ == '__main__':
     parser.add_argument('-i','--input', help='Input file of inchi',required=True)
     parser.add_argument('-o','--output', help='Output file',required=True)
 
+    print('line55')
+
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
     print(pIC50_pred_model.info)
     print(pIC50_pred_model.version)
@@ -62,7 +64,11 @@ if __name__ == '__main__':
 
     infile = open(args.input)
 
+    print('line67')
+
     for line in infile:
+
+        print('line71')
 
         inchi = line.strip('\n')
 

@@ -61,6 +61,7 @@ if __name__ == '__main__':
     _ = pIC50_pred_model.predict('C')[0]
 
     with open(args.output  , 'w') as outfile:
+        outfile.write('inchi;smi;pIC50_pred;mpo;pfi;psa;logp;n_aromatic;n_rot_bonds;n_chiral;h_acc;h_don;mw\n')
         print('Writing to', args.output)
 
     infile = open(args.input)
@@ -100,7 +101,7 @@ if __name__ == '__main__':
             h_don = num_lipinsky_donors(oemol)
 
             with open(args.output, 'a') as out:
-                out.write(f'{inchi};{smi};{pIC50_pred};{mpo};{pfi};{psa};{logp};{n_aromatic};{n_rot_bonds};{n_chiral};{h_acc};{mw:.2f};{h_don}\n')
+                out.write(f'{inchi};{smi};{pIC50_pred};{mpo};{pfi};{psa};{logp};{n_aromatic};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{mw}\n')
 
         except:
             print('Could not calculate properties for', inchi)

@@ -52,6 +52,8 @@ if __name__ == '__main__':
     parser.add_argument('-i','--input', help='Input file of inchi',required=True)
     parser.add_argument('-o','--output', help='Output file',required=True)
 
+    args = parser.parse_args()
+
     print('line55')
 
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')

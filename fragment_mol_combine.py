@@ -231,7 +231,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
         elements.update(mol_elements)
 
-        allowed_elements = {'Cl', 'O', 'C', 'F', 'N', 'S', 'H'}
+        allowed_elements = {'Cl', 'Br', 'I', 'O', 'C', 'F', 'N', 'S', 'H'}
 
         allowed = True
 

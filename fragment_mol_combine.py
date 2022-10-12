@@ -501,9 +501,6 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
 
     if filter:
 
-        frequencies = exclude_aliphatic_halogen_bonds(fragment_database_mol, frequencies)
-        sys.exit('exclude_aliphatic_halogen_bonds')
-
         filter_list = filter_database(fragment_database_mol, inchi_filter, pains)
 
         with open('filter_in.sdf', 'w') as outfile:
@@ -520,6 +517,8 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
                 outfile.write('$$$$\n')               
 
         frequencies = remove_bond_frequencies(frequencies, filter_list)
+
+        frequencies = exclude_aliphatic_halogen_bonds(fragment_database_mol, frequencies)
 
         save_frequencies_txt(frequencies, 'filter_bond_frequencies.txt')       
 

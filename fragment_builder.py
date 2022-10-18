@@ -395,7 +395,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         if candidate_list is not None:
 
-            output_mol_list, new_inchi_list = unique_mol_list(output_mol_list)
+            output_mol_list, new_inchi_list = unique_mol_list(output_mol_list, verbose)
 
             new_inchi_set = set(new_inchi_list)
 
@@ -451,7 +451,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             output_mol_list = []
 
-def unique_mol_list(mol_list):
+def unique_mol_list(mol_list, verbose):
 
     inchi_list = []
     inchi_set = set()

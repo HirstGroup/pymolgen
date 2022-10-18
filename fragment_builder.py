@@ -348,8 +348,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 print('Writing candidates to', candidate_file)
     else:
         if candidate_file is not None:
-            n = count_generated_molecules(outfile_name)
             candidate_list = read_candidates(candidate_file)
+        if n_mol is not None:
+            n = count_generated_molecules(outfile_name)
 
     if figure is not None:
         with open(figure, 'w') as outfile:

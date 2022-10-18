@@ -765,14 +765,14 @@ def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file,
     for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, outfile_name=outfile_name, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size, cpu=cpu, candidate_file=candidate_file, cap=cap, intermediates=intermediates):
 
         for mol in mol_list:
+            if outfile_name is not None:
+                lines = molecule_to_sdf(mol)
 
-            lines = molecule_to_sdf(mol)
+                with open(outfile_name, 'a') as outfile:
+                    for line in lines:
+                        outfile.write(line)
 
-            with open(outfile_name, 'a') as outfile:
-                for line in lines:
-                    outfile.write(line)
-
-                outfile.write('$$$$\n')
+                    outfile.write('$$$$\n')
 
             if figure is not None:
 
@@ -808,7 +808,7 @@ if __name__ == '__main__':
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
-    parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
+    parser.add_argument('-o','--outfile_name', help='Output File Name',required=False)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=False)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
     parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)

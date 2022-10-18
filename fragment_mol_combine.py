@@ -404,6 +404,39 @@ def is_thioether(mol):
 
     return False
 
+def copy_frequencies(fragment_database, bond_frequencies, frag_frequencies, fragment_a_i, fragment_b_sdf):
+
+    #fragment_a_mol = molecule_from_sdf(fragment_a_sdf)
+    fragment_b_mol = molecule_from_sdf(fragment_b_sdf).graph
+
+    #fragment_a_i = find_fragment(fragment_a_mol, fragment_database)
+    fragment_b_i = len(fragment_database)
+
+    fragment_a_freq = frag_frequencies[fragment_a_i]
+
+    frag_frequencies.append(fragment_a_freq)
+
+    for key, val in bond_frequencies.copy().items():
+        i = key[0]
+        j = key[1]
+
+        k = key[2]
+        l = key[3]
+
+        if fragment_a_i == i and fragment_a_i == j:
+            bond_frequencies[i,fragment_b_i,k,l] = val
+            bond_frequencies[fragment_b_i,fragment_b_i,k,l] = val
+
+        elif fragment_a_i == i:
+            bond_frequencies[j,fragment_b_i,l,k] = val
+
+        elif fragment_a_i == j:
+            bond_frequencies[i,fragment_b_i,k,l] = val            
+ 
+    fragment_database.append(fragment_b_mol)
+
+    return fragment_database, bond_frequencies, frag_frequencies
+
 def exclude_aliphatic_halogen_bonds(fragment_database_mol, fragment_bond_frequencies):
 
     with open('aromatic.sdf', 'w') as outfile:
@@ -455,11 +488,12 @@ def get_aromatic_carbons(rdmol):
 
     return aromatic_carbons
 
-def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None, filter=False, first=None, inchi_filter=None, pains=False, sort=False, test=False):
-
-    print('Loading %s' %first)
+def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, copy=None, limit=None, filter=False, first=None, inchi_filter=None, pains=False, sort=False, test=False):
 
     if first is not None:
+
+        print('Loading %s' %first)
+
         fragment_database_mol = get_fragment_database('%s_%s.sdf' %(fragments_sdf_in, first))
 
         frequencies = get_bond_frequencies('%s_%s.txt' %(frequencies_txt_in, first) )
@@ -498,6 +532,22 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
 
         sys.exit('Fragment data sorted')
 
+    if copy is not None:
+
+        fragment_a_i = int(copy[0])
+        fragment_b_sdf = copy[1]
+
+        fragment_database, frequencies, frag_frequencies = copy_frequencies(fragment_database, frequencies, frag_frequencies, fragment_a_i, fragment_b_sdf)
+
+        save_frequencies_txt(frequencies, frequencies_txt_out)
+
+        save_fragments_sdf(fragment_database, fragments_sdf_out)
+
+        save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt_out)
+
+        save_fragments_txt(fragment_database, fragments_txt_out)
+
+        sys.exit('Fragment frequencies copied')
 
     if filter:
 
@@ -650,6 +700,7 @@ if __name__ == '__main__':
     parser.add_argument('-o','--out_sub', help='Output subscript',required=True)
     parser.add_argument('-f','--first', help='First file index to consider',required=False, type=int)
     parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider',required=False, type=int)
+    parser.add_argument('--copy', nargs='+', help='Fragment_a and fragment_b to copy bond frequencies', required=False)
     parser.add_argument('--filter', action='store_true', help='Filter fragment database', required=False)
     parser.add_argument('--inchi_filter', help='Inchi list to filter',required=False)
     parser.add_argument('--pains', action='store_true', help='Filter fragments with pains', required=False)
@@ -675,6 +726,6 @@ if __name__ == '__main__':
     frequencies_txt_out = 'frequencies%s.txt' %out_sub
     frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
-    loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, filter=args.filter, first=args.first, limit=args.limit, inchi_filter=args.inchi_filter, pains=args.pains, sort=args.sort, test=args.test)
+    loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, copy=args.copy, filter=args.filter, first=args.first, limit=args.limit, inchi_filter=args.inchi_filter, pains=args.pains, sort=args.sort, test=args.test)
 
     print('Normal termination')

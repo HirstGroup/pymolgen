@@ -409,7 +409,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             previous_time = current_time
             current_time = time.time() - start_time
             interval_time = (current_time - previous_time) / len(output_mol_list)
-            print('TIME %.2f' %interval_time)
+            if verbose: print('TIME %.2f' %interval_time)
 
         if len(output_mol_list) > min(batch_size, n_mol - n):
                     
@@ -445,8 +445,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                     smi = molecule_to_smiles(mol)
                     mw = mol.molecular_weight()
                     print('NEW_CANDIDATE %s %s %.1f' % (n, smi, mw))            
-                else:
-                    print('NEW_CANDIDATE %s' %n )
 
             yield output_mol_list
 
@@ -466,7 +464,7 @@ def unique_mol_list(mol_list):
             inchi_list.append(inchi)
             output_mol_list.append(mol)
         else:
-            print('Not unique', inchi)
+            if verbose: print('Not unique', inchi)
 
     return output_mol_list, inchi_list
 
@@ -700,7 +698,7 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
                         inchi = molecule_to_inchi(mol)
                         if inchi not in candidate_list:
                             return_mol_list.append(mol)
-                            print('INTERMEDIATE %s' %inchi)
+                            if verbose: print('INTERMEDIATE %s' %inchi)
 
                     else:
                         return_mol_list.append(mol)

@@ -643,13 +643,14 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
                             mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
+                            inchi = molecule_to_inchi(mol)
+
                             if fragments_used_file is not None:
-                                write_fragments_used_file(fragments_used_file, frag_list)
+                                write_fragments_used_file(fragments_used_file, inchi, frag_list)
 
                             mol.hydrogenate()
 
                             if candidate_list is not None:
-                                inchi = molecule_to_inchi(mol)
                                 if inchi in candidate_list:
                                     if verbose: print('Not unique')
                                     return None
@@ -696,13 +697,14 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
                     mol = combine_all_fragments(frag_mol_list_int, frag_list, frag_bond_list)
 
+                    inchi = molecule_to_inchi(mol)
+
                     if fragments_used_file is not None:
-                        write_fragments_used_file(fragments_used_file, frag_list)
+                        write_fragments_used_file(fragments_used_file, inchi, frag_list)
 
                     mol.hydrogenate()
 
                     if candidate_list is not None:
-                        inchi = molecule_to_inchi(mol)
                         if inchi not in candidate_list:
                             return_mol_list.append(mol)
                             if verbose: print('INTERMEDIATE %s' %inchi)
@@ -715,11 +717,12 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
+    inchi = molecule_to_inchi(mol)
+
     if fragments_used_file is not None:
-        write_fragments_used_file(fragments_used_file, frag_list)
+        write_fragments_used_file(fragments_used_file, inchi, frag_list)
 
     if candidate_list is not None:
-        inchi = molecule_to_inchi(mol)
         if inchi in candidate_list:
             if verbose: print('Not unique')
             return None
@@ -728,9 +731,12 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
     return return_mol_list
 
-def write_fragments_used_file(fragments_used_file, frag_list):
+def write_fragments_used_file(fragments_used_file, inchi, frag_list):
 
     with open(fragments_used_file, 'a') as outfile:
+
+        outfile.write('%s ' %inchi)
+
         for i in frag_list:
             outfile.write('%s ' %i)
         outfile.write('\n')

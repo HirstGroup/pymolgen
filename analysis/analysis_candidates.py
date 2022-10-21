@@ -12,6 +12,11 @@ parser.add_argument('-o', '--output', help='Output file',required=True)
 
 args = parser.parse_args()
 
+def write(d, outfile_name):
+    with open(outfile_name, 'w') as outfile:
+        for key, val in d.items():
+            outfile.write('%s %s\n' %(key, val))
+
 d = {}
 
 for input in args.input:
@@ -32,8 +37,3 @@ for input in args.input:
     d = {k: v for k, v in sorted(d.items(), key=lambda item: item[1], reverse=True)}
 
     write(d, args.output)
-
-def write(d, outfile_name):
-    with open(outfile_name, 'w') as outfile:
-        for key, val in d.items():
-            outfile.write('%s %s\n' %(key, val))

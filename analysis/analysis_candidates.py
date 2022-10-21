@@ -33,7 +33,7 @@ for input in args.input:
 
     write(d, args.output)
 
-def write(d, outfile_name)
+def write(d, outfile_name):
     with open(outfile_name, 'w') as outfile:
         for key, val in d.items():
             outfile.write('%s %s\n' %(key, val))

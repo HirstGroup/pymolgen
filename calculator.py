@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     for line in infile:
 
-        inchi = line.strip('\n')
+        inchi = line.split()[0].strip('\n')
         print(inchi)
 
         try: 

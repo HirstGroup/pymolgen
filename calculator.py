@@ -25,6 +25,24 @@ head_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(head_path)
 sys.path.append(home + '/PP_ML_models')
 
+#   CHIRAL_THRESHOLD:   Maximum number of Chiral Centers (<= 2)
+CHIRAL_THRESHOLD = 2
+#   PSA_THRESHOLD:       Polar surface area (<= 140)
+PSA_THRESHOLD = 140
+#   PFI_THRESHOLD:       Property Forecast Index (LOGP + # of aromatic rings < 8)
+PFI_THRESHOLD = 8
+#   ROTBOND_THRESHOLD:  Number of rotatable bonds (<= 7)
+ROTBOND_THRESHOLD = 7
+#   WEIGHT_THRESHOLD:    Maximum MW in Daltons (<= 500)
+WEIGHT_THRESHOLD = 500
+#   H_DON_THRESHOLD:     Maximum number of hydrogen donors (<= 5)
+H_DON_THRESHOLD = 5
+#   H_ACC_THRESHOLD:     Maximum number of hydrogen acceptors (<= 10)
+H_ACC_THRESHOLD = 10
+#   LOGP_THRESHOLD:      Water/Octanol Partition Coefficient (0.5-5.0)
+LOGP_THRESHOLD_UP = 5
+LOGP_THRESHOLD_LOW = 0.5
+
 def oracle(mol):
 
     mw = mol.molecular_weight()
@@ -64,7 +82,7 @@ if __name__ == '__main__':
     _ = pIC50_pred_model.predict('C')[0]
 
     with open(args.output  , 'w') as outfile:
-        outfile.write('inchi;smi;pIC50_pred;mpo;pfi;psa;logp;n_aromatic;n_rot_bonds;n_chiral;h_acc;h_don;mw\n')
+        outfile.write('inchi;smi;mw;n_rot_bonds;n_chiral;h_acc;h_don;psa;logp;n_aromatic;pfi;pIC50_pred;mpo;filter_pass\n')
         print('Writing to', args.output)
 
     infile = open(args.input)
@@ -72,39 +90,80 @@ if __name__ == '__main__':
     for line in infile:
 
         inchi = line.split()[0].strip('\n')
-        print(inchi)
 
-        try: 
+        try:
+            rdmod, smi, oemol = None, None, None
+
             rdmol = Chem.MolFromInchi(inchi)
             smi = Chem.MolToSmiles(rdmol)
 
-            pIC50_pred = pIC50_pred_model.predict(smi)[0]
+            filter_pass = True
 
-            oemol = oechem.OEGraphMol()
-            oechem.OESmilesToMol(oemol, smi)
-            oechem.OEAddExplicitHydrogens(oemol)
-
-            logp = mp.OEGetXLogP(oemol, atomxlogps=None)
-
-            n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
-
-            pfi = n_aromatic + logp
-            mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
+            mw, n_rot_bonds, n_chiral, h_acc, h_don, psa, logp, n_aromatic, pfi, pIC50_pred, mpo = '', '', '', '', '', '', '', '', '', '', '' 
 
             mw = Chem.Descriptors.MolWt(rdmol)
 
-            psa = mp.OEGet2dPSA(oemol,atomPSA = None)
+            if filter_pass is not False:
 
-            n_rot_bonds = num_rot_bond(oemol)
+                oemol = oechem.OEGraphMol()
+                oechem.OESmilesToMol(oemol, smi)
+                oechem.OEAddExplicitHydrogens(oemol)
 
-            n_chiral = num_chiral_centres(oemol)
+                n_rot_bonds = num_rot_bond(oemol)
 
-            h_acc = num_lipinsky_acceptors(oemol)
+                if n_rot_bonds > CHIRAL_THRESHOLD:
+                    filter_pass = False
 
-            h_don = num_lipinsky_donors(oemol)
+            if filter_pass is not False:
+
+                n_chiral = num_chiral_centres(oemol)
+
+                if n_chiral > CHIRAL_THRESHOLD:
+                    filter_pass = False
+
+            if filter_pass is not False:
+
+                h_acc = num_lipinsky_acceptors(oemol)
+
+                if h_acc > H_ACC_THRESHOLD:
+                    filter_pass = False
+
+            if filter_pass is not False:
+
+                h_don = num_lipinsky_donors(oemol)
+
+                if h_don > H_DON_THRESHOLD:
+                    filter_pass = False
+
+            if filter_pass is not False:
+
+                psa = mp.OEGet2dPSA(oemol,atomPSA = None)
+
+                if psa > PSA_THRESHOLD:
+                    filter_pass = False
+
+            if filter_pass is not False:
+
+                logp = mp.OEGetXLogP(oemol, atomxlogps=None)
+
+                if logp > LOGP_THRESHOLD_UP:
+                    filter_pass = False
+
+                if logp < LOGP_THRESHOLD_LOW:
+                    filter_pass = False
+
+                n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
+
+                pfi = n_aromatic + logp
+
+            if filter_pass is not False:
+
+                pIC50_pred = pIC50_pred_model.predict(smi)[0]
+
+                mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
 
             with open(args.output, 'a') as out:
-                out.write(f'{inchi};{smi};{pIC50_pred};{mpo};{pfi};{psa};{logp};{n_aromatic};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{mw}\n')
+                out.write(f'{inchi};{smi};{mw};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{psa};{logp};{n_aromatic};{pfi};{pIC50_pred};{mpo};{filter_pass}\n')
 
         except:
             print('Could not calculate properties for', inchi)

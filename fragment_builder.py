@@ -244,9 +244,6 @@ def read_candidates(candidate_file):
 
 def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name=None, n=None, n_mol=None, filters=False, fragments_used_file=None, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=None, cpu=1, candidate_file=None, cap=False, intermediates=False):
 
-    if filters:
-        from pymolgen.newmol import filters_final_mol, filters_final_mol_return_mol
-
     if batch_size is None:
         batch_size = 1
 
@@ -260,6 +257,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     pains_database = None
     # build pains_database if using filters
     if filters:
+        from pymolgen.newmol import filters_final_mol, filters_final_mol_return_mol
         from pymolgen.newmol import gen_pains_database
         try:
             pains_database = gen_pains_database()

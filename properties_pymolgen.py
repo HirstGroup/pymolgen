@@ -164,11 +164,38 @@ def gen_pains_database():
 
     return pains_fragment_list
 
+def pains_filter_smi(smi, pains_database):
+
+    oemol = oechem.OEGraphMol()
+    oechem.OESmilesToMol(oemol, smi)
+    oechem.OEAddExplicitHydrogens(oemol)
+
+    return pains_filter(oemol, pains_database)
+
 def pains_filter(molecule, pains_database):
     for fragment in pains_database:
         fragment_search = oechem.OESubSearch(fragment)
         oechem.OEPrepareSearch(molecule, fragment_search)
         if fragment_search.SingleMatch(molecule):
+            return False
+            break
+
+    return True
+
+def pains_filter_rdkit(smi, pains_database):
+
+    m = Chem.MolFromSmiles(smi)
+    m = Chem.AddHs(m)
+    print('input smi =', smi)
+
+    for pains in pains_database:
+
+        patt = Chem.MolFromSmarts(pains)
+        
+        patt_match = m.HasSubstructMatch(patt)
+
+        if patt_match is True:
+            print('patt_match =', patt_match)
             return False
             break
 

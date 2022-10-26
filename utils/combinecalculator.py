@@ -22,6 +22,8 @@ for i in args.input[1:]:
     
     df = pd.concat([df, df2], ignore_index=True)
 
+df.sort_values('mpo', inplace=True)
+
 print(len(df))
 
 df.to_csv(args.output, sep=';', index=False)

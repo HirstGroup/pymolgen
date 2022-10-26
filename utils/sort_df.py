@@ -13,6 +13,7 @@ df = df.loc[df['rules_filter'] == True]
 
 df.sort_values('mpo', inplace=True)
 
-df = df.loc[df['mpo'] <= -6.5]
+#df = df.loc[df['mpo'] <= -6.5]
+df = df.head(10000)
 
 df.to_csv(output, sep=';', index=False)

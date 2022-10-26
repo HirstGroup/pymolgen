@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
                 n_rot_bonds = num_rot_bond(oemol)
 
-                if n_rot_bonds > CHIRAL_THRESHOLD:
+                if n_rot_bonds > ROTBOND_THRESHOLD:
                     filter_pass = False
 
             if filter_pass is not False:

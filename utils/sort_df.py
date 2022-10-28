@@ -5,9 +5,11 @@ import sys,os
 input = sys.argv[1]
 output = sys.argv[2]
 
+print(input, output)
+
 df = pd.read_csv(input, sep=';')
 
-print(df.head())
+df = df.loc[df['rules_filter'] == True]
 
 df.sort_values('mpo', inplace=True)
 

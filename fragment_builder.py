@@ -354,10 +354,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         with open(figure, 'w') as outfile:
             print('Writing to figure', figure)
 
-    output_mol_list = []
-
     if n_mol is None:
         n_mol = np.inf
+
+    print('NMOL =', n_mol)
 
     build_mol_single_partial = partial(build_mol_single,parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, fragments_used_file, pains_database, candidate_list, figure, verbose, mw_check, use_numpy, cap, intermediates)
 
@@ -365,6 +365,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     current_time = start_time
 
     while n < n_mol:
+
+        output_mol_list = []
+
+        print('N =', n, 'NMOL =', n_mol, 'len(output_mol_list) =', len(output_mol_list))
 
         if cpu > 1:
 
@@ -497,31 +501,6 @@ def rules_batch(output_mol_list, rules_file):
         new_output_mol_list.append(output_mol_list[i_mol])
 
     return new_output_mol_list
-
-def build_mol_single_batch(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, figure=None, verbose=False, mw_check=False, use_numpy=True, batch_size=None):
-
-    if batch_size is None:
-        batch_size = 1
-
-    output_mol_list = []
-
-    while len(output_mol_list) < batch_size:
-
-        mol = build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, figure, verbose, mw_check, use_numpy)
-
-        if mol is not None:
-
-            if candidate_list is not None:
-
-                inchi = molecule_to_inchi(mol)
-
-                if inchi not in candidate_list:
-                    output_mol_list.append(mol)
-
-            else:
-                output_mol_list.append(mol)
-
-    return output_mol_list        
 
 
 def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters=False, fragments_used_file=None, pains_database=None, candidate_list=None, figure=None, verbose=False, mw_check=False, use_numpy=True, cap=False, intermediates=False, dummy=None):
@@ -686,7 +665,7 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
                 # add new_free_valence_list to the list of available valence points in molecule being built
                 frag_free_valence_list.append(new_free_valence_list)
 
-                if intermediates:
+                if intermediates and len(frag_list) > 1:
 
                     frag_mol_list_int = [i for i in frag_mol_list]
 
@@ -726,6 +705,9 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
             return None
 
     return_mol_list.append(mol)
+
+    for i in return_mol_list:
+        print(molecule_to_inchi(i))
 
     return return_mol_list
 
@@ -784,6 +766,8 @@ def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file,
             with open(fragments_used_file, 'w') as outfile:
                 print('Writing to', fragments_used_file)
 
+    print('NMOL =', n_mol)
+
     for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, outfile_name=outfile_name, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, fragments_used_file=fragments_used_file, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size, cpu=cpu, candidate_file=candidate_file, cap=cap, intermediates=intermediates):
 
         for mol in mol_list:
@@ -837,40 +821,42 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
-    parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
+    parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
     parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
-    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
     parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
-    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
-    parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
-    parser.add_argument('-o','--outfile_name', help='Output File Name',required=False)
-    parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=False)
-    parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
-    parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
-    parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)
-    parser.add_argument('--filters', action='store_true', help='Use filters', required=False)
-    parser.add_argument('--fragments_used_file', help='Save fragments used to file', required=False)
-    parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
-    parser.add_argument('--verbose', action='store_true', help='Verbose output', required=False)
-    parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
-    parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
+
     parser.add_argument('--batch_size', type=int, help='Batch size for rules', required=False)
-    parser.add_argument('--cpu', type=int, help='Number of processes in parallel', default=1, required=False)
     parser.add_argument('--candidate_file', help='Candidate file to save all molecules generated as inchi', required=False)
     parser.add_argument('--cap', action='store_true', help='Cap intermediate molecules if new fragment goes over mass budget', required=False)
+    parser.add_argument('--cpu', type=int, help='Number of processes in parallel', default=1, required=False)
+    parser.add_argument('--filters', action='store_true', help='Use filters', required=False)
+    parser.add_argument('--fragments_used_file', help='Save fragments used to file', required=False)
     parser.add_argument('--intermediates', action='store_true', help='Save intermediate molecules while constructing new ones', required=False)
+    parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
+    parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=False)
+    parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
+    parser.add_argument('-o','--outfile_name', help='Output File Name',required=False)
+    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+    parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
+    parser.add_argument('--rules_file', help='Rules file name for rules to filter', required=False)
+    parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
+    parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
+    parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
+    parser.add_argument('--verbose', action='store_true', help='Verbose output', required=False)
 
 
     args = parser.parse_args()
 
     if args.seed is not None:
         random.seed(args.seed)
+        maxseed = 10000
         if args.n_mol is None:
             sys.exit('Cannot run with seed and n_mol infinite')
-        elif args.n_mol > 10000:
-            sys.exit('Cannot run with seed and n_mol > 1000')
+        elif args.n_mol > maxseed:
+            sys.exit('Cannot run with seed and n_mol >', maxseed)
 
     use_numpy = not args.no_numpy
 

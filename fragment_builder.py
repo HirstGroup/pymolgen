@@ -365,7 +365,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             plt.plot(fragment_bond_frequencies[1])
             #plt.show()
 
-            procs = 100
+            procs = 56
 
             ass = assign(fragment_bond_frequencies[1], procs)
 

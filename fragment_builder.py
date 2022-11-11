@@ -18,8 +18,6 @@ from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies
 
-WEIGHT_THRESHOLD = 500.0
-
 print = partial(print, flush=True)
 
 def count_generated_molecules(outfile_name):
@@ -332,6 +330,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     new_dict = {}
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
+        print(attachment_points); print('j =', j)
         new_dict[attachment_points[i]] = j
         parent_fragment_i_list.append(j)
 
@@ -881,6 +880,7 @@ if __name__ == '__main__':
     parser.add_argument('--fragments_used_file', help='Save fragments used to file', required=False)
     parser.add_argument('--intermediates', action='store_true', help='Save intermediate molecules while constructing new ones', required=False)
     parser.add_argument('--mw_check', action='store_true', help='MW filter in every fragment addition')
+    parser.add_argument('--mw_threshold', type=float, help='MW threshold', default = 500.0, required=False)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=False)
     parser.add_argument('--no_numpy', action='store_true', help='Do not use numpy for fragment bond frequencies')
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=False)
@@ -903,6 +903,10 @@ if __name__ == '__main__':
             sys.exit('Cannot run with seed and n_mol infinite')
         elif args.n_mol > maxseed:
             sys.exit('Cannot run with seed and n_mol >', maxseed)
+
+    global WEIGHT_THRESHOLD
+
+    WEIGHT_THRESHOLD = args.mw_threshold
 
     use_numpy = not args.no_numpy
 

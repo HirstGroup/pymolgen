@@ -28,7 +28,7 @@ random.shuffle(n_list)
 
 for col in range(args.batch_size):
 
-	suffix = row * args.n_batch + col
+	suffix = row * args.batch_size + col
 
 	first_mol = mol_size * col
 	last_mol = mol_size * (col + 1)

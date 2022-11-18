@@ -6,5 +6,5 @@ infile = sys.argv[1]
 
 df = pd.read_csv(infile, sep=';')
 
-print df.head()
+print(df.head())
 

@@ -2,9 +2,17 @@ import sys,os
 
 import pandas as pd
 
-infile = sys.argv[1]
+input = sys.argv[1]
+output = sys.argv[2]
 
-df = pd.read_csv(infile, sep=';')
+print(input, output)
 
-print(df.head())
+df = pd.read_csv(input, sep=';')
+
+outfile = open(output, 'w')
+
+inchi_list = df['inchi'].tolist()
+
+for i in inchi_list:
+	outfile.write('%s\n' %i)
 

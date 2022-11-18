@@ -1,4 +1,4 @@
-for j in range(10):
+for j in range(1):
 
 	inchi_list = []
 

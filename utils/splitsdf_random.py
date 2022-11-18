@@ -16,15 +16,11 @@ parser.add_argument('--num_batches', type=int, help='Number of batches, i.e. num
 args = parser.parse_args()
 
 n_list = list(range(args.n_mol))
-print(n_list)
 
 mol_database = SDFDatasetLargeRAM(args.input)
 
 if args.n_mol != len(mol_database):
 	sys.exit('N_mol not equal to number of molecules in input file')
-
-if args.batch_size * args.num_batches != args.n_mol:
-	sys.exit('batch_size * num_batches != n_mol')
 
 mol_size = int(args.n_mol / (args.batch_size))
 

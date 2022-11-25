@@ -40,13 +40,12 @@ for col in range(args.batch_size):
 	with open(outfile_name, 'w') as outfile:
 		print('Writing to', outfile_name )
 
-	for n in n_list[first_mol:last_mol]:
+		for n in n_list[first_mol:last_mol]:
 
-		mol = mol_database[n]
+			mol = mol_database[n]
 
-		lines = molecule_to_sdf(mol)
+			lines = molecule_to_sdf(mol)
 
-		with open(outfile_name, 'a') as outfile:
 			for line in lines:
 				outfile.write(line)
 			outfile.write('$$$$\n')

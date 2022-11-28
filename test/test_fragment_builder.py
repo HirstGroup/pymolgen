@@ -8,8 +8,6 @@ from pymolgen.fragment_mol import *
 from pymolgen.fragment_builder import *
 from rdkit import Chem
 
-WEIGHT_THRESHOLD = 500.0
-
 def test_update_bond_frequencies():
 
     fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')

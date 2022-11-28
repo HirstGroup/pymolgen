@@ -235,11 +235,11 @@ def bond_frequencies_to_np(bond_frequencies):
 
 def read_candidates(candidate_file):
 
-    candidate_list = set()
+    candidate_list = {}
 
     with open(candidate_file) as infile:
         for line in infile:
-            candidate_list.add(line.strip('\n'))
+            candidate_list[line.strip('\n')] = 1
 
     return candidate_list
 
@@ -268,7 +268,7 @@ def get_weight_per_proc(procs, weights, ass):
 
     return weight_per_proc
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name=None, n=None, n_mol=None, filters=False, fragments_used_file=None, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=1, cpu=1, candidate_file=None, cap=False, intermediates=False, restricted=False, time=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name=None, n=None, n_mol=None, filters=False, fragments_used_file=None, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=1, cpu=1, candidate_file=None, cap=False, intermediates=False, restricted=False, time_limit=None):
 
     new_dict = {}
 
@@ -297,7 +297,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
     if unique:
-        candidate_list = set()
+        candidate_list = {}
     else:
         candidate_list = None
 
@@ -413,12 +413,18 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     if n_mol is None:
         n_mol = np.inf
 
-    build_mol_single_partial = partial(build_mol_single,parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, fragments_used_file, pains_database, candidate_list, figure, verbose, mw_check, use_numpy, cap, intermediates)
+    build_mol_single_partial = partial(build_mol_single,parent_mol, parent_fragment_list, parent_fragment_i_list, parent_fragment_i_dict, fragment_database, bond_frequencies, parent_mapping, filters, fragments_used_file, pains_database, candidate_list, figure, verbose, mw_check, use_numpy, cap, intermediates, time_limit)
+
+    if time_limit is not None:
+        time_limit = time_limit * 3600
+    else:
+        time_limit = np.inf
 
     start_time = time.time()
     current_time = start_time
+    run_time = time.time() - start_time
 
-    while n < n_mol:
+    while n < n_mol and run_time < time_limit:
 
         output_mol_list = []
 
@@ -449,16 +455,22 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         if candidate_list is not None:
 
-            output_mol_list, new_inchi_list = unique_mol_list(output_mol_list, verbose)
+            output_mol_list, new_inchi_dict = unique_mol_list(output_mol_list, verbose)
 
-            new_inchi_set = set(new_inchi_list)
+            #new_inchi_set = set(new_inchi_list)
 
-            candidate_list.update(new_inchi_set)
+            #candidate_list.update(new_inchi_set)
+
+            for key, val in new_inchi_dict.items():
+                if key in candidate_list:
+                    candidate_list[key] += 1
+                else:
+                    candidate_list[key] = val
 
             if candidate_file is not None:
                 with open(candidate_file, 'a') as outfile:
-                    for inchi in new_inchi_list:
-                        outfile.write('%s\n' %inchi)
+                    for key, val in new_inchi_dict.items():
+                        outfile.write('%s %s\n' %(key, val))
 
         if len(output_mol_list) > 0:
             previous_time = current_time
@@ -505,23 +517,33 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             output_mol_list = []
 
+        run_time = time.time() - start_time
+
+    if candidate_file is not None:
+
+        candidate_list = dict(sorted(candidate_list.items(), key=lambda item: item[1], reverse=True))
+
+        with open(candidate_file, 'w') as outfile:
+            for key, val in candidate_list.items():
+                outfile.write('%s %s\n' %(key, val))    
+
 def unique_mol_list(mol_list, verbose):
 
     inchi_list = []
-    inchi_set = set()
+    inchi_set = {}
 
     output_mol_list = []
 
     for mol in mol_list:
         inchi = molecule_to_inchi(mol)
         if inchi not in inchi_set:
-            inchi_set.add(inchi)
+            inchi_set[inchi] = 1
             inchi_list.append(inchi)
             output_mol_list.append(mol)
         else:
             if verbose: print('Not unique', inchi)
 
-    return output_mol_list, inchi_list
+    return output_mol_list, inchi_set
 
 
 
@@ -677,6 +699,7 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
                             if candidate_list is not None:
                                 if inchi in candidate_list:
+                                    candidate_list[inchi] += 1
                                     if verbose: print('Not unique')
                                     return return_mol_list
 
@@ -749,6 +772,7 @@ def build_mol_single(parent_mol, parent_fragment_list, parent_fragment_i_list, p
 
     if candidate_list is not None:
         if inchi in candidate_list:
+            candidate_list[inchi] += 1
             if verbose: print('Not unique')
             return return_mol_list
 
@@ -804,7 +828,7 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
     return mol
 
-def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, fragments_used_file=None, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=1, cpu=1, candidate_file=None, cap=False, intermediates=False, restricted=False, time=None):
+def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file_list, parent_mapping_1,  remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol=None, filters=False, fragments_used_file=None, unique=False, figure=None, rules=False, rules_file=None, restart=False, verbose=False, mw_check=False, use_numpy=True, batch_size=1, cpu=1, candidate_file=None, cap=False, intermediates=False, restricted=False, time_limit=None):
 
     if restart is False:
         if outfile_name is not None:
@@ -814,7 +838,7 @@ def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file,
             with open(fragments_used_file, 'w') as outfile:
                 print('Writing to', fragments_used_file)
 
-    for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, outfile_name=outfile_name, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, fragments_used_file=fragments_used_file, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size, cpu=cpu, candidate_file=candidate_file, cap=cap, intermediates=intermediates, restricted=restricted, time=time):
+    for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, outfile_name=outfile_name, n_mol=n_mol, unique=unique, rules=rules, rules_file=rules_file, filters=filters, fragments_used_file=fragments_used_file, restart=restart, verbose=verbose, mw_check=mw_check, use_numpy=use_numpy, batch_size=batch_size, cpu=cpu, candidate_file=candidate_file, cap=cap, intermediates=intermediates, restricted=restricted, time_limit=time_limit):
 
         for mol in mol_list:
             if outfile_name is not None:
@@ -891,7 +915,7 @@ if __name__ == '__main__':
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
     parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
-    parser.add_argument('--time', type=float, help='Time limit in hours for generation')
+    parser.add_argument('--time_limit', type=float, help='Time limit in hours for generation')
     parser.add_argument('--verbose', action='store_true', help='Verbose output', required=False)
 
 
@@ -911,7 +935,7 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
-    fragment_builder(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, fragments_used_file=args.fragments_used_file, restart=args.restart, verbose=args.verbose, mw_check=args.mw_check, use_numpy=use_numpy, batch_size=args.batch_size, cpu=args.cpu, candidate_file=args.candidate_file, cap=args.cap, intermediates=args.intermediates, restricted=args.restricted, time=args.time)
+    fragment_builder(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment,outfile_name=args.outfile_name, n_mol=args.n_mol, unique=args.unique, rules=args.rules, rules_file=args.rules_file, filters=args.filters, fragments_used_file=args.fragments_used_file, restart=args.restart, verbose=args.verbose, mw_check=args.mw_check, use_numpy=use_numpy, batch_size=args.batch_size, cpu=args.cpu, candidate_file=args.candidate_file, cap=args.cap, intermediates=args.intermediates, restricted=args.restricted, time_limit=args.time_limit)
 
     print('Normal termination')
 

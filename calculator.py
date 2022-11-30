@@ -33,8 +33,8 @@ PSA_THRESHOLD = 140
 PFI_THRESHOLD = 8
 #   ROTBOND_THRESHOLD:  Number of rotatable bonds (<= 7)
 ROTBOND_THRESHOLD = 7
-#   WEIGHT_THRESHOLD:    Maximum MW in Daltons (<= 500)
-WEIGHT_THRESHOLD = 500
+
+
 #   H_DON_THRESHOLD:     Maximum number of hydrogen donors (<= 5)
 H_DON_THRESHOLD = 5
 #   H_ACC_THRESHOLD:     Maximum number of hydrogen acceptors (<= 10)
@@ -73,7 +73,11 @@ if __name__ == '__main__':
     parser.add_argument('-i','--input', help='Input file of inchi',required=True)
     parser.add_argument('-o','--output', help='Output file',required=True)
 
+    parser.add_argument('--mw_threshold', type=float, help='MW threshold', default = 500.0, required=False)
+    
     args = parser.parse_args()
+
+    WEIGHT_THRESHOLD = args.mw_threshold
 
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
     print(pIC50_pred_model.info)

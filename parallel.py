@@ -3,27 +3,20 @@ from itertools import product
 from functools import partial
 import time
 
-def test(a, b):
-    time.sleep(1)
-    return a + b
+def test(a, b, c=None, d=None):
+    time.sleep(0.1)
+    return a + d
 
 a = 0
+b=0
+c=None
+func = partial(test,a=a, b=b, c=c)
 
-func = partial(test,a)
-"""
 p = Pool(8)
-outputs = p.map(func, range(100) )
-"""
+outputs = p.map(func, range(10) )
 
-for i in range(100):
-    test(a,i)
+print(outputs)
 
-print('DONE')
-"""
-c = []
 
-for i in range(100000000):
-    c.append(a + i)
 
 print('DONE')
-"""

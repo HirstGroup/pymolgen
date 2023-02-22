@@ -271,43 +271,95 @@ def get_random_neighbour_np(fragment_i, fragment_bond_frequencies):
     return new_frag_i, new_frag_i_atom
 
 
-def get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, depth):
+def get_systematic_neighbour(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, depth):
+    
+    keys = list(fragment_bond_frequencies.keys())
+    vals = list(fragment_bond_frequencies.values())
 
-    keys = fragment_bond_frequencies[0]
-    vals = fragment_bond_frequencies[1]
+    if systematic_count == [0,0] and depth == 1 and systematic_restricted is not None:
 
-    if systematic_count == [0,0] and depth == 1:
-        if systematic_restricted is not None:
+        print('LINE281', systematic_count)
+        print(systematic_restricted)
 
-            print(systematic_count)
-            print(systematic_restricted)
+        offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0] - 1)
+        max_offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0])
+        systematic_restricted.append(max_offset)
 
-            offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0] - 1)
-            max_offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0])
-            systematic_restricted.append(max_offset)
+        systematic_count[0] = offset
+        print('OFFSET', systematic_count)
 
-            systematic_count = [offset, 0]
-            print('OFFSET', systematic_count)
-
-            for i in fragment_bond_frequencies[0]:
-                print(i)
 
     if systematic_restricted is not None and systematic_count[0] == systematic_restricted[2]:
         sys.exit('Done all systematic combinations for restricted run')
 
-    if depth == 1:
-        if systematic_count[0] > len(keys) - 1:
-            print('len keys =', len(keys))
-            sys.exit('Done all systematic combinations, systematic_count = %s' %systematic_count)
+    if depth == 1 and systematic_count[0] == len(keys):
+        print('len keys =', len(keys))
+        sys.exit('Done all systematic combinations, systematic_count = %s' %systematic_count)
+    print('LINE298', systematic_count)
+    print('LINE299', len(keys))
 
+    if depth == 2: print(keys)
     draw = keys[systematic_count[depth-1]]
-
+    print('depth', depth, 'draw', draw)
     if depth == 2:
-        if systematic_count[1] < len(keys) - 1:
-            systematic_count[1] += 1
-        else:
+        if systematic_count[1] == len(keys) - 1:
             systematic_count[0] += 1
             systematic_count[1] = 0
+        else:
+            systematic_count[1] += 1
+
+
+    if fragment_i == draw[0]:
+
+        new_frag_i = draw[1]
+        fragment_i_atom = draw[2]
+        new_frag_i_atom = draw[3]
+
+    if fragment_i == draw[1]:
+
+        new_frag_i = draw[0]
+        fragment_i_atom = draw[3]
+        new_frag_i_atom = draw[2]
+
+    return new_frag_i, new_frag_i_atom
+
+
+def get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, depth):
+    print('FUNCTION CALL')
+    keys = fragment_bond_frequencies[0]
+    vals = fragment_bond_frequencies[1]
+
+    if systematic_count == [0,0] and depth == 1 and systematic_restricted is not None:
+
+        print('LINE281', systematic_count)
+        print(systematic_restricted)
+
+        offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0] - 1)
+        max_offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0])
+        systematic_restricted.append(max_offset)
+
+        systematic_count[0] = offset
+        print('OFFSET', systematic_count)
+
+
+    if systematic_restricted is not None and systematic_count[0] == systematic_restricted[2]:
+        sys.exit('Done all systematic combinations for restricted run')
+
+    if depth == 1 and systematic_count[0] == len(keys):
+        print('len keys =', len(keys))
+        sys.exit('Done all systematic combinations, systematic_count = %s' %systematic_count)
+    print('LINE298', systematic_count)
+    print('LINE299', len(keys))
+
+    if depth == 2: print(keys)
+    draw = keys[systematic_count[depth-1]]
+    print('depth', depth)
+    if depth == 2:
+        if systematic_count[1] == len(keys) - 1:
+            systematic_count[0] += 1
+            systematic_count[1] = 0
+        else:
+            systematic_count[1] += 1
 
 
     if fragment_i == draw[0]:
@@ -709,7 +761,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                     candidate_list[key] += val
                 else:
                     candidate_list[key] = val
-                    print('NEW_CANDIDATE', key)
 
             if candidate_file is not None:
                 with open(candidate_file, 'a') as outfile:
@@ -931,13 +982,17 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
 
             else:
 
-                if systematic_count is not None:
-                    sys.exit('Systematic not implemented for no numpy bond frequencies')
-
                 fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies)
 
+                # if building fragments systematically then get systematic neighbour
+                if len(frag_list) < 3 and systematic_count is not None:
+                    get_random_neighbour_out = get_systematic_neighbour(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, len(frag_list))
+                else:
+                    # choose random neighbour
+                    get_random_neighbour_out = get_random_neighbour(fragment_i, fragment_bond_frequencies)                    
+
                 # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
-                # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
+                # this shouldn't happen since all fragments come from molecules so they should all have bonds
                 # but there could be errors in the database
                 if len(fragment_bond_frequencies) == 0:
                     if verbose:
@@ -945,8 +1000,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
                         print(fragment_bond_frequencies)
                     return return_mol_list
 
-                # choose random neighbour
-                get_random_neighbour_out = get_random_neighbour(fragment_i, fragment_bond_frequencies)
+
 
             if get_random_neighbour_out is not None:
                 new_frag_i = get_random_neighbour_out[0]
@@ -1027,14 +1081,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
 
                     mol.hydrogenate()
 
-                    size1 = len(return_mol_list)
-
                     return_mol_list = make_return_mol_list(mol, candidate_list, inchi, return_mol_list)
-
-                    size2 = len(return_mol_list)
-
-                    if size2 > size1:
-                        print('INTERMEDIATE', inchi)
 
 
     for i in frag_list[1:]:
@@ -1110,8 +1157,6 @@ def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file,
 
     for mol_list in build_molecule(fragments_sdf=fragments_sdf, fragments_txt=fragments_txt, frequencies_txt=frequencies_txt, parent_file=parent_file, parent_fragment_file_list=parent_fragment_file_list, parent_mapping_1=parent_mapping_1, remove_hydrogens=remove_hydrogens, remove_hydrogens_parent_fragment=remove_hydrogens_parent_fragment, batch_size=batch_size, candidate_file=candidate_file, cap=cap, cpu=cpu, depth=depth, extra_candidate_file=extra_candidate_file, filters=filters, fragments_used_file=fragments_used_file, intermediates=intermediates, mw_check=mw_check, mw_threshold=mw_threshold, n_mol=n_mol, outfile_name=outfile_name, parallel=parallel, restart=restart, restricted=restricted, rules=rules, rules_file=rules_file, silent=silent, systematic=systematic, systematic_read=systematic_read, systematic_restricted=systematic_restricted, time_limit=time_limit, unique=unique, use_numpy=use_numpy, verbose=verbose):
 
-        print('len mol list =', len(mol_list))
-
         for mol in mol_list:
             if outfile_name is not None:
 
@@ -1130,7 +1175,6 @@ def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file,
                 elif outfile_format == 'inchi':
 
                     inchi = molecule_to_inchi(mol)
-                    print('WRITE', inchi)
 
                     with open(outfile_name, 'a') as outfile:
                         outfile.write('%s\n' %inchi)

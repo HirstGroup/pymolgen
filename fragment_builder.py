@@ -1,5 +1,6 @@
 import argparse
 import copy
+import inspect
 import random
 import sys,os
 import subprocess
@@ -273,63 +274,19 @@ def get_random_neighbour_np(fragment_i, fragment_bond_frequencies):
 
 def get_systematic_neighbour(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, depth):
     
-    keys = list(fragment_bond_frequencies.keys())
-    vals = list(fragment_bond_frequencies.values())
-
-    if systematic_count == [0,0] and depth == 1 and systematic_restricted is not None:
-
-        print('LINE281', systematic_count)
-        print(systematic_restricted)
-
-        offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0] - 1)
-        max_offset = int(len(keys) / systematic_restricted[1]) * (systematic_restricted[0])
-        systematic_restricted.append(max_offset)
-
-        systematic_count[0] = offset
-        print('OFFSET', systematic_count)
-
-
-    if systematic_restricted is not None and systematic_count[0] == systematic_restricted[2]:
-        sys.exit('Done all systematic combinations for restricted run')
-
-    if depth == 1 and systematic_count[0] == len(keys):
-        print('len keys =', len(keys))
-        sys.exit('Done all systematic combinations, systematic_count = %s' %systematic_count)
-    print('LINE298', systematic_count)
-    print('LINE299', len(keys))
-
-    if depth == 2: print(keys)
-    draw = keys[systematic_count[depth-1]]
-    print('depth', depth, 'draw', draw)
-    if depth == 2:
-        if systematic_count[1] == len(keys) - 1:
-            systematic_count[0] += 1
-            systematic_count[1] = 0
-        else:
-            systematic_count[1] += 1
-
-
-    if fragment_i == draw[0]:
-
-        new_frag_i = draw[1]
-        fragment_i_atom = draw[2]
-        new_frag_i_atom = draw[3]
-
-    if fragment_i == draw[1]:
-
-        new_frag_i = draw[0]
-        fragment_i_atom = draw[3]
-        new_frag_i_atom = draw[2]
+    sys.exit('Get systematic neighbout not implemented without numpy')
 
     return new_frag_i, new_frag_i_atom
 
 
-def get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, depth):
-    print('FUNCTION CALL')
+def get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, depth, frag_free_valence_list_i, frag_list):
+
+    #print(inspect.currentframe().f_lineno, 'systematic_count =', systematic_count, len(frag_free_valence_list_i), depth)
+
     keys = fragment_bond_frequencies[0]
     vals = fragment_bond_frequencies[1]
 
-    if systematic_count == [0,0] and depth == 1 and systematic_restricted is not None:
+    if systematic_count == [0,0,0] and depth == 1 and systematic_restricted is not None:
 
         print('LINE281', systematic_count)
         print(systematic_restricted)
@@ -348,19 +305,35 @@ def get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systemati
     if depth == 1 and systematic_count[0] == len(keys):
         print('len keys =', len(keys))
         sys.exit('Done all systematic combinations, systematic_count = %s' %systematic_count)
-    print('LINE298', systematic_count)
-    print('LINE299', len(keys))
+    
+    draw_i = systematic_count[depth-1]
 
-    if depth == 2: print(keys)
-    draw = keys[systematic_count[depth-1]]
-    print('depth', depth)
-    if depth == 2:
-        if systematic_count[1] == len(keys) - 1:
-            systematic_count[0] += 1
-            systematic_count[1] = 0
-        else:
-            systematic_count[1] += 1
+    #if more attachment points at fragment2 available then increase count
+    if depth == 2 and systematic_count[2] < len(frag_free_valence_list_i) - 1:
+        systematic_count[2] += 1
 
+    #if no more attachment points and more fragments2 available
+    elif depth == 2 and systematic_count[2] == len(frag_free_valence_list_i) - 1 and systematic_count[1] < len(keys) - 1:
+        systematic_count[1] += 1
+        systematic_count[2] = 0
+
+    # if all fragments2 and all attachment points used up for fragment1 then move on to the next fragment1
+    elif depth == 2 and systematic_count[2] == len(frag_free_valence_list_i) - 1 and systematic_count[1] == len(keys) - 1:
+        systematic_count[0] += 1
+        systematic_count[1] = 0
+        systematic_count[2] = 0
+
+    elif depth == 1:
+        pepe = 0
+    else:
+        print('FAILED')
+
+    #print(inspect.currentframe().f_lineno, 'systematic_count =', systematic_count, len(frag_free_valence_list_i), depth)
+
+    try : draw = keys[draw_i]
+    except:
+        print('DRAW FAILED', systematic_count, frag_list)
+        return None
 
     if fragment_i == draw[0]:
 
@@ -576,7 +549,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         sys.exit('Systematic Done')
 
     if systematic_read is not None:
-        systematic_count = [0,0] #np.zeros((2, len(bond_frequencies[0])), dtype=int)
+        systematic_count = [0,0, 0] #np.zeros((2, len(bond_frequencies[0])), dtype=int)
 
     else:
         systematic_count = None
@@ -905,6 +878,8 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
     counter = 0
     while get_length(frag_free_valence_list) != 0:
 
+        #print(inspect.currentframe().f_lineno, 'frag_list', frag_list)
+
         if depth is not None and len(frag_list) == depth + 1:
 
             for i in frag_list[1:]:
@@ -935,8 +910,16 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
 
             j = len(frag_list)
 
-            # get atom from fragment_i to build on
-            atom_i = random.choice(frag_free_valence_list[i])
+            if systematic_count is not None:
+                if len(frag_list) > 1:
+                    #print(inspect.currentframe().f_lineno, 'frag_free_valence_list[i]', frag_free_valence_list[i], 'frag_list', frag_list)
+                    atom_i = frag_free_valence_list[i][systematic_count[2]]
+                else:
+                    atom_i = random.choice(frag_free_valence_list[i])    
+            else:
+                # get atom from fragment_i to build on
+                atom_i = random.choice(frag_free_valence_list[i])
+
             # get fragment_i (index in fragment_database)
             fragment_i = frag_list[i]
 
@@ -974,7 +957,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
 
                 # if building fragments systematically then get systematic neighbour
                 if len(frag_list) < 3 and systematic_count is not None:
-                    get_random_neighbour_out = get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, len(frag_list))
+                    get_random_neighbour_out = get_systematic_neighbour_np(fragment_i, fragment_bond_frequencies, systematic_count, systematic_restricted, len(frag_list), frag_free_valence_list[i], frag_list)
 
                 else:
                     # choose random neighbour
@@ -1001,7 +984,6 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
                     return return_mol_list
 
 
-
             if get_random_neighbour_out is not None:
                 new_frag_i = get_random_neighbour_out[0]
                 new_frag_i_atom = get_random_neighbour_out[1]
@@ -1016,7 +998,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
             # get free valence points of new fragment
             new_free_valence_list = new_frag.free_valence_list
 
-            if not new_frag.is_fluorine() and new_frag_i_atom in new_free_valence_list:
+            if True: #not new_frag.is_fluorine() and new_frag_i_atom in new_free_valence_list:
 
                 if mw_check:
                     mw += new_frag.molecular_weight()

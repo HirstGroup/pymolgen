@@ -24,6 +24,17 @@ def test_add_bond():
 	f.add_bond(0,1,0,0)
 	assert f.bonds == [(0,1,0,0)]
 
+	assert f.free_valence_points == [[], []]
+
+def test_add_bond2():
+	f = FragmentGraph()
+	f.add_fragment(0, [0])
+	f.add_fragment(1, [0,1])
+	f.add_bond(0,1,0,0)
+	assert f.bonds == [(0,1,0,0)]
+
+	assert f.free_valence_points == [[], [1]]
+
 def test_add_invalid_bond():
 	f = FragmentGraph()
 	try:
@@ -57,4 +68,5 @@ def test_add_invalid_bond_3():
 	except AssertionError:
 		return
 	assert False
+
 

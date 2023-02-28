@@ -13,7 +13,7 @@ parser.add_argument('-o', '--output', help='Output file',required=True)
 
 args = parser.parse_args()
 
-d = set()
+d = {}
 
 for input in args.input:
 
@@ -24,11 +24,23 @@ for input in args.input:
     a = []
 
     for line in infile:
-        a = line.strip('\n')
-        if a not in d:
-            d.add(a)
+
+        if len(line.split()) == 1:
+
+            a = line.strip('\n')
+            d[a] = 1
+
+        elif len(line.split()) == 2:
+
+            if a in d.keys():
+                d[a] += 1
+            else:
+                d[a] = 1
+
+        else:
+            sys.error('Len line split > 2')
 
 
 with open(args.output, 'w') as outfile:
-    for i in d:
-        outfile.write('%s\n' %i)
+    for key, val in d.items():
+        outfile.write('%s %s\n' %(key, val))

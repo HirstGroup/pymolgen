@@ -18,7 +18,7 @@ bond_frequencies = get_bond_frequencies(args.frequencies_txt)
 bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
 bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
-parent_frag_i = 14
+parent_frag_i = 3
 
 atom = 2
 
@@ -27,6 +27,8 @@ total = 0
 bond_freq_i = get_fragment_bond_frequencies_np(parent_frag_i, atom, bond_frequencies)[0]
 
 print('parent bond_freq_i =', len(bond_freq_i))
+
+print(bond_freq_i)
 
 for j in bond_freq_i:
 
@@ -48,7 +50,7 @@ for j in bond_freq_i:
 
 	j_mol = fragment_database[parent_frag_j]
 
-	j_val = j_mol.free_valence_list
+	j_val = j_mol.free_valence_list; print(j_val)
 	j_val.remove(atom_j)
 
 	for k in j_val:

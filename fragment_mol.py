@@ -532,9 +532,7 @@ def update_bond_frequencies(bond_frequencies, frag_mapping):
     Update bond frequencies for atom numbering in frag_mapping (typically numbering from 0)
     """
     d = {}
-
     for key, val in bond_frequencies.items():
-
         i = key[0]
         j = key[1]
 

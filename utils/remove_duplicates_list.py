@@ -42,5 +42,5 @@ for input in args.input:
 
 
 with open(args.output, 'w') as outfile:
-    for key, val in d.items:
+    for key, val in d.items():
         outfile.write('%s %s\n' %(key, val))

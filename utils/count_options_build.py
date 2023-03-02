@@ -7,6 +7,7 @@ parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',require
 parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
 #parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
+parser.add_argument('-o','--output', help='Output file name',required=True)
 
 args = parser.parse_args()
 
@@ -26,9 +27,19 @@ total = 0
 
 bond_freq_i = get_fragment_bond_frequencies_np(parent_frag_i, atom, bond_frequencies)[0]
 
+if args.output is not None:
+	with open(args.output, 'w') as f:
+		print('Writing output to', args.output)
+
+all_inchis = []
+
+# loop through all bonds that fragment1 can make
 for j in bond_freq_i:
 
-	frag_list = []
+	frag_list = [parent_frag_i]
+	frag_mol_list = [fragment_database[parent_frag_i]]
+	frag_bond_list = []
+	#frag_free_valence_list = [[]]
 
 	i1 = j[0]
 	j1 = j[1]
@@ -37,14 +48,18 @@ for j in bond_freq_i:
 
 	if i1 == parent_frag_i:
 		parent_frag_j = j1
+		atom_i = k1
 		atom_j = l1
 	elif j1 == parent_frag_i:
 		parent_frag_j = i1
+		atom_i = l1
 		atom_j = k1
 	else:
 		sys.error('parent_frag_i not in bond_freq_i') 
 
 	frag_list.append(parent_frag_j)
+	frag_mol_list.append(fragment_database[parent_frag_j])
+	frag_bond_list.append((0,1,atom_i, atom_j))
 
 	#bond_freq_j = get_fragment_bond_frequencies_np(parent_frag_j, atom_j, bond_frequencies)[0]
 
@@ -53,6 +68,7 @@ for j in bond_freq_i:
 	j_val = j_mol.free_valence_list
 	j_val.remove(atom_j)
 
+	# loop through all attachment points of fragment2
 	for k in j_val:
 
 		canonical_mapping = get_canonical_mapping(j_mol.graph)
@@ -61,10 +77,55 @@ for j in bond_freq_i:
 
 		fragment_bond_frequencies = get_fragment_bond_frequencies_np(parent_frag_j, atom_i_can, bond_frequencies)[0]
 
-		total += len(fragment_bond_frequencies)
 
-		if total % 100 == 0: print(total)
+		for l in fragment_bond_frequencies:
 
+			total += 1
+
+			i2 = l[0]
+			j2 = l[1]
+			k2 = l[2]
+			l2 = l[3]					
+
+			if i2 == parent_frag_j:
+				parent_frag_l = j2
+				atom_i2 = k2
+				atom_j2 = l2
+			elif j2 == parent_frag_j:
+				parent_frag_l = i2
+				atom_i2 = l2
+				atom_j2 = k2
+			else:
+				sys.error('parent_frag_j not in bond_freq_l')
+
+			frag_list2 = [x for x in frag_list]
+			frag_mol_list2 = [x for x in frag_mol_list]
+			frag_bond_list2 = [x for x in frag_bond_list]
+
+			frag_list2.append(parent_frag_l)
+			frag_mol_list2.append(fragment_database[parent_frag_l])
+			frag_bond_list2.append((1,2,atom_i2, atom_j2))			 
+
+			mol = combine_all_fragments(frag_mol_list2, frag_list2, frag_bond_list2)
+			mol.hydrogenate()
+			inchi = molecule_to_inchi(mol)
+
+			all_inchis.append(inchi)
+
+			if total % 100 == 0: 
+				print(total)
+
+				if args.output is not None:
+					with open(args.output, 'a') as f:
+						for inchi in all_inchis:
+							f.write('%s\n' %inchi)
+					all_inchis = []
+
+
+if args.output is not None:
+	with open(args.output, 'a') as f:
+		for inchi in all_inchis:
+			f.write('%s\n' %inchi)
 
 print(total)
 

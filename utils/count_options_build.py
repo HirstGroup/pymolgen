@@ -5,13 +5,26 @@ from pymolgen.fragment_builder import *
 parser = argparse.ArgumentParser(description='Count total possible number of molecules')
 parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
 parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
-#parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
 parser.add_argument('-o','--output', help='Output file name',required=True)
+parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
+parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
+parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
+parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
 
 args = parser.parse_args()
 
-#parent_mol = molecule_from_sdf(args.parent_file)
+parent_mol = molecule_from_sdf(args.parent_file)
+
+attachment_points = []
+
+# remove hydrogens from parent and determine atoms that will have open valence
+for i in remove_hydrogens:
+    parent_mol = parent_mol.remove_atom(i)
+    for j in parent_mol.free_valence_list:
+        if j not in attachment_points:
+            attachment_points.append(j)
 
 fragment_database = get_fragment_database(args.fragments_sdf)
 frag_mapping = get_frag_mapping(args.fragments_txt)

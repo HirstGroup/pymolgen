@@ -361,6 +361,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     attachment_points = []
 
+    # remove hydrogens from parent and determine atoms that will have open valence
     for i in remove_hydrogens:
         parent_mol = parent_mol.remove_atom(i)
         for j in parent_mol.free_valence_list:

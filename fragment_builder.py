@@ -756,7 +756,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
                             for i in frag_list[1:]:
                                 frag_mol_list.append(fragment_database[i])
 
-                            mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+                            mol = combine_all_fragments(frag_mol_list, frag_bond_list)
 
                             inchi = molecule_to_inchi(mol)
 
@@ -811,7 +811,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
                     for i in frag_list[1:]:
                         frag_mol_list_int.append(fragment_database[i])
 
-                    mol = combine_all_fragments(frag_mol_list_int, frag_list, frag_bond_list)
+                    mol = combine_all_fragments(frag_mol_list_int, frag_bond_list)
 
                     inchi = molecule_to_inchi(mol)
 
@@ -831,7 +831,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
     for i in frag_list[1:]:
         frag_mol_list.append(fragment_database[i])
 
-    mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+    mol = combine_all_fragments(frag_mol_list, frag_bond_list)
 
     inchi = molecule_to_inchi(mol)
 
@@ -862,7 +862,7 @@ def write_fragments_used_file(fragments_used_file, inchi, frag_list):
             outfile.write('%s ' %i)
         outfile.write('\n')
 
-def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
+def combine_all_fragments(frag_mol_list, frag_bond_list):
 
     mol = Molecule()
 

@@ -26,15 +26,53 @@ for i in remove_hydrogens:
         if j not in attachment_points:
             attachment_points.append(j)
 
+parent_fragment_list = []
+
+for i in parent_fragment_file_list:
+    parent_fragment_list.append(molecule_from_sdf(i))
+
+for i in range(len(parent_fragment_list)):
+    parent_fragment_list[i] = parent_fragment_list[i].remove_atom(remove_hydrogens_parent_fragment[i])
+
+parent_fragment_original_list = []
+
+for i in parent_fragment_list:
+    parent_fragment_original_list.append(i)
+
+parent_fragment_i_list = []
+
+new_dict = {}
+for i in range(len(parent_fragment_list)):
+    j = find_fragment(parent_fragment_list[i], fragment_database)
+    print(attachment_points); print('j =', j)
+    new_dict[attachment_points[i]] = j
+    parent_fragment_i_list.append(j)
+
+parent_fragment_list = []
+
+for i in parent_fragment_i_list:
+    parent_fragment_list.append(fragment_database[i])
+
+parent_mapping_2 = []
+
+for i in range(len(parent_fragment_list)):
+    parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
+
+parent_mapping = {}
+n = 0
+for key, val in parent_mapping_1.items():
+    parent_mapping[key] = parent_mapping_2[n][val]
+    n += 1
+
 fragment_database = get_fragment_database(args.fragments_sdf)
 frag_mapping = get_frag_mapping(args.fragments_txt)
 bond_frequencies = get_bond_frequencies(args.frequencies_txt)
 bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
 bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
-parent_frag_i = 14
+parent_frag_i = 8
 
-atom = 2
+atom = 0
 
 total = 0
 
@@ -80,7 +118,8 @@ for j in bond_freq_i:
 
 	j_val = j_mol.free_valence_list
 	j_val.remove(atom_j)
-
+	print('parent_frag_j =', parent_frag_j)
+	print('j_val =', j_val)
 	# loop through all attachment points of fragment2
 	for k in j_val:
 
@@ -117,7 +156,7 @@ for j in bond_freq_i:
 
 			frag_list2.append(parent_frag_l)
 			frag_mol_list2.append(fragment_database[parent_frag_l])
-			frag_bond_list2.append((1,2,atom_i2, atom_j2))			 
+			frag_bond_list2.append((1,2,k, atom_j2))			 
 
 			mol = combine_all_fragments(frag_mol_list2, frag_list2, frag_bond_list2)
 			mol.hydrogenate()

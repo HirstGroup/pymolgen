@@ -369,26 +369,26 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 attachment_points.append(j)
 
     parent_mw = Molecule.molecular_weight(parent_mol)
-    parent_fragment_list = []
 
-    for i in parent_fragment_file_list:
-        parent_fragment_list.append(molecule_from_sdf(i))
+    # make list of equivalent fragments to build on parent
+    parent_fragment_list = [molecule_from_sdf(x) for x in parent_fragment_file_list]
 
+    # remove hydrogens from equivalent fragments
     for i in range(len(parent_fragment_list)):
         parent_fragment_list[i] = parent_fragment_list[i].remove_atom(remove_hydrogens_parent_fragment[i])
 
-    parent_fragment_original_list = []
 
-    for i in parent_fragment_list:
-        parent_fragment_original_list.append(i)
+    # the original equivalent fragments will be mapped to those in the database to account for the different atom numberings
+    parent_fragment_original_list = [x for x in parent_fragment_list]
 
+    # make a dictionary parent_fragment_i_dict that will map each attachment point to the equivalent fragment id in the database
+    # make a list parent_fragment_i_list that will contain all equivalent fragments ids
+    parent_fragment_i_dict = {}
     parent_fragment_i_list = []
-
-    new_dict = {}
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
         print(attachment_points); print('j =', j)
-        new_dict[attachment_points[i]] = j
+        parent_fragment_i_dict[attachment_points[i]] = j
         parent_fragment_i_list.append(j)
 
         lines = molecule_to_sdf(fragment_database[j])
@@ -401,6 +401,21 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         if j is False:
             sys.exit('Parent fragment not found')
+
+    # make list of all fragments as molecule objects
+    parent_fragment_list = [fragment_database[x] for x in parent_fragment_i_list]
+
+    # map all atoms in each equivalent fragment to the atom numbers in the database
+    parent_mapping_2 = []
+    for i in range(len(parent_fragment_list)):
+        parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
+
+    # parent_mapping will map the atoms in the parent with those atom numbers in the equivalent fragments in the database
+    parent_mapping = {}
+    n = 0
+    for key, val in parent_mapping_1.items():
+        parent_mapping[key] = parent_mapping_2[n][val]
+        n += 1
 
     if restricted:
         for i in parent_fragment_i_list:
@@ -433,24 +448,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             plt.show()
 
         sys.exit('Restricted finished')
-
-    parent_fragment_i_dict = new_dict
-
-    parent_fragment_list = []
-
-    for i in parent_fragment_i_list:
-        parent_fragment_list.append(fragment_database[i])
-
-    parent_mapping_2 = []
-
-    for i in range(len(parent_fragment_list)):
-        parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
-
-    parent_mapping = {}
-    n = 0
-    for key, val in parent_mapping_1.items():
-        parent_mapping[key] = parent_mapping_2[n][val]
-        n += 1
 
     if parallel is not None:
         index = parallel[0]

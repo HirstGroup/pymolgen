@@ -4,9 +4,11 @@ from pymolgen.fragment_builder import *
 
 parser = argparse.ArgumentParser(description='Count total possible number of molecules')
 parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
+parser.add_argument('--atom', help='Atom to build from in parent fragment',required=True)
 parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
 #parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
+parser.add_argument('--parent_frag_i', help='Index i in fragment database of fragment to build from',required=True)
 
 args = parser.parse_args()
 
@@ -18,9 +20,9 @@ bond_frequencies = get_bond_frequencies(args.frequencies_txt)
 bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
 bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
-parent_frag_i = 14
+parent_frag_i = args.parent_frag_i
 
-atom = 2
+atom = args.atom
 
 total = 0
 

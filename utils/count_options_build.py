@@ -10,14 +10,12 @@ parser.add_argument('-o','--output', help='Output file name',required=True)
 parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
 parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
-parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
 parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
 
 args = parser.parse_args()
 
 parent_mapping_1 = args.parent_mapping_1
 remove_hydrogens = args.remove_hydrogens
-remove_hydrogens_parent_fragment = args.remove_hydrogens_parent_fragment
 
 fragment_database = get_fragment_database(args.fragments_sdf)
 frag_mapping = get_frag_mapping(args.fragments_txt)
@@ -45,10 +43,6 @@ for i in remove_hydrogens:
 
 # make list of equivalent fragments to build on parent
 parent_fragment_list = [molecule_from_sdf(x) for x in args.parent_fragment_file_list]
-
-# remove hydrogens from equivalent fragments
-for i in range(len(parent_fragment_list)):
-    parent_fragment_list[i] = parent_fragment_list[i].remove_atom(remove_hydrogens_parent_fragment[i])
 
 # the original equivalent fragments will be mapped to those in the database to account for the different atom numberings
 parent_fragment_original_list = [x for x in parent_fragment_list]
@@ -108,7 +102,7 @@ all_inchis = []
 # loop through all bonds that fragment1 can make
 for j in bond_freq_i:
 
-	#frag_list = [parent_frag_i]
+	frag_list = [-1]
 	frag_mol_list = [parent_mol]
 	frag_bond_list = []
 	#frag_free_valence_list = [[]]

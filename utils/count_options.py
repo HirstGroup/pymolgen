@@ -4,11 +4,11 @@ from pymolgen.fragment_builder import *
 
 parser = argparse.ArgumentParser(description='Count total possible number of molecules')
 parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
-parser.add_argument('--atom', help='Atom to build from in parent fragment',required=True)
+parser.add_argument('--atom', type=int, help='Atom to build from in parent fragment',required=True)
 parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
 #parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
-parser.add_argument('--parent_frag_i', help='Index i in fragment database of fragment to build from',required=True)
+parser.add_argument('--parent_frag_i', type=int, help='Index i in fragment database of fragment to build from',required=True)
 
 args = parser.parse_args()
 
@@ -28,7 +28,29 @@ total = 0
 
 bond_freq_i = get_fragment_bond_frequencies_np(parent_frag_i, atom, bond_frequencies)[0]
 
-for j in bond_freq_i:
+count_dict = {}
+
+frags = [1, 0, 11, 26, 41, 10, 86, 88, 7, 221]
+
+with open('frags.sdf', 'w') as f:
+
+	for i in frags:
+
+		mol = fragment_database[i]
+
+		lines = molecule_to_sdf(mol)
+
+		for line in lines:
+			f.write(line)
+		f.write('$$$$\n')
+
+sys.exit()
+
+for x in range(len(bond_freq_i)):
+
+	count_dict[x] = 0
+
+	j = bond_freq_i[x]
 
 	frag_list = []
 
@@ -65,9 +87,16 @@ for j in bond_freq_i:
 
 		total += len(fragment_bond_frequencies)
 
+		count_dict[x] += len(fragment_bond_frequencies)
+
 		if total % 100 == 0: print(total)
 
 
 print(total)
+
+count_dict = dict(sorted(count_dict.items(), key=lambda item: item[1]))
+
+for key, val in count_dict.items():
+	print(key, val)
 
 

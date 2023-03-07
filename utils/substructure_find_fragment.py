@@ -12,11 +12,14 @@ args = parser.parse_args()
 dataset = SDFDatasetLarge(args.input)
 
 frag = molecule_from_sdf(args.fragment)
-frag_len = len(frag)
+frag_len = len(frag.graph)
 
 outfile = open(args.output, 'w')
 
 for i in range(len(dataset)):
+
+    print(i, end = ' ')
+    sel = False
     mol = dataset.load_molecule(i)
 
     fragments, pairs, bonds = get_fragments_dataset(mol)
@@ -26,10 +29,14 @@ for i in range(len(dataset)):
         if len(j) != frag_len:
             continue
 
-        gm = isomorphism.GraphMatcher(j, frag, node_match=node_compare_element)
+        gm = isomorphism.GraphMatcher(j, frag.graph, node_match=node_compare_element)
 
         if gm.is_isomorphic():
-            lines = molecule_to_sdf(j)
-            for line in lines:
-                outfile.write(line)
-            outfile.write('$$$$\n')
+            sel = True
+
+    if sel:
+        mol = dataset.load_molecule(i)
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')

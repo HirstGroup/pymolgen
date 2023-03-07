@@ -1,16 +1,46 @@
+import os
+import sys
+
 from pymolgen.fragment_molecule import *
+from pymolgen.generate import SDFDatasetLargeRAM
+from pymolgen.molecule_formats import *
+from pymolgen.fragment_builder import bond_frequencies_to_np, get_bond_frequencies, get_fragment_database, get_fragment_bond_frequencies_np
 
-f = FragmentMolecule()
+def extend_molecule(fragment_id, bond_frequencies, fragment_database):
 
-f.add_fragment(10, [0,1]) # 0
-f.add_fragment(20, [2,2]) # 1
-f.add_fragment(20, [2,2]) # 2
-f.add_fragment(30, [4])   # 3
-f.add_fragment(40, [5])   # 4
+	output_mol_list = []
 
-f.add_bond(0, 1, 0, 2)
-f.add_bond(1, 2, 2, 2)
-f.add_bond(2, 3, 2, 4)
-f.add_bond(0, 4, 1, 5)
+	mol = fragment_database[fragment_id]
 
-print(f.list_free_valence_points())
+	free_valence_list = mol.free_valence_list
+	for atom in free_valence_list:
+
+		fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom, bond_frequencies)
+
+		for bond in fragment_bonds:
+
+			i = bond[0]
+			j = bond[1]
+			k = bond[2]
+			l = bond[3]
+
+			f = FragmentMolecule()
+			f.add_fragment(fragment_id, mol.free_valence_list)
+
+			if i == fragment_id:
+
+				f.add_fragment(j, fragment_database[j].free_valence_list)
+				f.add_bond(0, 1, k, l)
+
+			elif j == fragment_id:
+
+				f.add_fragment(j, fragment_database[i].free_valence_list)
+				f.add_bond(0, 1, l, k)
+
+			else:
+				sys.error('fragmend_id not in bond', bond)
+
+
+			output_mol_list.append(f)
+
+	return output_mol_list

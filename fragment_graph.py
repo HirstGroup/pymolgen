@@ -3,6 +3,8 @@ import networkx
 
 from typing import Tuple, Dict, List
 
+from pymolgen.molecule import Molecule
+
 class FragmentGraphNode:
 
     def __init__(self, attachment_points: List[int]):

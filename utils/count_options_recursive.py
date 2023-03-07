@@ -30,22 +30,6 @@ bond_freq_i = get_fragment_bond_frequencies_np(parent_frag_i, atom, bond_frequen
 
 count_dict = {}
 
-frags = [0, 3, 13, 7, 4, 11, 17, 12, 2, 19]
-
-with open('frags.sdf', 'w') as f:
-
-	for i in frags:
-
-		mol = fragment_database[i]
-
-		lines = molecule_to_sdf(mol)
-
-		for line in lines:
-			f.write(line)
-		f.write('$$$$\n')
-
-sys.exit()
-
 for x in range(len(bond_freq_i)):
 
 	j = bond_freq_i[x]
@@ -69,8 +53,6 @@ for x in range(len(bond_freq_i)):
 	count_dict[parent_frag_j] = 0
 
 	frag_list.append(parent_frag_j)
-
-	#bond_freq_j = get_fragment_bond_frequencies_np(parent_frag_j, atom_j, bond_frequencies)[0]
 
 	j_mol = fragment_database[parent_frag_j]
 

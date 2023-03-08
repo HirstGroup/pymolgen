@@ -21,4 +21,10 @@ class FragmentMolecule:
     def list_free_valence_points(self):
         return self._graph.free_valence_points
 
-
+    def __str__(self):
+        out = ''
+        for i in range(len(self._graph.fragments)):
+            if len(out) > 0:
+                out += '-'
+            out += str(self._graph.fragments[i].get_attribute('frag_id'))
+        return out

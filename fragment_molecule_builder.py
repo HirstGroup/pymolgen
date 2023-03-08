@@ -1,3 +1,4 @@
+import argparse
 import copy
 import os
 import sys
@@ -96,6 +97,45 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
 
 	return FragmentMolecule_list
 
+def save_mol_to_sdf(mol, sdffile):
 
+	with open(sdffile, 'a') as f:
+		lines = molecule_to_sdf(mol)
+		for line in lines:
+			f.write(line)
+		f.write('$$$$\n')
 
+if __name__ == '__main__':
 
+	parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
+	parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
+	parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
+	parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)
+	parser.add_argument('--atom', type=int, help='Atom to build on parent',required=True)
+	parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
+	parser.add_argument('-o','--output', help='Output SDF file name',required=True)
+
+	args = parser.parse_args()
+
+	bond_frequencies = get_bond_frequencies(args.frequencies_txt)
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database = get_fragment_database(args.fragments_sdf)
+
+	parent = FragmentMolecule()
+
+	parent.add_fragment(args.parent_id, [args.atom])
+
+	output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database, args.depth)
+
+	print(len(output_mol_list))
+
+"""
+	with open(args.output, 'w') as f:
+		print('writing to', args.output)
+
+	for j in output_mol_list:
+		print(j)
+		mol = convert_fragment_molecule_to_mol(j, fragment_database)
+		save_mol_to_sdf(mol, args.output)
+"""

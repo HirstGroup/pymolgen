@@ -145,6 +145,8 @@ def test_extend_molecule_list_depth():
 
 	for j in range(len(output_mol_list)):
 		assert str(output_mol_list[j]) == answers[j]
+
+
 """
 	with open('test.sdf', 'w') as f:
 		print('writing to test.sdf')
@@ -155,10 +157,22 @@ def test_extend_molecule_list_depth():
 		save_mol_to_sdf(mol, 'test.sdf')
 """
 
-def save_mol_to_sdf(mol, sdffile):
+def test_extend_molecule_list_depth_simple():
 
-	with open(sdffile, 'a') as f:
-		lines = molecule_to_sdf(mol)
-		for line in lines:
-			f.write(line)
-		f.write('$$$$\n')
+	bond_frequencies = get_bond_frequencies('../datasets/simple/frequencies_simple.txt')
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database = get_fragment_database('../datasets/simple/fragments_simple.sdf')
+
+	ch3 = FragmentMolecule()
+
+	ch3.add_fragment(0, [0])
+
+	output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database, depth=1)
+
+	answers = ['0-0', '0-1']
+
+	for j in range(len(output_mol_list)):
+		assert str(output_mol_list[j]) == answers[j]
+
+test_extend_molecule_list_depth()

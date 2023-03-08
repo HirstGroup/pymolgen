@@ -156,7 +156,6 @@ def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
 
     atoms = []
     bonds = []
-
     n = 0
     for line in lines:
         if 'V2000' in line: 

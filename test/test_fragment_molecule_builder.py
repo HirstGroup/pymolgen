@@ -25,6 +25,25 @@ def test_fragment_molecule_builder():
 	f.add_bond(0, 4, 1, 5)
 	assert f.list_free_valence_points() == [[], [], [], [], []]
 
+	assert f.list_frag_id() == [10, 20, 20, 30, 40]
+
+	assert f.list_bonds() == [(0, 1, 0, 2), (1, 2, 2, 2), (2, 3, 2, 4), (0, 4, 1, 5)]
+
+def test_convert_fragment_molecule_to_mol():
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [0])
+	f.add_fragment(0, [0])
+
+	f.add_bond(0, 1, 0, 0)
+
+	fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+
+	mol = convert_fragment_molecule_to_mol(f, fragment_database)
+
+	assert molecule_to_inchi(mol) == 'InChI=1S/C2H6/c1-2/h1-2H3'
+
 def test_extend_molecule():
 
 	bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
@@ -51,7 +70,7 @@ def test_extend_molecule_list():
 
 	ch3.add_fragment(0, [0])
 
-	print(len(extend_molecule_list([ch3], bond_frequencies, fragment_database, [])))
+	print(len(extend_molecule_list([ch3], bond_frequencies, fragment_database)))
 
 def test_extend_molecule_list_2():
 
@@ -64,7 +83,7 @@ def test_extend_molecule_list_2():
 
 	amide.add_fragment(2, [1, 2])
 
-	print(len(extend_molecule_list([amide], bond_frequencies, fragment_database, [])))
+	print(len(extend_molecule_list([amide], bond_frequencies, fragment_database)))
 
 def test_extend_molecule_list_all():
 
@@ -83,7 +102,7 @@ def test_extend_molecule_list_all():
 
 		mol2.add_fragment(i, mol.free_valence_list)
 
-		output = len(extend_molecule_list([mol2], bond_frequencies, fragment_database, []))
+		output = len(extend_molecule_list([mol2], bond_frequencies, fragment_database))
 
 		assert output == answers[i]
 
@@ -115,27 +134,26 @@ def test_extend_molecule_list_depth():
 
 	output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database, depth=4)
 
-	answers = ['0-1-2-3-3', '0-1-2-3-4', '0-1-2-3-5', '0-1-2-3-6']
+	answers = ['0-1-2-3-2','0-1-2-3-4','0-1-2-3-5','0-1-2-3-6']
 
 	for j in range(len(output_mol_list)):
 		assert str(output_mol_list[j]) == answers[j]
 
 	output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database, depth=5)
 
-	answers = ['0-1-2-3-3', '0-1-2-3-4', '0-1-2-3-5', '0-1-2-3-6']
+	answers = ['0-1-2-3-2-1', '0-1-2-3-4-3', '0-1-2-3-4-5', '0-1-2-3-5-4', '0-1-2-3-5-8', '0-1-2-3-5-8']
 
 	for j in range(len(output_mol_list)):
-		print(str(output_mol_list[j]))
-		print(output_mol_list[j]._graph.bonds)
-		#assert str(output_mol_list[j]) == answers[j]
-
+		assert str(output_mol_list[j]) == answers[j]
+"""
 	with open('test.sdf', 'w') as f:
 		print('writing to test.sdf')
 
 	for j in output_mol_list:
 		print(j)
-		mol = convert_fragment_graph_to_mol(j._graph, fragment_database)
+		mol = convert_fragment_molecule_to_mol(j, fragment_database)
 		save_mol_to_sdf(mol, 'test.sdf')
+"""
 
 def save_mol_to_sdf(mol, sdffile):
 
@@ -144,6 +162,3 @@ def save_mol_to_sdf(mol, sdffile):
 		for line in lines:
 			f.write(line)
 		f.write('$$$$\n')
-
-
-test_extend_molecule_list_depth()

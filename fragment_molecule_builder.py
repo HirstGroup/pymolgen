@@ -56,9 +56,9 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
 		for x in range(len(free_valence_list)):
 
-			for atom in free_valence_list[x]:
+			fragment_id = f.get_frag_id(x)
 
-				fragment_id = f._graph.fragments[x].get_attribute('frag_id')
+			for atom in free_valence_list[x]:
 
 				fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom, bond_frequencies)
 
@@ -78,7 +78,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
 					elif j == fragment_id:
 
-						node_id = f2.add_fragment(j, fragment_database[i].free_valence_list)
+						node_id = f2.add_fragment(i, fragment_database[i].free_valence_list)
 						f2.add_bond(x, node_id, l, k)
 
 					else:

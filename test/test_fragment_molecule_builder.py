@@ -175,4 +175,24 @@ def test_extend_molecule_list_depth_simple():
 	for j in range(len(output_mol_list)):
 		assert str(output_mol_list[j]) == answers[j]
 
-test_extend_molecule_list_depth()
+def test_extend_molecule_list_depth_rzt():
+
+	bond_frequencies = get_bond_frequencies('../datasets/simple/frequencies_rzt.txt')
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database = get_fragment_database('../datasets/simple/fragments_rzt.sdf')
+
+	ch3 = FragmentMolecule()
+
+	ch3.add_fragment(0, [0])
+
+	output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database, depth=2)
+
+	for j in output_mol_list:
+		print(j)
+		mol = convert_fragment_molecule_to_mol(j, fragment_database)
+		smi = molecule_to_smiles(mol)
+		print(smi)
+		#assert str(output_mol_list[j]) == answers[j]
+
+test_extend_molecule_list_depth_rzt()

@@ -1,3 +1,4 @@
+from pymolgen.fragment_builder import bond_frequencies_to_np, get_bond_frequencies, get_fragment_database, get_fragment_bond_frequencies_np
 from pymolgen.fragment_graph import FragmentGraph
 
 def test_create_fragment_graph():
@@ -68,5 +69,3 @@ def test_add_invalid_bond_3():
 	except AssertionError:
 		return
 	assert False
-
-

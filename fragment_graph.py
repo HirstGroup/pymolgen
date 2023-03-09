@@ -3,13 +3,25 @@ import networkx
 
 from typing import Tuple, Dict, List
 
+from pymolgen.fragment_mol import get_canonical_mapping
 from pymolgen.molecule import Molecule
+
 
 class FragmentGraphNode:
 
     def __init__(self, attachment_points: List[int]):
         self._attachment_points = attachment_points
         self._attributes = dict()
+        self._molecule = None
+
+    @property
+    def attachment_points(self):
+        return list(self._attachment_points)
+
+    def get_molecule(self, fragment_database):
+        if self._molecule is None:
+            self._molecule = fragment_database[self._attributes['frag_id']]
+        return self._molecule
 
     def set_attribute(self, key: str, val):
         self._attributes[key] = val
@@ -17,9 +29,6 @@ class FragmentGraphNode:
     def get_attribute(self, key: str):
         return self._attributes[key]
 
-    @property
-    def attachment_points(self):
-        return list(self._attachment_points)
 
 class FragmentGraph:
 

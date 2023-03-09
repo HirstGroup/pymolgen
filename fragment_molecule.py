@@ -2,6 +2,7 @@ import argparse
 
 from pymolgen.fragment_graph import *
 from pymolgen.fragment_builder import get_fragment_database, get_frag_mapping, get_bond_frequencies, update_bond_frequencies
+from pymolgen.fragment_mol import get_canonical_mapping
 from pymolgen.molecule_formats import *
 
 class FragmentMolecule:
@@ -32,6 +33,9 @@ class FragmentMolecule:
         for node_id in range(len(self._graph.fragments)):
             frag_id_list.append(self._graph.fragments[node_id].get_attribute('frag_id'))
         return frag_id_list
+
+    def get_canonical_mapping(self, frag_id, fragment_database):
+        return get_canonical_mapping(self._graph.fragments[frag_id].get_molecule(fragment_database).graph)
 
     def __str__(self):
         out = ''

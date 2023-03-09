@@ -2,7 +2,7 @@ import random
 import rdkit.Chem
 from pymolgen.molecule import Molecule, FractionalOrderException
 from pymolgen.bond_generator import RandomBondGenerator
-from pymolgen.molecule_formats import molecule_from_smiles, molecule_to_smiles
+from pymolgen.molecule_formats import molecule_from_smiles, molecule_to_smiles, molecule_from_sdf
 
 
 def test_molecule():
@@ -14,7 +14,6 @@ def test_cehmbl_molecules():
         for i, smiles_string in enumerate(smiles_chembl):
             m = molecule_from_smiles(smiles_string)
             assert m is not None
-
 
 def test_implicit_hydrogen():
     m = molecule_from_smiles("C")
@@ -112,3 +111,8 @@ def test_frac_valence():
         "Cc:1:c:c(:c:c(:c1Oc:1:n:c(:n:[c]:2:c:c:[s]:[c]21)NC1CCN(C1)Cc:1:c:c:n:c:c1)[CH])[C]")
     m3 = Molecule.randomly_glue_together(m1, m2, RandomBondGenerator())
     m3.hydrogenate()
+
+def test_attach_points():
+    mol = molecule_from_sdf('../datasets/database1000/fragments1_1.sdf')
+
+    assert mol.attach_points == [0]

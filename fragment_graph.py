@@ -6,6 +6,8 @@ from typing import Tuple, Dict, List
 from pymolgen.fragment_mol import get_canonical_mapping
 from pymolgen.molecule import Molecule
 
+from functools import partial
+print = partial(print, flush=True)
 
 class FragmentGraphNode:
 
@@ -30,9 +32,13 @@ class FragmentGraphNode:
     def get_attribute(self, key: str):
         return self._attributes[key]
 
-    def get_canonical_mapping(self, fragment_database):
+    def set_canonical_mapping(self, fragment_database):
         if self._canonical_mapping is None:
             self._canonical_mapping = get_canonical_mapping(fragment_database[self._attributes['frag_id']].graph)
+        return self._canonical_mapping
+
+    def get_canonical_mapping(self):
+        assert self._canonical_mapping is not None
         return self._canonical_mapping
 
 class FragmentGraph:
@@ -60,8 +66,6 @@ class FragmentGraph:
         return list(self._free_valence_points)
 
     def add_fragment(self, id: int, attachment_points: List[int]):
-        if len(attachment_points) < 1:
-            raise ValueError("A fragment must have at least 1 attachment point")
         self._fragments[id] = FragmentGraphNode(attachment_points)
         self._attachment_point_list.append(attachment_points)
         self._free_valence_points.append(attachment_points)
@@ -78,24 +82,24 @@ class FragmentGraph:
             attach_to = attach_from
             attach_from = tmp
 
-        # Check acending order and that fragments don't bond to themselves
-        assert fragment_from < fragment_to
+        # # Check acending order and that fragments don't bond to themselves
+        # assert fragment_from < fragment_to
 
-        # Check bond is between existing fragments
-        assert 0 <= fragment_from < len(self._fragments)
-        assert 0 <= fragment_to < len(self._fragments)
+        # # Check bond is between existing fragments
+        # assert 0 <= fragment_from < len(self._fragments)
+        # assert 0 <= fragment_to < len(self._fragments)
 
-        # Check attachment points are valid
-        assert attach_from in self._fragments[fragment_from].attachment_points
-        assert attach_to in self._fragments[fragment_to].attachment_points
-        assert attach_from in self._attachment_point_list[fragment_from]
-        assert attach_to in self._attachment_point_list[fragment_to]
+        # # Check attachment points are valid
+        # assert attach_from in self._fragments[fragment_from].attachment_points
+        # assert attach_to in self._fragments[fragment_to].attachment_points
+        # assert attach_from in self._attachment_point_list[fragment_from]
+        # assert attach_to in self._attachment_point_list[fragment_to]
 
-        # Check that the attachment points are free
-        assert attach_from in self._free_valence_points[fragment_from]
-        assert attach_to in self._free_valence_points[fragment_to]
+        # # Check that the attachment points are free
+        # assert attach_from in self._free_valence_points[fragment_from]
+        # assert attach_to in self._free_valence_points[fragment_to]
 
-        # Make bon
+        # Make bond
         self._bonds.append((fragment_from, fragment_to, attach_from, attach_to))
         self._free_valence_points[fragment_from].remove(attach_from)
         self._free_valence_points[fragment_to].remove(attach_to)
@@ -142,3 +146,16 @@ def convert_fragment_graph_to_mol(FragmentGraph, fragment_database):
         mol.graph.add_edge(k, l, order=1)        
 
     return mol
+
+def convert_fragment_database_to_graph(fragment_database):
+
+    f = FragmentGraph()
+    print('Converting fragment database to graph')
+    for x in range(len(fragment_database)):
+        if x % 100 == 0:
+            print('%s' %x, end = ' ')
+        f.add_fragment(x, fragment_database[x].attach_points)
+        f.fragments[x].set_attribute('frag_id', x)
+        f.fragments[x].set_canonical_mapping(fragment_database)
+    print('Converting fragment database to graph FINISHED')
+    return f

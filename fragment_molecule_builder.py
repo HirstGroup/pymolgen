@@ -8,6 +8,9 @@ from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
 from pymolgen.fragment_builder import bond_frequencies_to_np, get_bond_frequencies, get_fragment_database, get_fragment_bond_frequencies_np
 
+from functools import partial
+print = partial(print, flush=True)
+
 def extend_molecule(fragment_id, bond_frequencies, fragment_database):
 
 	output_mol_list = []

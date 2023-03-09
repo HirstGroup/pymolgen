@@ -58,14 +58,10 @@ def convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database):
 
     frag_len_list = [len(i.graph.nodes) for i in frag_mol_list]
 
-    print(frag_len_list)
-
     added_frag_len_list = [0]
 
     for i in range(1,len(frag_len_list)):
         added_frag_len_list.append(sum(frag_len_list[:i]))
-
-    print(added_frag_len_list)
 
     for bond in FragmentMolecule.list_bonds():
         i = bond[0]

@@ -13,6 +13,7 @@ class FragmentGraphNode:
         self._attachment_points = attachment_points
         self._attributes = dict()
         self._molecule = None
+        self._canonical_mapping = None
 
     @property
     def attachment_points(self):
@@ -29,6 +30,10 @@ class FragmentGraphNode:
     def get_attribute(self, key: str):
         return self._attributes[key]
 
+    def get_canonical_mapping(self, fragment_database):
+        if self._canonical_mapping is None:
+            self._canonical_mapping = get_canonical_mapping(fragment_database[self._attributes['frag_id']].graph)
+        return self._canonical_mapping
 
 class FragmentGraph:
 

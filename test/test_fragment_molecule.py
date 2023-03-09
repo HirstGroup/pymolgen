@@ -64,4 +64,11 @@ def test_networkx_graph2():
 
 	assert f.get_canonical_mapping(0, fragment_database) == {0: 0, 1: 1, 2: 1, 3: 1}
 
-test_networkx_graph2()
+def test_canonical_mapping():
+
+	f = FragmentMolecule()
+	f.add_fragment(0, [0])	
+	fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+
+	assert f.get_canonical_mapping(0, fragment_database) == {0: 0, 1: 1, 2: 1, 3: 1}
+

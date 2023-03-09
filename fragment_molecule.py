@@ -35,7 +35,7 @@ class FragmentMolecule:
         return frag_id_list
 
     def get_canonical_mapping(self, frag_id, fragment_database):
-        return get_canonical_mapping(self._graph.fragments[frag_id].get_molecule(fragment_database).graph)
+        return self._graph.fragments[frag_id].get_canonical_mapping(fragment_database)
 
     def __str__(self):
         out = ''

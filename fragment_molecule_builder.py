@@ -50,47 +50,6 @@ def extend_molecule(fragment_id, bond_frequencies, fragment_database):
 
 	return output_mol_list
 
-def extend_molecule_list1(FragmentMolecule_list, bond_frequencies, fragment_database):
-
-	output_mol_list = []
-
-	for f in FragmentMolecule_list:
-
-		free_valence_list = f.list_free_valence_points()
-
-		for x in range(len(free_valence_list)):
-
-			fragment_id = f.get_frag_id(x)
-
-			for atom in free_valence_list[x]:
-
-				fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom, bond_frequencies)
-
-				for bond in fragment_bonds:
-
-					i = bond[0]
-					j = bond[1]
-					k = bond[2]
-					l = bond[3]
-
-					f2 = copy.deepcopy(f)
-
-					if i == fragment_id:
-
-						node_id = f2.add_fragment(j, fragment_database[j].free_valence_list)
-						f2.add_bond(x, node_id, k, l)
-
-					elif j == fragment_id:
-
-						node_id = f2.add_fragment(i, fragment_database[i].free_valence_list)
-						f2.add_bond(x, node_id, l, k)
-
-					else:
-						sys.error('fragmend_id not in bond', bond)
-
-					output_mol_list.append(f2)
-
-	return output_mol_list
 
 def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database, depth=False):
 
@@ -170,7 +129,7 @@ if __name__ == '__main__':
 	parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)
 	parser.add_argument('--atom', type=int, help='Atom to build on parent',required=True)
 	parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
-	parser.add_argument('-o','--output', help='Output inchi file name',required=True)
+	parser.add_argument('-o','--output', help='Output inchi file name',required=False)
 
 	args = parser.parse_args()
 
@@ -187,11 +146,13 @@ if __name__ == '__main__':
 
 	print(len(output_mol_list))
 
-	with open(args.output, 'w') as f:
-		print('writing to', args.output)
+	if args.output is not None:
 
-		for j in output_mol_list:
-			mol = convert_fragment_molecule_to_mol(j, fragment_database)
-			inchi = molecule_to_inchi(mol)
-			f.write('%s\n' %inchi)
+		with open(args.output, 'w') as f:
+			print('writing to', args.output)
+
+			for j in output_mol_list:
+				mol = convert_fragment_molecule_to_mol(j, fragment_database)
+				inchi = molecule_to_inchi(mol)
+				f.write('%s\n' %inchi)
 

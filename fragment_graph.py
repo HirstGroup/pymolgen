@@ -37,6 +37,10 @@ class FragmentGraphNode:
             self._canonical_mapping = get_canonical_mapping(fragment_database[self._attributes['frag_id']].graph)
         return self._canonical_mapping
 
+    def manual_canonical_mapping(self, dict):
+        self._canonical_mapping = dict
+        return self._canonical_mapping
+
     def get_canonical_mapping(self):
         assert self._canonical_mapping is not None
         return self._canonical_mapping

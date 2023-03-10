@@ -232,6 +232,7 @@ def test_extend_molecule_list_depth_simple():
 def test_extend_molecule_list_depth_rzt():
 
 	bond_frequencies = get_bond_frequencies('../datasets/simple/frequencies_rzt.txt')
+	print(bond_frequencies)
 	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
 	fragment_database = get_fragment_database('../datasets/simple/fragments_rzt.sdf')
@@ -285,3 +286,137 @@ def test_convert_fragment_database_to_graph():
 	assert canonical_mapping_list == [{0: 0, 1: 1, 2: 1, 3: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, {0: 0, 1: 1, 2: 2, 3: 3}, {0: 0, 2: 2, 1: 0}, {0: 0, 1: 1, 2: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 7: 7, 8: 8, 5: 5, 9: 9, 10: 10, 6: 6, 11: 11}, {0: 0, 2: 2, 1: 1, 3: 3, 4: 2, 5: 1, 7: 7, 8: 0, 9: 9, 6: 6}, {0: 0, 4: 4, 3: 3, 5: 5, 6: 6, 1: 1, 7: 7, 2: 2}, {0: 0}]
 	assert canonical_mapping_list_get == [{0: 0, 1: 1, 2: 1, 3: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, {0: 0, 1: 1, 2: 2, 3: 3}, {0: 0, 2: 2, 1: 0}, {0: 0, 1: 1, 2: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 7: 7, 8: 8, 5: 5, 9: 9, 10: 10, 6: 6, 11: 11}, {0: 0, 2: 2, 1: 1, 3: 3, 4: 2, 5: 1, 7: 7, 8: 0, 9: 9, 6: 6}, {0: 0, 4: 4, 3: 3, 5: 5, 6: 6, 1: 1, 7: 7, 2: 2}, {0: 0}]
 
+def test_extend_molecule_list_model1():
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [1,2,3])
+
+	bond_frequencies = {(0,0,1,1):1}
+
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database_graph = FragmentGraph()
+
+	fragment_database_graph.add_fragment(0, [1,2,3])
+
+	fragment_database_graph.fragments[0].manual_canonical_mapping({1:1, 2:2, 3:3})
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1)
+
+	assert len(output_mol_list) == 1
+	assert str(output_mol_list[0]) == '0-0'
+	assert output_mol_list[0].list_bonds() == [(0, 1, 1, 1)]
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2)
+
+	for i in output_mol_list:
+		print(i, i.list_bonds())
+
+	assert len(output_mol_list) == 0
+
+def test_extend_molecule_list_model2():
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [1,2,3])
+
+	bond_frequencies = {(0,0,2,2):1}
+
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database_graph = FragmentGraph()
+
+	fragment_database_graph.add_fragment(0, [1,2,3])
+
+	fragment_database_graph.fragments[0].manual_canonical_mapping({1:1, 2:2, 3:3})
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1)
+
+	for i in output_mol_list:
+		print(i, i.list_bonds())	
+
+	assert len(output_mol_list) == 1
+	assert str(output_mol_list[0]) == '0-0'
+	assert output_mol_list[0].list_bonds() == [(0, 1, 2, 2)]
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2)
+
+	for i in output_mol_list:
+		print(i, i.list_bonds())	
+
+	assert len(output_mol_list) == 0
+
+def test_extend_molecule_list_model3():
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [1,2,3])
+
+	bond_frequencies = {(0,0,1,2):1}
+
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database_graph = FragmentGraph()
+
+	fragment_database_graph.add_fragment(0, [1,2,3])
+
+	fragment_database_graph.fragments[0].manual_canonical_mapping({1:1, 2:2, 3:3})
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1)
+
+	assert len(output_mol_list) == 2
+
+	mols = ['0-0', '0-0']
+	bonds = [[(0, 1, 1, 2)], [(0, 1, 2, 1)]]
+
+	for idx, x in enumerate(output_mol_list):
+		print(x, x.list_bonds())
+		assert str(x) == mols[idx]
+		assert x.list_bonds() == bonds[idx]
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2)
+
+	mols = ['0-0-0','0-0-0','0-0-0','0-0-0']
+	bonds = [[(0, 1, 1, 2), (0, 2, 2, 1)],[(0, 1, 1, 2), (1, 2, 1, 2)],[(0, 1, 2, 1), (0, 2, 1, 2)],[(0, 1, 2, 1), (1, 2, 2, 1)]]
+
+	for idx, x in enumerate(output_mol_list):
+		print(x, x.list_bonds())
+		assert str(x) == mols[idx]
+		assert x.list_bonds() == bonds[idx]
+
+def test_extend_molecule_list_model4():
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [1,2,3])
+
+	bond_frequencies = {(0,0,1,1):1,(0,0,1,2):1}
+
+	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+	fragment_database_graph = FragmentGraph()
+
+	fragment_database_graph.add_fragment(0, [1,2,3])
+
+	fragment_database_graph.fragments[0].manual_canonical_mapping({1:1, 2:2, 3:3})
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1)
+
+	#assert len(output_mol_list) == 2
+
+	mols = ['0-0', '0-0','0-0']
+	bonds = [[(0, 1, 1, 1)], [(0, 1, 1, 2)], [(0, 1, 2, 1)]]
+
+	for idx, x in enumerate(output_mol_list):
+		print(x, x.list_bonds())
+		assert str(x) == mols[idx]
+		assert x.list_bonds() == bonds[idx]
+
+	output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2)
+
+	bonds = [[(0, 1, 1, 1), (0, 2, 2, 1)], [(0, 1, 1, 1), (1, 2, 2, 1)], [(0, 1, 1, 2), (0, 2, 2, 1)], [(0, 1, 1, 2), (1, 2, 1, 1)], [(0, 1, 1, 2), (1, 2, 1, 2)], [(0, 1, 2, 1), (0, 2, 1, 1)], [(0, 1, 2, 1), (0, 2, 1, 2)], [(0, 1, 2, 1), (1, 2, 2, 1)]]
+
+	for idx, x in enumerate(output_mol_list):
+		print(x, x.list_bonds())
+		assert x.list_bonds() == bonds[idx]

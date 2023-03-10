@@ -64,8 +64,9 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
 			for atom in free_valence_list[x]:
 				atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
+				print(atom, atom_can)
 				fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
-
+				print(fragment_bonds)
 				for bond in fragment_bonds:
 					i = bond[0]
 					j = bond[1]
@@ -75,17 +76,19 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 					f2 = copy.deepcopy(f)
 
 					# if i corresponds to left fragment j is right fragment
-					if i == fragment_id:
+					if i == fragment_id and k == atom_can:
 						node_id = f2.add_fragment(j, fragment_database_graph.fragments[j].attachment_points)
 						f2.add_bond(x, node_id, atom, l)
+						print('new bond82', x, node_id, atom, l)
 
 					# if j corresponds to left fragment i is right framgent
-					elif j == fragment_id:
+					elif j == fragment_id and l == atom_can:
 						node_id = f2.add_fragment(i, fragment_database_graph.fragments[i].attachment_points)
 						f2.add_bond(x, node_id, atom, k)
+						print('new bond88', x, node_id, atom, k)
 
 					else:
-						sys.error('fragmend_id not in bond', bond)
+						sys.error('fragmend_id and atom_can not in bond', bond, atom_can)
 
 					if depth is not None:
 						total = len(output_mol_list)
@@ -94,6 +97,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 							print(f'DEPTH {depth} TOTAL {total}')
 
 					output_mol_list.append(f2)
+					print(f2, f2.list_bonds())
 
 	return output_mol_list
 

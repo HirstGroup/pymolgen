@@ -186,6 +186,9 @@ if __name__ == '__main__':
 	fragment_database = get_fragment_database(args.fragments_sdf)
 	fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
 
+	for i in range(fragment_database_graph):
+		print(i, fragment_database_graph.fragments[i]['frag_id'], fragment_database_graph.fragments[i].get_canonical_mapping())
+
 	parent = FragmentMolecule()
 
 	parent.add_fragment(args.parent_id, [args.atom])

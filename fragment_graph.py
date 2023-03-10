@@ -53,6 +53,9 @@ class FragmentGraph:
         self._attachment_point_list = []
         self._free_valence_points = []
 
+    def __len__(self):
+        return len(self._fragments)
+
     @property
     def fragments(self):
         return dict(self._fragments)

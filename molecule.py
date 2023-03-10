@@ -126,8 +126,6 @@ class Molecule:
             if is_integer_order(v) and to_integer_order(v) > 0:
                 for j in range(v):
                     points.append(i)
-        print('molecule free valence list called')
-        #time.sleep(0.1)
         return points        
 
     @property

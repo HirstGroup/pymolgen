@@ -20,6 +20,19 @@ bond_frequencies = get_bond_frequencies(args.frequencies_txt)
 bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
 bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
+frags = '14265 5315 14339 8669 3030 8674 9828 12015 9818 6993 12520 10103 11719 10882 9999 13591 10699 13568 14852 13674 10908 10092 7559 4426 12233 15140 1874 13903 4447 13866 9142 695 5602 10433 13798 13811 3875 14525 13812 7848 7801 13779 15998 12810 11982 15964 11905 13961 10536 15868 6489 16223 16155 9837 5837 15334 9912 12642 10268 9432 6969 6624 8045 15690 7522 8337 11846 15576 11021 15574 12069 5764 9301 9033 13089 12178 12819 6942 12317 9508 6839 11411 11507 14394 8231 9996 12022 9691 8753 6976 8937'.split()
+
+with open('frag_b_1.sdf', 'w') as f:
+	for i in frags:
+		mol = fragment_database[int(i)]
+		lines = molecule_to_sdf(mol)
+		for line in lines:
+			f.write(line)
+		f.write('$$$$\n')
+
+sys.exit()
+
+
 parent_frag_i = args.parent_frag_i
 
 atom = args.atom
@@ -30,21 +43,7 @@ bond_freq_i = get_fragment_bond_frequencies_np(parent_frag_i, atom, bond_frequen
 
 count_dict = {}
 
-frags = [0, 3, 13, 7, 4, 11, 17, 12, 2, 19]
-
-with open('frags.sdf', 'w') as f:
-
-	for i in frags:
-
-		mol = fragment_database[i]
-
-		lines = molecule_to_sdf(mol)
-
-		for line in lines:
-			f.write(line)
-		f.write('$$$$\n')
-
-sys.exit()
+dead_end_list = []
 
 for x in range(len(bond_freq_i)):
 
@@ -77,6 +76,8 @@ for x in range(len(bond_freq_i)):
 	j_val = j_mol.free_valence_list
 	j_val.remove(atom_j)
 
+	dead_end = True
+
 	for k in j_val:
 
 		canonical_mapping = get_canonical_mapping(j_mol.graph)
@@ -85,11 +86,20 @@ for x in range(len(bond_freq_i)):
 
 		fragment_bond_frequencies = get_fragment_bond_frequencies_np(parent_frag_j, atom_i_can, bond_frequencies)[0]
 
+		if len(fragment_bond_frequencies) > 0:
+			dead_end = False
+
+		if dead_end is True:
+			print('fragment %s has free valence points but no bonds' %parent_frag_j)
+
 		total += len(fragment_bond_frequencies)
 
 		count_dict[parent_frag_j] += len(fragment_bond_frequencies)
 
 		if total % 100 == 0: print(total)
+
+	if dead_end is True:
+		dead_end_list.append(parent_frag_j)
 
 
 print(total)
@@ -99,4 +109,10 @@ count_dict = dict(sorted(count_dict.items(), key=lambda item: item[1]))
 for key, val in count_dict.items():
 	print(key, val)
 
-
+with open('dead_end_list.sdf', 'w') as f:
+	for i in dead_end_list:
+		mol = fragment_database[i]
+		lines = molecule_to_sdf(mol)
+		for line in lines:
+			f.write(line)
+		f.write('$$$$\n')

@@ -10,6 +10,7 @@ parser.add_argument('-o','--output', help='Output file name',required=True)
 parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
 parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
 parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
 
 args = parser.parse_args()
@@ -43,6 +44,14 @@ for i in remove_hydrogens:
 
 # make list of equivalent fragments to build on parent
 parent_fragment_list = [molecule_from_sdf(x) for x in args.parent_fragment_file_list]
+
+print_molecule(parent_fragment_list[0])
+
+for i in range(len(parent_fragment_list)):
+	parent_fragment_list[i] = parent_fragment_list[i].remove_atom(args.remove_hydrogens_parent_fragment[i])
+	print('atom removed', args.remove_hydrogens_parent_fragment[i])
+
+print_molecule(parent_fragment_list[0])
 
 # the original equivalent fragments will be mapped to those in the database to account for the different atom numberings
 parent_fragment_original_list = [x for x in parent_fragment_list]
@@ -86,6 +95,7 @@ for key, val in parent_mapping_1.items():
 
 parent_frag_i = parent_fragment_i_list[0]
 
+print(parent_fragment_list[0].free_valence_list)
 atom = parent_fragment_list[0].free_valence_list[0]
 atom_parent = 14 #parent_mol.free_valence_list[0]
 
@@ -98,6 +108,8 @@ if args.output is not None:
 		print('Writing output to', args.output)
 
 all_inchis = []
+
+frag_b_1_list = []
 
 # loop through all bonds that fragment1 can make
 for j in bond_freq_i:
@@ -130,15 +142,15 @@ for j in bond_freq_i:
 	mol = combine_all_fragments(frag_mol_list, frag_bond_list)
 	mol.hydrogenate()
 	inchi = molecule_to_inchi(mol)
-	print(inchi)
 	#bond_freq_j = get_fragment_bond_frequencies_np(parent_frag_j, atom_j, bond_frequencies)[0]
 
 	j_mol = fragment_database[parent_frag_j]
 
 	j_val = j_mol.free_valence_list
 	j_val.remove(atom_j)
-	print('parent_frag_j =', parent_frag_j)
-	print('j_val =', j_val)
+
+	parent_frag_j_total = 0
+
 	# loop through all attachment points of fragment2
 	for k in j_val:
 
@@ -147,7 +159,6 @@ for j in bond_freq_i:
 		atom_i_can = canonical_mapping[k]
 
 		fragment_bond_frequencies = get_fragment_bond_frequencies_np(parent_frag_j, atom_i_can, bond_frequencies)[0]
-
 
 		for l in fragment_bond_frequencies:
 
@@ -180,8 +191,9 @@ for j in bond_freq_i:
 			mol = combine_all_fragments(frag_mol_list2, frag_bond_list2)
 			mol.hydrogenate()
 			inchi = molecule_to_inchi(mol)
-			print(inchi)
 			all_inchis.append(inchi)
+
+			parent_frag_j_total += 1
 
 			if total % 100 == 0: 
 				print(total)
@@ -192,6 +204,9 @@ for j in bond_freq_i:
 							f.write('%s\n' %inchi)
 					all_inchis = []
 
+	if parent_frag_j_total == 1:
+		frag_b_1_list.append(mol)
+
 
 if args.output is not None:
 	with open(args.output, 'a') as f:
@@ -200,4 +215,10 @@ if args.output is not None:
 
 print(total)
 
+with open('frag_b_1_list.sdf', 'w') as f:
+	for mol in frag_b_1_list:
+		lines = molecule_to_sdf(mol)
+		for line in lines:
+			f.write(line)
+		f.write('$$$$\n')
 

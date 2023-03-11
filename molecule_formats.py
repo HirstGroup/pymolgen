@@ -477,3 +477,19 @@ def read_asf_file(asf):
             mol = read_asf_lines(lines[i:i+2])
             smi = molecule_to_smiles(mol)
             print(smi)
+
+def save_mol_to_sdf(mol, sdffile):
+
+    with open(sdffile, 'w') as f:
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            f.write(line)
+        f.write('$$$$\n')
+
+def save_mol_list_to_sdf(mol_list, sdffile):
+
+    with open(sdffile) as f:
+        print('saving to', sdffile)
+
+    for mol in mol_list:
+        save_mol_to_sdf(mol, sdffile)

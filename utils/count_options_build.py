@@ -1,17 +1,40 @@
 import argparse
 
 from pymolgen.fragment_builder import *
+from pymolgen.molecule_formats import *
+
+import inspect
+
+# Save a reference to the original built-in print function
+original_print = print
+
+def my_print(*args, **kwargs):
+    # Get the caller's frame object
+    frame = inspect.currentframe().f_back
+
+    # Get the line number of the current line in the caller's frame object
+    line_number = frame.f_lineno
+
+    # Call the original print function to output the arguments
+    original_print(f"Line {line_number}:", *args, **kwargs)
+
+# Redefine the built-in print function as my_print
+print = my_print
+
+# Now you can use print as if it were my_print, with line numbers included
+print("Hello, world!")
 
 parser = argparse.ArgumentParser(description='Count total possible number of molecules')
 parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
 parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
 parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
-parser.add_argument('-o','--output', help='Output file name',required=True)
 parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
 parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
-parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=True)
 parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
 parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
+
+parser.add_argument('-o','--output', help='Output file name',required=False)
 
 args = parser.parse_args()
 
@@ -97,7 +120,7 @@ parent_frag_i = parent_fragment_i_list[0]
 
 print(parent_fragment_list[0].free_valence_list)
 atom = parent_fragment_list[0].free_valence_list[0]
-atom_parent = 14 #parent_mol.free_valence_list[0]
+atom_parent = parent_mol.free_valence_list[0]
 
 total = 0
 
@@ -124,25 +147,24 @@ for j in bond_freq_i:
 	k1 = j[2]
 	l1 = j[3]
 
-	if i1 == parent_frag_i:
+	if i1 == parent_frag_i and k1 == atom:
 		parent_frag_j = j1
 		atom_i = atom_parent
 		atom_j = l1
-	elif j1 == parent_frag_i:
+	elif j1 == parent_frag_i and l1 == atom:
 		parent_frag_j = i1
 		atom_i = atom_parent
 		atom_j = k1
 	else:
-		sys.error('parent_frag_i not in bond_freq_i') 
+		sys.exit('parent_frag_i not in bond_freq_i %s' %j) 
 
 	#frag_list.append(parent_frag_j)
 	frag_mol_list.append(fragment_database[parent_frag_j])
 	frag_bond_list.append((0,1,atom_i, atom_j))
 
-	mol = combine_all_fragments(frag_mol_list, frag_bond_list)
-	mol.hydrogenate()
-	inchi = molecule_to_inchi(mol)
-	#bond_freq_j = get_fragment_bond_frequencies_np(parent_frag_j, atom_j, bond_frequencies)[0]
+	#mol = combine_all_fragments(frag_mol_list, frag_bond_list)
+	#mol.hydrogenate()
+	#inchi = molecule_to_inchi(mol)
 
 	j_mol = fragment_database[parent_frag_j]
 
@@ -169,16 +191,16 @@ for j in bond_freq_i:
 			k2 = l[2]
 			l2 = l[3]					
 
-			if i2 == parent_frag_j:
+			if i2 == parent_frag_j and k2 == atom_i_can:
 				parent_frag_l = j2
 				atom_i2 = k2
 				atom_j2 = l2
-			elif j2 == parent_frag_j:
+			elif j2 == parent_frag_j and l2 == atom_i_can:
 				parent_frag_l = i2
 				atom_i2 = l2
 				atom_j2 = k2
 			else:
-				sys.error('parent_frag_j not in bond_freq_l')
+				sys.exit('parent_frag_j not in bond_freq_l %s %s %s' %(l, parent_frag_j, atom_i_can))
 
 			#frag_list2 = [x for x in frag_list]
 			frag_mol_list2 = [x for x in frag_mol_list]
@@ -188,14 +210,15 @@ for j in bond_freq_i:
 			frag_mol_list2.append(fragment_database[parent_frag_l])
 			frag_bond_list2.append((1,2,k, atom_j2))			 
 
-			mol = combine_all_fragments(frag_mol_list2, frag_bond_list2)
-			mol.hydrogenate()
-			inchi = molecule_to_inchi(mol)
-			all_inchis.append(inchi)
+			if args.output is not None:
+				mol = combine_all_fragments(frag_mol_list2, frag_bond_list2)
+				mol.hydrogenate()
+				inchi = molecule_to_inchi(mol)
+				all_inchis.append(inchi)
 
 			parent_frag_j_total += 1
 
-			if total % 100 == 0: 
+			if total % 1000 == 0: 
 				print(total)
 
 				if args.output is not None:
@@ -203,9 +226,6 @@ for j in bond_freq_i:
 						for inchi in all_inchis:
 							f.write('%s\n' %inchi)
 					all_inchis = []
-
-	if parent_frag_j_total == 1:
-		frag_b_1_list.append(mol)
 
 
 if args.output is not None:

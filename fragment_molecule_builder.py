@@ -14,198 +14,245 @@ print = partial(print, flush=True)
 
 def extend_molecule(fragment_id, bond_frequencies, fragment_database):
 
-	output_mol_list = []
+    output_mol_list = []
 
-	mol = fragment_database[fragment_id]
+    mol = fragment_database[fragment_id]
 
-	free_valence_list = mol.free_valence_list
-	for atom in free_valence_list:
+    free_valence_list = mol.free_valence_list
+    for atom in free_valence_list:
 
-		fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom, bond_frequencies)
+        fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom, bond_frequencies)
 
-		for bond in fragment_bonds:
-			i = bond[0]
-			j = bond[1]
-			k = bond[2]
-			l = bond[3]
+        for bond in fragment_bonds:
+            i = bond[0]
+            j = bond[1]
+            k = bond[2]
+            l = bond[3]
 
-			f = FragmentMolecule()
-			f.add_fragment(fragment_id, mol.attach_points)
+            f = FragmentMolecule()
+            f.add_fragment(fragment_id, mol.attach_points)
 
-			if i == fragment_id:
+            if i == fragment_id:
 
-				f.add_fragment(j, fragment_database[j].attach_points)
-				f.add_bond(0, 1, k, l)
+                f.add_fragment(j, fragment_database[j].attach_points)
+                f.add_bond(0, 1, k, l)
 
-			elif j == fragment_id:
+            elif j == fragment_id:
 
-				f.add_fragment(j, fragment_database[i].attach_points)
-				f.add_bond(0, 1, l, k)
+                f.add_fragment(j, fragment_database[i].attach_points)
+                f.add_bond(0, 1, l, k)
 
-			else:
-				sys.error('fragmend_id not in bond', bond)
+            else:
+                sys.error('fragmend_id not in bond', bond)
 
 
-			output_mol_list.append(f)
+            output_mol_list.append(f)
 
-	return output_mol_list
+    return output_mol_list
 
 
 def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=False):
 
-	output_mol_list = []
+    output_mol_list = []
 
-	for f in FragmentMolecule_list:
-		free_valence_list = f.list_free_valence_points()
+    for f in FragmentMolecule_list:
+        free_valence_list = f.list_free_valence_points()
 
-		for x in range(len(free_valence_list)):
+        for x in range(len(free_valence_list)):
 
-			fragment_id = f.get_frag_id(x)
+            fragment_id = f.get_frag_id(x)
 
-			for atom in free_valence_list[x]:
-				atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
-				print(atom, atom_can)
-				fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
-				print(fragment_bonds)
-				for bond in fragment_bonds:
-					i = bond[0]
-					j = bond[1]
-					k = bond[2]
-					l = bond[3]
+            for atom in free_valence_list[x]:
+                atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
+                fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
+                for bond in fragment_bonds:
+                    i = bond[0]
+                    j = bond[1]
+                    k = bond[2]
+                    l = bond[3]
 
-					f2 = copy.deepcopy(f)
+                    f2 = copy.deepcopy(f)
 
-					# if i corresponds to left fragment j is right fragment
-					if i == fragment_id and k == atom_can:
-						node_id = f2.add_fragment(j, fragment_database_graph.fragments[j].attachment_points)
-						f2.add_bond(x, node_id, atom, l)
-						print('new bond82', x, node_id, atom, l)
+                    # if i corresponds to left fragment j is right fragment
+                    if i == fragment_id and k == atom_can:
+                        node_id = f2.add_fragment(j, fragment_database_graph.fragments[j].attachment_points)
+                        f2.add_bond(x, node_id, atom, l)
 
-					# if j corresponds to left fragment i is right framgent
-					elif j == fragment_id and l == atom_can:
-						node_id = f2.add_fragment(i, fragment_database_graph.fragments[i].attachment_points)
-						f2.add_bond(x, node_id, atom, k)
-						print('new bond88', x, node_id, atom, k)
+                    # if j corresponds to left fragment i is right framgent
+                    elif j == fragment_id and l == atom_can:
+                        node_id = f2.add_fragment(i, fragment_database_graph.fragments[i].attachment_points)
+                        f2.add_bond(x, node_id, atom, k)
 
-					else:
-						sys.error('fragmend_id and atom_can not in bond', bond, atom_can)
+                    else:
+                        sys.error('fragmend_id and atom_can not in bond', bond, atom_can)
 
-					if depth is not None:
-						total = len(output_mol_list)
+                    if depth is not None:
+                        total = len(output_mol_list)
 
-						if total % 10000 == 0:
-							print(f'DEPTH {depth} TOTAL {total}')
+                        if total % 10000 == 0:
+                            print(f'DEPTH {depth} TOTAL {total}')
 
-					output_mol_list.append(f2)
-					print(f2, f2.list_bonds())
+                    output_mol_list.append(f2)
 
-	return output_mol_list
+    return output_mol_list
 
 def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database, depth=None):
 
-	total = 0
+    total = 0
 
-	for f in FragmentMolecule_list:
+    for f in FragmentMolecule_list:
 
-		free_valence_list = f.list_free_valence_points()
+        free_valence_list = f.list_free_valence_points()
 
-		for x in range(len(free_valence_list)):
+        for x in range(len(free_valence_list)):
 
-			fragment_id = f.get_frag_id(x)
+            fragment_id = f.get_frag_id(x)
 
-			for atom in free_valence_list[x]:
+            for atom in free_valence_list[x]:
 
-				atom_can = atom 
+                atom_can = atom 
 
-				fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
+                fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
 
-				total += len(fragment_bonds)
+                total += len(fragment_bonds)
 
-				if total % 10000 == 0:
-					print(f'DEPTH {depth} TOTAL {total}')
+                if total % 10000 == 0:
+                    print(f'DEPTH {depth} TOTAL {total}')
 
-	return total
+    return total
 
 def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth):
 
-	for i in range(depth):
+    for i in range(depth):
 
-		FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
+        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
 
-		print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
+        print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
-	return FragmentMolecule_list
+    return FragmentMolecule_list
 
 def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth):
 
-	for i in range(depth - 1):
+    for i in range(depth - 1):
 
-		FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
+        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
 
-		print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
+        print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
-	total = extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database)
+    total = extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database)
 
-	print(f'FINAL DEPTH {depth} TOTAL {total}')
+    print(f'FINAL DEPTH {depth} TOTAL {total}')
 
-	return total
+    return total
 
 def save_mol_to_sdf(mol, sdffile):
 
-	with open(sdffile, 'a') as f:
-		lines = molecule_to_sdf(mol)
-		for line in lines:
-			f.write(line)
-		f.write('$$$$\n')
+    with open(sdffile, 'a') as f:
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            f.write(line)
+        f.write('$$$$\n')
 
 def save_mol_list_to_sdf(mol_list, sdffile):
 
-	with open(sdffile) as f:
-		print('saving to', sdffile)
+    with open(sdffile) as f:
+        print('saving to', sdffile)
 
-	for mol in mol_list:
-		save_mol_to_sdf(mol, sdffile)
+    for mol in mol_list:
+        save_mol_to_sdf(mol, sdffile)
+
+def read_fragment_database_graph(filename):
+
+    with open(filename) as f:
+        lines = f.readlines()
+
+    attach_points_sel = False
+    canonical_mapping_sel = False
+
+    attach_points_list = []
+    canonical_mapping_list = []
+
+    for line in lines:
+        if line.startswith('CANONICAL MAPPING'):
+            attach_points_sel = False
+        if attach_points_sel is True:
+            attach_points_list.append(eval(line))
+        if canonical_mapping_sel is True:
+            canonical_mapping_list.append(eval(line))
+        if line.startswith('ATTACHMENT POINTS'):
+            attach_points_sel = True
+        if line.startswith('CANONICAL MAPPING'):
+            canonical_mapping_sel = True
+
+    f = FragmentGraph()
+
+    assert len(attach_points_list) == len(canonical_mapping_list)
+
+    for i in range(len(attach_points_list)):
+        f.add_fragment(i, attach_points_list[i])
+        f.fragments[i].set_attribute('frag_id', i)
+        f.fragments[i].manual_canonical_mapping(canonical_mapping_list[i])
+
+    return f
+
+def write_fragment_database_graph(fragment_database, filename):
+
+    with open(filename, 'w') as f:
+        f.write('ATTACHMENT POINTS\n')
+        for i in range(len(fragment_database.fragments)):
+            f.write(f'{fragment_database.fragments[i].attachment_points}\n')
+        f.write('CANONICAL MAPPING\n')
+        for i in range(len(fragment_database.fragments)):
+            f.write(f'{fragment_database.fragments[i].get_canonical_mapping()}\n')
 
 
 if __name__ == '__main__':
 
-	parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
-	parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
-	parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
-	parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)
-	parser.add_argument('--atom', type=int, help='Atom to build on parent',required=True)
-	parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
-	parser.add_argument('--count', action='store_true', help='Count total number of molecules without making them', required=False)
-	parser.add_argument('-o','--output', help='Output inchi file name',required=False)
+    parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
+    parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
+    parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
+    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)
+    parser.add_argument('--atom', type=int, help='Atom to build on parent',required=True)
+    parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
+    
+    parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
+    parser.add_argument('-o','--output', help='Output inchi file name', required=False)
+    parser.add_argument('--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
+    parser.add_argument('--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
 
-	args = parser.parse_args()
+    args = parser.parse_args()
 
-	bond_frequencies = get_bond_frequencies(args.frequencies_txt)
-	bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+    bond_frequencies = get_bond_frequencies(args.frequencies_txt)
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
 
-	fragment_database = get_fragment_database(args.fragments_sdf)
-	fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+    fragment_database = get_fragment_database(args.fragments_sdf)
 
-	for i in range(fragment_database_graph):
-		print(i, fragment_database_graph.fragments[i]['frag_id'], fragment_database_graph.fragments[i].get_canonical_mapping())
+    if args.read_fragment_database is not None:
+        fragment_database_graph = read_fragment_database_graph(args.read_fragment_database)
+    else:    
+        fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
 
-	parent = FragmentMolecule()
+    if args.write_fragment_database is not None:
+        write_fragment_database_graph(fragment_database_graph, args.write_fragment_database)
 
-	parent.add_fragment(args.parent_id, [args.atom])
+    parent = FragmentMolecule()
 
-	if args.count:
-		extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth)
+    parent.add_fragment(args.parent_id, [args.atom])
 
-	else:
-		output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth)
+    if args.count:
+        extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth)
 
-	if args.output is not None:
+    else:
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth)
 
-		with open(args.output, 'w') as f:
-			print('writing to', args.output)
+    if args.output is not None:
 
-			for j in output_mol_list:
-				mol = convert_fragment_molecule_to_mol(j, fragment_database)
-				inchi = molecule_to_inchi(mol)
-				f.write('%s\n' %inchi)
+        with open(args.output, 'w') as f:
+            print('writing to', args.output)
+
+            for j in output_mol_list:
+                mol = convert_fragment_molecule_to_mol(j, fragment_database)
+                inchi = molecule_to_inchi(mol)
+                f.write('%s\n' %inchi)
+
 

@@ -131,6 +131,7 @@ if args.output is not None:
 		print('Writing output to', args.output)
 
 all_inchis = []
+all_mols = []
 
 frag_b_1_list = []
 
@@ -212,9 +213,10 @@ for j in bond_freq_i:
 
 			if args.output is not None:
 				mol = combine_all_fragments(frag_mol_list2, frag_bond_list2)
-				mol.hydrogenate()
+				#mol.hydrogenate()
 				inchi = molecule_to_inchi(mol)
 				all_inchis.append(inchi)
+				all_mols.append(mol)
 
 			parent_frag_j_total += 1
 
@@ -229,9 +231,19 @@ for j in bond_freq_i:
 
 
 if args.output is not None:
-	with open(args.output, 'a') as f:
-		for inchi in all_inchis:
-			f.write('%s\n' %inchi)
+	outfile_format = args.output.split('.')[-1].lower()
+
+	if outfile_format == 'sdf':
+		with open(args.output, 'w') as f:
+			for mol in all_mols:
+				lines = molecule_to_sdf(mol)
+				for line in lines:
+					f.write(line)
+				f.write('$$$$\n')
+	else:
+		with open(args.output, 'a') as f:
+			for inchi in all_inchis:
+				f.write('%s\n' %inchi)
 
 print(total)
 

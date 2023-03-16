@@ -161,7 +161,7 @@ def convert_fragment_database_to_graph(fragment_database):
     for x in range(len(fragment_database)):
         if x % 100 == 0:
             print('%s' %x, end = ' ')
-        f.add_fragment(x, fragment_database[x].attach_points)
+        f.add_fragment(x, fragment_database[x].free_valence_list)
         f.fragments[x].set_attribute('frag_id', x)
         f.fragments[x].set_canonical_mapping(fragment_database)
     print('Converting fragment database to graph FINISHED')

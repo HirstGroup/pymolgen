@@ -155,7 +155,7 @@ def save_mol_to_sdf(mol, sdffile):
 
 def save_mol_list_to_sdf(mol_list, sdffile):
 
-    with open(sdffile) as f:
+    with open(sdffile, 'w') as f:
         print('saving to', sdffile)
 
     for mol in mol_list:
@@ -247,12 +247,23 @@ if __name__ == '__main__':
 
     if args.output is not None:
 
-        with open(args.output, 'w') as f:
-            print('writing to', args.output)
+        print('writing to', args.output)
 
+        outfile_format = args.output.split('.')[-1].lower()
+
+        if outfile_format == 'sdf':
+            output_mol_list_mol = []
             for j in output_mol_list:
                 mol = convert_fragment_molecule_to_mol(j, fragment_database)
-                inchi = molecule_to_inchi(mol)
-                f.write('%s\n' %inchi)
+                output_mol_list_mol.append(mol)
+            save_mol_list_to_sdf(output_mol_list_mol, args.output)
+
+        else:
+            with open(args.output, 'w') as f:
+
+                for j in output_mol_list:
+                    mol = convert_fragment_molecule_to_mol(j, fragment_database)
+                    inchi = molecule_to_inchi(mol)
+                    f.write('%s\n' %inchi)
 
 

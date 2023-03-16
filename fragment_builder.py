@@ -490,6 +490,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     while n < n_mol and run_time < time_limit:
 
+        if n % 100 == 0:
+            print(n)
+
         output_mol_list = []
 
         if parallel is not None:
@@ -547,7 +550,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             if verbose: print('TIME %.2f' %interval_time)
 
         if len(output_mol_list) > min(batch_size, n_mol - n):
-                    
+            print('line553')      
             if filters:
 
                 filters_final_mol_return_mol_partial = partial(filters_final_mol_return_mol, pains_database)
@@ -573,7 +576,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 output_mol_list = rules_batch(output_mol_list, rules_file)                
 
             for mol in output_mol_list:
-
+                print('line579')
                 n += 1
 
                 if verbose:

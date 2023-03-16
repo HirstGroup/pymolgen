@@ -45,26 +45,7 @@ def test_convert_fragment_molecule_to_mol():
 
     assert molecule_to_inchi(mol) == 'InChI=1S/C2H6/c1-2/h1-2H3'
 
-"""
-def test_extend_molecule():
 
-    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
-    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
-
-    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
-
-    answers = [1, 2, 2, 8, 4, 4, 2, 1, 2]
-
-    for fragment_id in range(9):
-
-        output_mol_list = extend_molecule(fragment_id, bond_frequencies, fragment_database)
-
-        print(len(output_mol_list))
-
-        #assert len(output_mol_list) == answers[fragment_id]
-
-test_extend_molecule()
-"""
 def test_extend_molecule_list():
 
     bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
@@ -282,7 +263,7 @@ def test_convert_fragment_database_to_graph():
         canonical_mapping_list.append(fragment_database_graph.fragments[i].set_canonical_mapping(fragment_database))
         canonical_mapping_list_get.append(fragment_database_graph.fragments[i].get_canonical_mapping())
 
-    assert attachment_point_list == [[0], [0, 2], [1, 2], [2], [0], [1, 3, 9, 11], [1, 5], [3], [0]]
+    assert attachment_point_list == [[0], [0, 2], [1, 2], [2, 2], [0, 0], [1, 3, 9, 11], [1, 5], [3], [0]]
     assert canonical_mapping_list == [{0: 0, 1: 1, 2: 1, 3: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, {0: 0, 1: 1, 2: 2, 3: 3}, {0: 0, 2: 2, 1: 0}, {0: 0, 1: 1, 2: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 7: 7, 8: 8, 5: 5, 9: 9, 10: 10, 6: 6, 11: 11}, {0: 0, 2: 2, 1: 1, 3: 3, 4: 2, 5: 1, 7: 7, 8: 0, 9: 9, 6: 6}, {0: 0, 4: 4, 3: 3, 5: 5, 6: 6, 1: 1, 7: 7, 2: 2}, {0: 0}]
     assert canonical_mapping_list_get == [{0: 0, 1: 1, 2: 1, 3: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, {0: 0, 1: 1, 2: 2, 3: 3}, {0: 0, 2: 2, 1: 0}, {0: 0, 1: 1, 2: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 7: 7, 8: 8, 5: 5, 9: 9, 10: 10, 6: 6, 11: 11}, {0: 0, 2: 2, 1: 1, 3: 3, 4: 2, 5: 1, 7: 7, 8: 0, 9: 9, 6: 6}, {0: 0, 4: 4, 3: 3, 5: 5, 6: 6, 1: 1, 7: 7, 2: 2}, {0: 0}]
 
@@ -445,3 +426,104 @@ def test_extend_molecule_list_model4():
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
         assert x.list_bonds() == bonds[idx]
+
+
+def test_extend_molecule_list_model5():
+
+    f = FragmentMolecule()
+
+    f.add_fragment(0, [1,2,3])
+
+    bond_frequencies = {(0,0,1,2):1}
+
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database_graph = FragmentGraph()
+
+    fragment_database_graph.add_fragment(0, [1,2,3])
+
+    fragment_database_graph.fragments[0].manual_canonical_mapping({1:1, 2:1, 3:3})
+
+    output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1)
+
+    mols = ['0-0', '0-0']
+    bonds = [[(0, 1, 1, 2)], [(0, 1, 2, 2)]]
+
+    for idx, x in enumerate(output_mol_list):
+        print(x, x.list_bonds())
+        assert str(x) == mols[idx]
+        assert x.list_bonds() == bonds[idx]
+
+    output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2)
+
+    mols = ['0-0-0', '0-0-0', '0-0-0', '0-0-0']
+    bonds = [[(0, 1, 1, 2), (0, 2, 2, 2)], [(0, 1, 1, 2), (1, 2, 1, 2)], [(0, 1, 2, 2), (0, 2, 1, 2)], [(0, 1, 2, 2), (1, 2, 1, 2)]]
+
+    for idx, x in enumerate(output_mol_list):
+        print(x, x.list_bonds())
+        assert str(x) == mols[idx]
+        assert x.list_bonds() == bonds[idx]
+
+def test_extend_molecule_list_model6():
+
+    f = FragmentMolecule()
+
+    f.add_fragment(0, [1,2,3])
+
+    bond_frequencies = {(0,0,1,2):1}
+
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database_graph = FragmentGraph()
+
+    fragment_database_graph.add_fragment(0, [1,2,3])
+
+    fragment_database_graph.fragments[0].manual_canonical_mapping({1:1, 2:1, 3:1})
+
+    output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1)
+
+    mols = ['0-0', '0-0', '0-0']
+    bonds = [[(0, 1, 1, 2)], [(0, 1, 2, 2)], [(0, 1, 3, 2)]]
+
+    for idx, x in enumerate(output_mol_list):
+        print(x, x.list_bonds())
+        assert str(x) == mols[idx]
+        assert x.list_bonds() == bonds[idx]
+
+    output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2)
+
+    mols = ['0-0-0'] * 12
+    bonds = [[(0, 1, 1, 2), (0, 2, 2, 2)], [(0, 1, 1, 2), (0, 2, 3, 2)], [(0, 1, 1, 2), (1, 2, 1, 2)], [(0, 1, 1, 2), (1, 2, 3, 2)], [(0, 1, 2, 2), (0, 2, 1, 2)], [(0, 1, 2, 2), (0, 2, 3, 2)], [(0, 1, 2, 2), (1, 2, 1, 2)], [(0, 1, 2, 2), (1, 2, 3, 2)], [(0, 1, 3, 2), (0, 2, 1, 2)], [(0, 1, 3, 2), (0, 2, 2, 2)], [(0, 1, 3, 2), (1, 2, 1, 2)], [(0, 1, 3, 2), (1, 2, 3, 2)]]
+
+
+    for idx, x in enumerate(output_mol_list):
+        print(idx, x, x.list_bonds())
+        assert str(x) == mols[idx]
+        assert x.list_bonds() == bonds[idx]
+
+
+def test_extend_molecule_list_database11_20():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0])
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, 2)
+
+    inchi_list = ['InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C10H9NO/c1-12-9-4-5-10-8(7-9)3-2-6-11-10/h2-7H,1H3', 'InChI=1S/C14H11NO/c1-16-12-6-7-14-11(9-12)8-10-4-2-3-5-13(10)15-14/h2-9H,1H3', 'InChI=1S/C7H8O/c1-8-7-5-3-2-4-6-7/h2-6H,1H3', 'InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C7H9N/c1-8-7-5-3-2-4-6-7/h2-6,8H,1H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C7H9N/c1-8-7-5-3-2-4-6-7/h2-6,8H,1H3', 'InChI=1S/C4H7N3/c1-3-5-4(2)7-6-3/h1-2H3,(H,5,6,7)', 'InChI=1S/C4H7N3/c1-3-5-4(2)7-6-3/h1-2H3,(H,5,6,7)', 'InChI=1S/C9H9N3/c1-8-11-10-7-12(8)9-5-3-2-4-6-9/h2-7H,1H3', 'InChI=1S/C18H17N5O/c1-23-15(24)18(22-16(23)19)14-5-3-2-4-11(14)6-17(18)7-12-9-20-21-10-13(12)8-17/h2-5,9-10H,6-8H2,1H3,(H2,19,22)', 'InChI=1S/C24H20N4O/c1-28-15-25-24(22(28)29)21-9-17(16-5-3-2-4-6-16)7-8-18(21)10-23(24)11-19-13-26-27-14-20(19)12-23/h2-9,13-15H,10-12H2,1H3', 'InChI=1S/C5H8N2/c1-5-3-4-7(2)6-5/h3-4H,1-2H3', 'InChI=1S/C5H8N2/c1-4-3-5(2)7-6-4/h3H,1-2H3,(H,6,7)', 'InChI=1S/C8H13N3/c1-6-7(5-10-11-6)8-3-2-4-9-8/h5,8-9H,2-4H2,1H3,(H,10,11)', 'InChI=1S/C5H8N2/c1-5-3-4-7(2)6-5/h3-4H,1-2H3', 'InChI=1S/C5H8N2/c1-5-3-4-6-7(5)2/h3-4H,1-2H3', 'InChI=1S/C8H13N3/c1-11-6-7(5-10-11)8-3-2-4-9-8/h5-6,8-9H,2-4H2,1H3', 'InChI=1S/C5H8N2/c1-4-3-5(2)7-6-4/h3H,1-2H3,(H,6,7)', 'InChI=1S/C5H8N2/c1-5-3-4-6-7(5)2/h3-4H,1-2H3', 'InChI=1S/C8H13N3/c1-6-7(5-10-11-6)8-3-2-4-9-8/h5,8-9H,2-4H2,1H3,(H,10,11)', 'InChI=1S/C3H7NO/c1-4(2)3-5/h3H,1-2H3', 'InChI=1S/C5H6N2OS/c1-7(4-8)5-6-2-3-9-5/h2-4H,1H3', 'InChI=1S/C3H7NO/c1-3(5)4-2/h1-2H3,(H,4,5)', 'InChI=1S/C15H15NO2/c1-3-6-11-12-9-14(16(2)15(11)17)18-13-8-5-4-7-10(12)13/h3-8,12,14H,1,9H2,2H3', 'InChI=1S/C13H13NO3/c1-14-12-6-9(10(7-15)13(14)16)8-4-2-3-5-11(8)17-12/h2-5,7,9,12,15H,6H2,1H3', 'InChI=1S/C15H15NO2/c1-3-6-11-12-9-14(16(2)15(11)17)18-13-8-5-4-7-10(12)13/h3-8,12,14H,1,9H2,2H3', 'InChI=1S/C13H13NO3/c1-14-12-6-9(10(7-15)13(14)16)8-4-2-3-5-11(8)17-12/h2-5,7,9,12,15H,6H2,1H3', 'InChI=1S/C14H15NO2/c1-9-11-8-14(2,15(3)13(9)16)17-12-7-5-4-6-10(11)12/h4-7,11H,1,8H2,2-3H3', 'InChI=1S/C15H15NO2/c1-3-6-11-12-9-15(2,16-14(11)17)18-13-8-5-4-7-10(12)13/h3-8,12H,1,9H2,2H3,(H,16,17)', 'InChI=1S/C13H13NO3/c1-13-6-9(10(7-15)12(16)14-13)8-4-2-3-5-11(8)17-13/h2-5,7,9,15H,6H2,1H3,(H,14,16)', 'InChI=1S/C15H15NO2/c1-3-6-11-12-9-15(2,16-14(11)17)18-13-8-5-4-7-10(12)13/h3-8,12H,1,9H2,2H3,(H,16,17)', 'InChI=1S/C13H13NO3/c1-13-6-9(10(7-15)12(16)14-13)8-4-2-3-5-11(8)17-13/h2-5,7,9,15H,6H2,1H3,(H,14,16)', 'InChI=1S/C14H15NO2/c1-9-11-8-14(2,15(3)13(9)16)17-12-7-5-4-6-10(11)12/h4-7,11H,1,8H2,2-3H3', 'InChI=1S/C6H8N2/c1-5-2-3-8-6(7)4-5/h2-4H,1H3,(H2,7,8)', 'InChI=1S/C8H9NO/c1-6-4-2-3-5-7(6)8(9)10/h2-5H,1H3,(H2,9,10)', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C8H9NO/c1-6-2-4-7(5-3-6)8(9)10/h2-5H,1H3,(H2,9,10)', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C5H7NS/c1-4-3-7-5(2)6-4/h3H,1-2H3']
+
+    print(len(output_mol_list))
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+
+        assert inchi == inchi_list[idx]

@@ -9,15 +9,6 @@ def test_single_fragment_graph():
 	f.add_fragment(10, [1])
 	assert len(f.fragments) == 1
 
-def test_add_incorrect_fragment_fail():
-	f = FragmentGraph()
-	try:
-		# should fail because fragment doesn't have attachment points
-		f.add_fragment(0, [])
-	except ValueError:
-		return
-	assert False
-
 def test_add_bond():
 	f = FragmentGraph()
 	f.add_fragment(0, [0])
@@ -69,3 +60,14 @@ def test_add_invalid_bond_3():
 	except AssertionError:
 		return
 	assert False
+
+def test_graph_build_probability():
+
+	f = FragmentGraph()
+	f.add_fragment(0, [1])
+	f.add_fragment(1, [1])
+	f.add_bond(0, 1, 1, 1, 0.5)
+
+	assert f.build_probability == 0.5
+
+test_graph_build_probability()

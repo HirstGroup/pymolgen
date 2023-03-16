@@ -527,3 +527,10 @@ def test_extend_molecule_list_database11_20():
         inchi = molecule_to_inchi(mol)
 
         assert inchi == inchi_list[idx]
+
+    count = extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, 2)
+
+    assert count == 46
+
+
+test_extend_molecule_list_database11_20()

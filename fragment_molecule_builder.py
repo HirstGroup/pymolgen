@@ -96,7 +96,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
     return output_mol_list
 
-def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database, depth=None):
+def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=None):
 
     total = 0
 
@@ -110,7 +110,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
 
             for atom in free_valence_list[x]:
 
-                atom_can = atom 
+                atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
 
                 fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
 
@@ -139,7 +139,7 @@ def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fr
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
-    total = extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database)
+    total = extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth)
 
     print(f'FINAL DEPTH {depth} TOTAL {total}')
 

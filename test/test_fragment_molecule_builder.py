@@ -533,4 +533,49 @@ def test_extend_molecule_list_database11_20():
     assert count == 46
 
 
-test_extend_molecule_list_database11_20()
+def test_extend_molecule_list_database11_20_threshold():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0])
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, threshold=0.1)
+
+    inchi_list = ['InChI=1S/C2H6O/c1-3-2/h1-2H3']
+
+    print(len(output_mol_list))
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+
+        print(inchi, x.get_build_probability())
+
+        assert inchi == inchi_list[idx]
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, threshold=0.025)
+
+    inchi_list = ['InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C10H9NO/c1-12-9-4-5-10-8(7-9)3-2-6-11-10/h2-7H,1H3', 'InChI=1S/C14H11NO/c1-16-12-6-7-14-11(9-12)8-10-4-2-3-5-13(10)15-14/h2-9H,1H3', 'InChI=1S/C7H8O/c1-8-7-5-3-2-4-6-7/h2-6H,1H3', 'InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C9H9N3/c1-8-11-10-7-12(8)9-5-3-2-4-6-9/h2-7H,1H3', 'InChI=1S/C18H17N5O/c1-23-15(24)18(22-16(23)19)14-5-3-2-4-11(14)6-17(18)7-12-9-20-21-10-13(12)8-17/h2-5,9-10H,6-8H2,1H3,(H2,19,22)', 'InChI=1S/C24H20N4O/c1-28-15-25-24(22(28)29)21-9-17(16-5-3-2-4-6-16)7-8-18(21)10-23(24)11-19-13-26-27-14-20(19)12-23/h2-9,13-15H,10-12H2,1H3', 'InChI=1S/C3H7NO/c1-3(5)4-2/h1-2H3,(H,4,5)', 'InChI=1S/C6H8N2/c1-5-2-3-8-6(7)4-5/h2-4H,1H3,(H2,7,8)', 'InChI=1S/C8H9NO/c1-6-4-2-3-5-7(6)8(9)10/h2-5H,1H3,(H2,9,10)', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C5H7NS/c1-4-3-7-5(2)6-4/h3H,1-2H3']
+
+    print(len(output_mol_list))
+
+    all_inchi = []
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+        all_inchi.append(inchi)
+        print(inchi, x.get_build_probability())
+
+        assert inchi == inchi_list[idx]
+
+test_extend_molecule_list_database11_20_threshold()

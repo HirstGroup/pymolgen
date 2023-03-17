@@ -52,7 +52,7 @@ def extend_molecule(fragment_id, bond_frequencies, fragment_database):
     return output_mol_list
 
 
-def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=False):
+def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=False, threshold=None):
 
     output_mol_list = []
 
@@ -65,15 +65,22 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
             fragment_id = f.get_frag_id(x)
 
             for atom in free_valence_list[x]:
+
                 atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
+
                 fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
 
                 total_freq = np.sum(fragment_bond_frequencies)
 
-
                 for bond, bond_freq in zip(fragment_bonds, fragment_bond_frequencies):
 
                     attachment_probability = bond_freq / ( total_freq * total_free_valence)
+
+                    new_build_probability = attachment_probability * f.get_build_probability()
+
+                    if threshold is not None and new_build_probability < threshold:
+                        # do not build molecule if its build probability is below the threshold
+                        continue
 
                     i = bond[0]
                     j = bond[1]
@@ -130,21 +137,24 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
 
     return total
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
 
     for i in range(depth):
 
-        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
+        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1, threshold)
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
     return FragmentMolecule_list
 
-def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth):
+def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
+
+    if threshold is not None:
+        sys.error('Cannot count with threshold')
 
     for i in range(depth - 1):
 
-        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
+        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1, threshold)
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
@@ -227,6 +237,7 @@ if __name__ == '__main__':
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
     parser.add_argument('--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
+    parser.add_argument('-t','--threshold', help='Build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
 
     args = parser.parse_args()
@@ -249,10 +260,10 @@ if __name__ == '__main__':
     parent.add_fragment(args.parent_id, [args.atom])
 
     if args.count:
-        extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth)
+        extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     if args.output is not None:
 

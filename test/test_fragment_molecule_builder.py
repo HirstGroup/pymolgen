@@ -577,5 +577,3 @@ def test_extend_molecule_list_database11_20_threshold():
         print(inchi, x.get_build_probability())
 
         assert inchi == inchi_list[idx]
-
-test_extend_molecule_list_database11_20_threshold()

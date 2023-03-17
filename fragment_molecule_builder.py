@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import copy
 import numpy as np
@@ -137,13 +139,24 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
 
     return total
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, output=None, threshold=None):
 
     for i in range(depth):
 
         FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1, threshold)
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
+
+        if len(FragmentMolecule_list) == 0:
+            # stop building molecules
+            return FragmentMolecule_list
+
+        if output is not None:
+            with open('%s-depth%s.inchi' %(output, i+1), 'w') as f:
+                for j in FragmentMolecule_list:
+                    mol = convert_fragment_molecule_to_mol(j, fragment_database)
+                    inchi = molecule_to_inchi(mol)
+                    f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
 
     return FragmentMolecule_list
 
@@ -237,7 +250,7 @@ if __name__ == '__main__':
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
     parser.add_argument('--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
-    parser.add_argument('-t','--threshold', help='Build probability threshold of molecules to be built', type=float, required=False)
+    parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
 
     args = parser.parse_args()
@@ -259,12 +272,18 @@ if __name__ == '__main__':
 
     parent.add_fragment(args.parent_id, [args.atom])
 
+    if args.threshold is not None:
+        threshold = 10 ** args.threshold
+    else:
+        threshold = None
+
     if args.count:
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth, args.output, threshold)
 
+"""
     if args.output is not None:
 
         print('writing to', args.output)
@@ -284,6 +303,6 @@ if __name__ == '__main__':
                 for j in output_mol_list:
                     mol = convert_fragment_molecule_to_mol(j, fragment_database)
                     inchi = molecule_to_inchi(mol)
-                    f.write('%s %s\n' %(inchi, j.get_build_probability()) )
-
+                    f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
+"""
 

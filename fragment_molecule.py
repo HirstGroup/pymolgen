@@ -16,14 +16,20 @@ class FragmentMolecule:
         self._graph.add_node_attribute(node_id, "frag_id", frag_id)
         return node_id
 
-    def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int):
-        self._graph.add_bond(fragment_from, fragment_to, attach_from, attach_to)
+    def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int, attachment_probability: float = None):
+        self._graph.add_bond(fragment_from, fragment_to, attach_from, attach_to, attachment_probability)
 
     def list_bonds(self):
         return self._graph.bonds
 
     def list_free_valence_points(self):
         return self._graph.free_valence_points
+
+    def get_total_free_valence(self):
+        total_free_valence = 0
+        for i in self.list_free_valence_points():
+            total_free_valence += len(i)
+        return total_free_valence
 
     def get_frag_id(self, node_id):
         return self._graph.fragments[node_id].get_attribute('frag_id')
@@ -34,8 +40,11 @@ class FragmentMolecule:
             frag_id_list.append(self._graph.fragments[node_id].get_attribute('frag_id'))
         return frag_id_list
 
-    def get_canonical_mapping(self, frag_id, fragment_database):
-        return self._graph.fragments[frag_id].get_canonical_mapping(fragment_database)
+    def get_canonical_mapping(self, frag_id):
+        return self._graph.fragments[frag_id].get_canonical_mapping()
+
+    def get_build_probability(self):
+        return self._graph.build_probability
 
     def __str__(self):
         out = ''

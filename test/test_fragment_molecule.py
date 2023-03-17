@@ -56,19 +56,12 @@ def test_networkx_graph():
 
 	assert get_canonical_mapping(f._graph.fragments[0].get_molecule(fragment_database).graph) == {0: 0, 1: 1, 2: 1, 3: 1}
 
-def test_networkx_graph2():
+def test_total_free_valence():
 
 	f = FragmentMolecule()
-	f.add_fragment(0, [0])	
-	fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+	f.add_fragment(0, [0, 1])	
+	f.add_fragment(0, [0, 1])
 
-	assert f.get_canonical_mapping(0, fragment_database) == {0: 0, 1: 1, 2: 1, 3: 1}
+	assert f.get_total_free_valence() == 4
 
-def test_canonical_mapping():
-
-	f = FragmentMolecule()
-	f.add_fragment(0, [0])	
-	fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
-
-	assert f.get_canonical_mapping(0, fragment_database) == {0: 0, 1: 1, 2: 1, 3: 1}
-
+test_total_free_valence()

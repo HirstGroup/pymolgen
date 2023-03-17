@@ -21,8 +21,6 @@ for input in args.input:
 
     infile = open(input)
 
-    a = []
-
     for line in infile:
 
         if len(line.split()) == 1:
@@ -32,14 +30,18 @@ for input in args.input:
 
         elif len(line.split()) == 2:
 
-            if a in d.keys():
-                d[a] += 1
+            inchi = line.split()[0]
+            probability = float(line.strip().split()[1])
+
+            if inchi in d.keys():
+                d[inchi] += probability
             else:
-                d[a] = 1
+                d[inchi] = probability
 
         else:
             sys.error('Len line split > 2')
 
+d = dict(sorted(d.items(), key=lambda item: item[1], reverse=True))
 
 with open(args.output, 'w') as outfile:
     for key, val in d.items():

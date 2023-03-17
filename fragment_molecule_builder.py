@@ -1,5 +1,6 @@
 import argparse
 import copy
+import numpy as np
 import os
 import sys
 
@@ -57,6 +58,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
     for f in FragmentMolecule_list:
         free_valence_list = f.list_free_valence_points()
+        total_free_valence = f.get_total_free_valence()
 
         for x in range(len(free_valence_list)):
 
@@ -65,7 +67,14 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
             for atom in free_valence_list[x]:
                 atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
                 fragment_bonds, fragment_bond_frequencies = get_fragment_bond_frequencies_np(fragment_id, atom_can, bond_frequencies)
-                for bond in fragment_bonds:
+
+                total_freq = np.sum(fragment_bond_frequencies)
+
+
+                for bond, bond_freq in zip(fragment_bonds, fragment_bond_frequencies):
+
+                    attachment_probability = bond_freq / ( total_freq * total_free_valence)
+
                     i = bond[0]
                     j = bond[1]
                     k = bond[2]
@@ -76,12 +85,12 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
                     # if i corresponds to left fragment j is right fragment
                     if i == fragment_id and k == atom_can:
                         node_id = f2.add_fragment(j, fragment_database_graph.fragments[j].attachment_points)
-                        f2.add_bond(x, node_id, atom, l)
+                        f2.add_bond(x, node_id, atom, l, attachment_probability)
 
                     # if j corresponds to left fragment i is right framgent
                     elif j == fragment_id and l == atom_can:
                         node_id = f2.add_fragment(i, fragment_database_graph.fragments[i].attachment_points)
-                        f2.add_bond(x, node_id, atom, k)
+                        f2.add_bond(x, node_id, atom, k, attachment_probability)
 
                     else:
                         sys.error('fragmend_id and atom_can not in bond', bond, atom_can)
@@ -264,6 +273,6 @@ if __name__ == '__main__':
                 for j in output_mol_list:
                     mol = convert_fragment_molecule_to_mol(j, fragment_database)
                     inchi = molecule_to_inchi(mol)
-                    f.write('%s\n' %inchi)
+                    f.write('%s %s\n' %(inchi, j.get_build_probability()) )
 
 

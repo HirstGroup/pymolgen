@@ -65,9 +65,14 @@ def test_graph_build_probability():
 
 	f = FragmentGraph()
 	f.add_fragment(0, [1])
-	f.add_fragment(1, [1])
+	f.add_fragment(1, [1, 1])
 	f.add_bond(0, 1, 1, 1, 0.5)
 
 	assert f.build_probability == 0.5
+
+	f.add_fragment(2, [1])
+	f.add_bond(1, 2, 1, 1, 0.5)
+
+	assert f.build_probability == 0.25
 
 test_graph_build_probability()

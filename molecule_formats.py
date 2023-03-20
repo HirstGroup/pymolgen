@@ -1,6 +1,11 @@
 from pymolgen.molecule import Molecule, BondType
+from rdkit import Chem
 from typing import List, Tuple, TextIO
 import networkx
+
+from rdkit import RDLogger
+
+RDLogger.DisableLog('rdApp.*')
 
 def print_molecule(mol: Molecule) -> str:
 
@@ -79,7 +84,6 @@ def molecule_to_inchi(mol: Molecule) -> str:
     -------
     Inchi string of the molecule
     """
-    from rdkit import Chem
     return Chem.MolToInchi(molecule_to_rdkit(mol), options='-SNon')
 
 def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]], valences: List[int]=None) -> 'Networkx graph':

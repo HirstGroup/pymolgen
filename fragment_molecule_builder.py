@@ -264,16 +264,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
-    parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
-    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)
     parser.add_argument('--atom', type=int, help='Atom to build on parent',required=True)
+    parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
     parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
+    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)    
     
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
-    parser.add_argument('--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
+    parser.add_argument('-r', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
-    parser.add_argument('--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
+    parser.add_argument('-w', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
 
     args = parser.parse_args()
 

@@ -63,7 +63,6 @@ class FragmentMolecule:
     def get_hash(self, fragment_database=None):
 
         f = self.cap()
-        print('line66', f._graph.attachment_point_list)
 
         g = f._graph.convert_to_networkx(fragment_database)
 

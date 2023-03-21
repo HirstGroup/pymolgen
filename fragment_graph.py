@@ -124,8 +124,6 @@ class FragmentGraph:
 
     def convert_to_networkx(self, fragment_database=None):
 
-        import matplotlib.pyplot as plt
-
         g = networkx.Graph()
 
         for i in range(len(self.fragments)):

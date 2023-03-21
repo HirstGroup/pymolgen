@@ -139,6 +139,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
 
     return total
 
+
 def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, output=None, threshold=None):
 
     for i in range(depth):
@@ -146,6 +147,10 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
         FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1, threshold)
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
+
+        FragmentMolecule_list = get_unique_molecule_list(FragmentMolecule_list)
+
+        print(f'FINAL DEPTH {i+1} TOTAL UNIQUE {len(FragmentMolecule_list)}')
 
         if len(FragmentMolecule_list) == 0:
             # stop building molecules
@@ -159,6 +164,23 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
                     f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
 
     return FragmentMolecule_list
+
+
+def get_unique_molecule_list(FragmentMolecule_list):
+
+    unique = set()
+    new_list = []
+
+    for mol in FragmentMolecule_list:
+
+        mol_hash = mol.get_hash()
+
+        if mol_hash not in unique:
+            unique.add(mol_hash)
+            new_list.append(mol)
+
+    return new_list
+
 
 def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
 

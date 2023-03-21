@@ -122,7 +122,7 @@ class FragmentGraph:
         self.fragments[node_id].set_attribute(atribute_name, atribute_value)
 
 
-    def convert_to_networkx(self):
+    def convert_to_networkx(self, fragment_database=None):
 
         import matplotlib.pyplot as plt
 
@@ -140,12 +140,28 @@ class FragmentGraph:
 
             left_id, right_id = self.fragments[i].get_attribute('frag_id'), self.fragments[j].get_attribute('frag_id')
 
-            if left_id <= right_id:
-                atoms = {left_id:k, right_id:l}
-            else:
-                atoms = {right_id:l, left_id:k}
+            if fragment_database is not None:
+                # convert to canonical atoms if atom does not have valence greater than 1
+                # this is to convert aromatic rings to canonical atoms but not saturated rings
+                if left_id != -1 and fragment_database.fragments[left_id].attachment_points.count(k) == 1:
+                    k = fragment_database.fragments[left_id].get_canonical_mapping()[k]
+                if right_id != -1 and fragment_database.fragments[right_id].attachment_points.count(l) == 1:
+                    l = fragment_database.fragments[right_id].get_canonical_mapping()[l]
 
-            g.add_edge(i, j, atoms=atoms)
+            if left_id < right_id:
+                atoms_attr = f'{left_id}:{k}, {right_id}:{l}'
+            elif left_id == right_id:
+                if k < l:
+                    atoms_attr = f'{left_id}:{k}, {right_id}:{l}'
+                else:
+                    atoms_attr = f'{left_id}:{l}, {right_id}:{k}'
+            else:
+                atoms_attr = f'{right_id}:{l}, {left_id}:{k}'
+
+            g.add_edge(i, j, atoms=atoms_attr)
+
+
+        bond_atoms = networkx.get_edge_attributes(g, 'atoms')
 
         return g
 

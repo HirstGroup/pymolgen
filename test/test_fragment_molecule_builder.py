@@ -577,3 +577,178 @@ def test_extend_molecule_list_database11_20_threshold():
         print(inchi, x.get_build_probability())
 
         assert inchi == inchi_list[idx]
+
+
+def test_unique():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0])
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, threshold=0.1)
+
+    inchi_list = ['InChI=1S/C2H6O/c1-3-2/h1-2H3']
+
+    print(len(output_mol_list))
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+
+        print(inchi, x.get_build_probability())
+
+        assert inchi == inchi_list[idx]
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, threshold=0.025)
+
+    inchi_list = ['InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C10H9NO/c1-12-9-4-5-10-8(7-9)3-2-6-11-10/h2-7H,1H3', 'InChI=1S/C14H11NO/c1-16-12-6-7-14-11(9-12)8-10-4-2-3-5-13(10)15-14/h2-9H,1H3', 'InChI=1S/C7H8O/c1-8-7-5-3-2-4-6-7/h2-6H,1H3', 'InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C9H9N3/c1-8-11-10-7-12(8)9-5-3-2-4-6-9/h2-7H,1H3', 'InChI=1S/C18H17N5O/c1-23-15(24)18(22-16(23)19)14-5-3-2-4-11(14)6-17(18)7-12-9-20-21-10-13(12)8-17/h2-5,9-10H,6-8H2,1H3,(H2,19,22)', 'InChI=1S/C24H20N4O/c1-28-15-25-24(22(28)29)21-9-17(16-5-3-2-4-6-16)7-8-18(21)10-23(24)11-19-13-26-27-14-20(19)12-23/h2-9,13-15H,10-12H2,1H3', 'InChI=1S/C3H7NO/c1-3(5)4-2/h1-2H3,(H,4,5)', 'InChI=1S/C6H8N2/c1-5-2-3-8-6(7)4-5/h2-4H,1H3,(H2,7,8)', 'InChI=1S/C8H9NO/c1-6-4-2-3-5-7(6)8(9)10/h2-5H,1H3,(H2,9,10)', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C5H7NS/c1-4-3-7-5(2)6-4/h3H,1-2H3']
+
+    print(len(output_mol_list))
+
+    all_inchi = []
+
+    hash_list = ['b48dfcd06652f521dbcd6d1dbfcf87b6', '2ade94effe054dd25b86f32e8aaae296', 'ac75c47e2f1dbe2d5c219e8cfa4b1c59', '473d3f1b10ddc739709525f347a6a40b', 'dab379e7241ac4233c4ef1150b0bef4a', '452bb1872b3e295c274fe38eb93e049c', '452bb1872b3e295c274fe38eb93e049c', '3370a2cfe617d7b5536a4097b6eb1c22', 'c77230ba00c1d74d884b8682adee03bc', '97cd8642d059c0ed42591a932da78a2a', '6cb4d9f96b14531c80224a42a3efe75c', '5b43dbb9cd006cb8ccb12c30acfed781', '2e00d22b5b685c2276d517c3c84f2396', '11aab0d16de8bb0b6c64fc4b64f764ef', '1f8ee55294129b7640b9be0f6c8d3b87', '84d933246035f9ad3a7c0df8c0d567ef']
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+        all_inchi.append(inchi)
+        print(inchi, x.get_build_probability())
+        assert hash_list[idx] == x.get_hash(fragment_database_graph)
+        hash_list.append(x.get_hash(fragment_database_graph))
+        assert inchi == inchi_list[idx]
+
+
+def test_unique2():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0])
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=3, threshold=0.0025)
+
+    inchi_list = ['InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C10H9NO/c1-12-9-4-5-10-8(7-9)3-2-6-11-10/h2-7H,1H3', 'InChI=1S/C14H11NO/c1-16-12-6-7-14-11(9-12)8-10-4-2-3-5-13(10)15-14/h2-9H,1H3', 'InChI=1S/C7H8O/c1-8-7-5-3-2-4-6-7/h2-6H,1H3', 'InChI=1S/C2H6O/c1-3-2/h1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C2H7N/c1-3-2/h3H,1-2H3', 'InChI=1S/C9H9N3/c1-8-11-10-7-12(8)9-5-3-2-4-6-9/h2-7H,1H3', 'InChI=1S/C18H17N5O/c1-23-15(24)18(22-16(23)19)14-5-3-2-4-11(14)6-17(18)7-12-9-20-21-10-13(12)8-17/h2-5,9-10H,6-8H2,1H3,(H2,19,22)', 'InChI=1S/C24H20N4O/c1-28-15-25-24(22(28)29)21-9-17(16-5-3-2-4-6-16)7-8-18(21)10-23(24)11-19-13-26-27-14-20(19)12-23/h2-9,13-15H,10-12H2,1H3', 'InChI=1S/C3H7NO/c1-3(5)4-2/h1-2H3,(H,4,5)', 'InChI=1S/C6H8N2/c1-5-2-3-8-6(7)4-5/h2-4H,1H3,(H2,7,8)', 'InChI=1S/C8H9NO/c1-6-4-2-3-5-7(6)8(9)10/h2-5H,1H3,(H2,9,10)', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C8H10/c1-7-4-3-5-8(2)6-7/h3-6H,1-2H3', 'InChI=1S/C5H7NS/c1-4-3-7-5(2)6-4/h3H,1-2H3']
+
+    print(len(output_mol_list))
+
+    all_inchi = []
+
+    outfile = open('test.sdf', 'w')
+
+    hash_list = []
+
+    f = open('test.sdf', 'w')
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+        all_inchi.append(inchi)
+        #print(inchi, x.get_build_probability())
+        #assert hash_list[idx] == x.get_hash()
+        print(x.get_hash(fragment_database_graph))
+        hash_list.append(x.get_hash(fragment_database_graph))
+        #assert inchi == inchi_list[idx]
+        save_mol_to_sdf(mol, 'test.sdf')
+
+    hash_count = {}
+
+    for i in hash_list:
+        if i in hash_count:
+            hash_count[i] += 1
+        else:
+            hash_count[i] = 1
+
+    for i in hash_list:
+        print(i, hash_count[i])
+
+    inchi_count = {}
+
+    for i in all_inchi:
+        if i in inchi_count:
+            inchi_count[i] += 1
+        else:
+            inchi_count[i] = 1
+
+    for i in all_inchi:
+        print(i, inchi_count[i])
+
+    print(len(hash_list), len(all_inchi))
+
+    for i in range(len(hash_list)):
+
+        hash_i = hash_list[i]
+        inchi_i = all_inchi[i]
+
+        if hash_count[hash_i] != inchi_count[inchi_i]:
+            print(i+1, hash_list[i], hash_count[hash_i], all_inchi[i], inchi_count[inchi_i])
+
+    print(hash_list)
+    print(all_inchi)
+
+    hash_list_check = ['bac56cc4e599146549e99566852af1f5', 'b323c7f5d2b6446c1d86217f00b01c51', 'a6b075be9ea1a50893630b55642ff14d', 'ff58fbc35063c4be1e233496f1237ef7', '6a938454aa92bee71a64d0df2bd845d1', 'ff074a9b5a837c8261fd48abd0d33263', '79203c4e37beda86430c6136a7c2c6e2', 'f5ae7816b28c35e2a8a2256391c69c52', '5cf30d27a12b082a2442fb5109e43eeb', '88ad3b879ed3103e2e505b3108047d13', '5c4af55b4760df37a29fe15ae1df611c', '75d3ed9edaebc461707235aa8e7be0ad', '5c4af55b4760df37a29fe15ae1df611c', '75d3ed9edaebc461707235aa8e7be0ad', '7ce3102ceb175f0af6b8560ab289a514', '0cf9a99236e56eedaf35b21d8112f45e', '88ad3b879ed3103e2e505b3108047d13', '5c4af55b4760df37a29fe15ae1df611c', '75d3ed9edaebc461707235aa8e7be0ad', '5c4af55b4760df37a29fe15ae1df611c', '75d3ed9edaebc461707235aa8e7be0ad', '7ce3102ceb175f0af6b8560ab289a514', '0cf9a99236e56eedaf35b21d8112f45e', '51d50d1721f9fe22e99a694c609e33d1', '21ffe6731a9b0afd69a753c5ac3b7d8b', '51d50d1721f9fe22e99a694c609e33d1', '21ffe6731a9b0afd69a753c5ac3b7d8b', 'd2c791ad2ec13be3198d2dd298dce26c', '9698c9f64ff08baca2de34caf66d4e05', '3fdd7877d781cb5173a44efb4822295c', '3fdd7877d781cb5173a44efb4822295c', '899a1aa5453d87204c08aa3d8c57460a', '7d4ffa6b3449194229f6fbeb5e8c1772', '76e8bc5220b32f77cc16dcbf427d45a9', '907cb3217c1dfaf8847f060b0c2c3d9d', '53234a85cf852dc4162b4cd354100e0c', '1e6eb8ce351aa84125c4fae8ae5274ba', '53234a85cf852dc4162b4cd354100e0c', '957348cb63a8d38a368eb389040fe49f', '1e6eb8ce351aa84125c4fae8ae5274ba', '957348cb63a8d38a368eb389040fe49f', '0b28304aec29820bd083bdde32dfec60', '53234a85cf852dc4162b4cd354100e0c', '1e6eb8ce351aa84125c4fae8ae5274ba', '53234a85cf852dc4162b4cd354100e0c', '7bdbfcc2ab484abfaf340e9b3437671c', '1e6eb8ce351aa84125c4fae8ae5274ba', '7bdbfcc2ab484abfaf340e9b3437671c', '9991b6ebb127fef3eb80590195321f68', '53234a85cf852dc4162b4cd354100e0c', '957348cb63a8d38a368eb389040fe49f', '53234a85cf852dc4162b4cd354100e0c', '7bdbfcc2ab484abfaf340e9b3437671c', '957348cb63a8d38a368eb389040fe49f', '7bdbfcc2ab484abfaf340e9b3437671c', '997d9422cf2955775a9d37e21745a93f', '3aad144d7df8e1cfe40658d0fda42e37', '50698cd0a1122787f894e4ff10cf4cb4', '3aad144d7df8e1cfe40658d0fda42e37', '50698cd0a1122787f894e4ff10cf4cb4', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', 'a35494f981d9da0e9ba024a95a0d6344', '5148a12a3cf72899424f3f664a4ca764', '39194147f588ac5c086ddbebb985cd0a', 'f72da20937eb71daaaf4f0401c58e8be', '9a7d32289f45e5f2e9f2b9fd4c6a3bce', '7491a1a3d4d9af7f14ccf8510af389b7', 'e50ad9b59618f957f04ad0bd057c2e31', 'b03df8ce9e808009a2ef89c02f277a68', 'dd79f1310bce8420b31daa832080a379', 'fc2722480af09d31242747da83475936', 'e50ad9b59618f957f04ad0bd057c2e31', '05c00c9aceb305a3bf3ddca24723edc0', 'b03df8ce9e808009a2ef89c02f277a68', '05c00c9aceb305a3bf3ddca24723edc0', 'e50ad9b59618f957f04ad0bd057c2e31', 'e50ad9b59618f957f04ad0bd057c2e31', 'f82d3e812dbe33b96421810e512d4112', 'e50ad9b59618f957f04ad0bd057c2e31', '05c00c9aceb305a3bf3ddca24723edc0', 'e50ad9b59618f957f04ad0bd057c2e31', '05c00c9aceb305a3bf3ddca24723edc0', '58fe53799f0280fe116ce65fd3a9d8a9', 'e2677b45e450785eb31e56be9e73f56c', 'db5bb7ea47560b41f6351ad441c9149b', '03d576d3a2712aadf723cfa8b3f4387f', '89270169b3a01a3e5a72322be9458724']
+
+    all_inchi_check = ['InChI=1S/C10H10N2O/c1-13-8-5-7-3-2-4-12-10(7)9(11)6-8/h2-6H,11H2,1H3', 'InChI=1S/C14H12N2O/c1-17-9-6-7-13-11(8-9)14(15)10-4-2-3-5-12(10)16-13/h2-8H,1H3,(H2,15,16)', 'InChI=1S/C14H10ClNO/c1-17-12-4-5-13-10(7-12)6-9-2-3-11(15)8-14(9)16-13/h2-8H,1H3', 'InChI=1S/C7H9NO/c1-9-7-4-2-6(8)3-5-7/h2-5H,8H2,1H3', 'InChI=1S/C8H10O/c1-7-3-5-8(9-2)6-4-7/h3-6H,1-2H3', 'InChI=1S/C2H7NO/c1-4-2-3/h2-3H2,1H3', 'InChI=1S/C3H8O/c1-3-4-2/h3H2,1-2H3', 'InChI=1S/C3H8O/c1-3-4-2/h3H2,1-2H3', 'InChI=1S/C8H10O/c1-9-7-8-5-3-2-4-6-8/h2-6H,7H2,1H3', 'InChI=1S/C3H9N/c1-4(2)3/h1-3H3', 'InChI=1S/C3H9N/c1-4(2)3/h1-3H3', 'InChI=1S/C8H11N/c1-9(2)8-6-4-3-5-7-8/h3-7H,1-2H3', 'InChI=1S/C3H9N/c1-4(2)3/h1-3H3', 'InChI=1S/C8H11N/c1-9(2)8-6-4-3-5-7-8/h3-7H,1-2H3', 'InChI=1S/C13H13N/c1-14(12-8-4-2-5-9-12)13-10-6-3-7-11-13/h2-11H,1H3', 'InChI=1S/C8H11N/c1-7-3-5-8(9-2)6-4-7/h3-6,9H,1-2H3', 'InChI=1S/C3H9N/c1-4(2)3/h1-3H3', 'InChI=1S/C3H9N/c1-4(2)3/h1-3H3', 'InChI=1S/C8H11N/c1-9(2)8-6-4-3-5-7-8/h3-7H,1-2H3', 'InChI=1S/C3H9N/c1-4(2)3/h1-3H3', 'InChI=1S/C8H11N/c1-9(2)8-6-4-3-5-7-8/h3-7H,1-2H3', 'InChI=1S/C13H13N/c1-14(12-8-4-2-5-9-12)13-10-6-3-7-11-13/h2-11H,1H3', 'InChI=1S/C8H11N/c1-7-3-5-8(9-2)6-4-7/h3-6,9H,1-2H3', 'InChI=1S/C10H11N3/c1-8-11-12-9(2)13(8)10-6-4-3-5-7-10/h3-7H,1-2H3', 'InChI=1S/C10H11N3/c1-8-11-12-9(2)13(8)10-6-4-3-5-7-10/h3-7H,1-2H3', 'InChI=1S/C10H11N3/c1-8-11-12-9(2)13(8)10-6-4-3-5-7-10/h3-7H,1-2H3', 'InChI=1S/C10H11N3/c1-8-11-12-9(2)13(8)10-6-4-3-5-7-10/h3-7H,1-2H3', 'InChI=1S/C9H8ClN3/c1-7-12-11-6-13(7)9-4-2-8(10)3-5-9/h2-6H,1H3', 'InChI=1S/C10H11N3/c1-8-5-3-4-6-10(8)13-7-11-12-9(13)2/h3-7H,1-2H3', 'InChI=1S/C24H21N5O/c1-29-21(30)24(28-22(29)25)20-9-16(15-5-3-2-4-6-15)7-8-17(20)10-23(24)11-18-13-26-27-14-19(18)12-23/h2-9,13-14H,10-12H2,1H3,(H2,25,28)', 'InChI=1S/C24H21N5O/c1-29-21(30)24(28-22(29)25)20-9-16(15-5-3-2-4-6-15)7-8-17(20)10-23(24)11-18-13-26-27-14-19(18)12-23/h2-9,13-14H,10-12H2,1H3,(H2,25,28)', 'InChI=1S/C41H32N8O2/c1-49-23-44-41(37(49)51)35-11-27(6-8-29(35)13-39(41)16-32-20-47-48-21-33(32)17-39)25-4-2-3-24(9-25)26-5-7-28-12-38(14-30-18-45-46-19-31(30)15-38)40(34(28)10-26)36(50)42-22-43-40/h2-11,18-23H,12-17H2,1H3,(H,42,43,50)', 'InChI=1S/C25H19N5O/c1-30-15-27-25(23(30)31)22-8-18(17-4-2-3-16(7-17)12-26)5-6-19(22)9-24(25)10-20-13-28-29-14-21(20)11-24/h2-8,13-15H,9-11H2,1H3', 'InChI=1S/C34H28N4O4/c1-38-19-35-34(32(38)39)27-10-21(5-6-24(27)13-33(34)14-25-16-36-37-17-26(25)15-33)20-3-2-4-22(9-20)31-18-41-29-11-23-7-8-40-28(23)12-30(29)42-31/h2-6,9-12,16-17,19,31H,7-8,13-15,18H2,1H3', 'InChI=1S/C30H24N4O/c1-34-19-31-30(28(34)35)27-13-23(22-9-5-8-21(12-22)20-6-3-2-4-7-20)10-11-24(27)14-29(30)15-25-17-32-33-18-26(25)16-29/h2-13,17-19H,14-16H2,1H3', 'InChI=1S/C6H10N2/c1-5-4-6(2)8(3)7-5/h4H,1-3H3', 'InChI=1S/C9H15N3/c1-7-8(6-12(2)11-7)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C6H10N2/c1-5-4-6(2)8(3)7-5/h4H,1-3H3', 'InChI=1S/C9H15N3/c1-6-9(7(2)12-11-6)8-4-3-5-10-8/h8,10H,3-5H2,1-2H3,(H,11,12)', 'InChI=1S/C9H15N3/c1-7-8(6-12(2)11-7)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C9H15N3/c1-6-9(7(2)12-11-6)8-4-3-5-10-8/h8,10H,3-5H2,1-2H3,(H,11,12)', 'InChI=1S/C9H15N3/c1-7-8(6-10-11-7)9-4-3-5-12(9)2/h6,9H,3-5H2,1-2H3,(H,10,11)', 'InChI=1S/C6H10N2/c1-5-4-6(2)8(3)7-5/h4H,1-3H3', 'InChI=1S/C9H15N3/c1-7-8(6-12(2)11-7)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C6H10N2/c1-5-4-6(2)8(3)7-5/h4H,1-3H3', 'InChI=1S/C9H15N3/c1-7-8(6-11-12(7)2)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C9H15N3/c1-7-8(6-12(2)11-7)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C9H15N3/c1-7-8(6-11-12(7)2)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C9H15N3/c1-11-5-3-4-9(11)8-6-10-12(2)7-8/h6-7,9H,3-5H2,1-2H3', 'InChI=1S/C6H10N2/c1-5-4-6(2)8(3)7-5/h4H,1-3H3', 'InChI=1S/C9H15N3/c1-6-9(7(2)12-11-6)8-4-3-5-10-8/h8,10H,3-5H2,1-2H3,(H,11,12)', 'InChI=1S/C6H10N2/c1-5-4-6(2)8(3)7-5/h4H,1-3H3', 'InChI=1S/C9H15N3/c1-7-8(6-11-12(7)2)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C9H15N3/c1-6-9(7(2)12-11-6)8-4-3-5-10-8/h8,10H,3-5H2,1-2H3,(H,11,12)', 'InChI=1S/C9H15N3/c1-7-8(6-11-12(7)2)9-4-3-5-10-9/h6,9-10H,3-5H2,1-2H3', 'InChI=1S/C9H15N3/c1-7-8(6-10-11-7)9-4-3-5-12(9)2/h6,9H,3-5H2,1-2H3,(H,10,11)', 'InChI=1S/C4H9NO/c1-4(6)5(2)3/h1-3H3', 'InChI=1S/C6H8N2OS/c1-5(9)8(2)6-7-3-4-10-6/h3-4H,1-2H3', 'InChI=1S/C4H9NO/c1-4(6)5(2)3/h1-3H3', 'InChI=1S/C6H8N2OS/c1-5(9)8(2)6-7-3-4-10-6/h3-4H,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C16H17NO2/c1-4-7-12-13-10-16(2,17(3)15(12)18)19-14-9-6-5-8-11(13)14/h4-9,13H,1,10H2,2-3H3', 'InChI=1S/C14H15NO3/c1-14-7-10(11(8-16)13(17)15(14)2)9-5-3-4-6-12(9)18-14/h3-6,8,10,16H,7H2,1-2H3', 'InChI=1S/C15H13N3/c1-11-7-9-16-14(10-11)18-13-6-2-4-12-5-3-8-17-15(12)13/h2-10H,1H3,(H,16,18)', 'InChI=1S/C7H10N2/c1-6-3-4-9-7(5-6)8-2/h3-5H,1-2H3,(H,8,9)', 'InChI=1S/C19H15N3/c1-13-10-11-20-18(12-13)22-19-14-6-2-4-8-16(14)21-17-9-5-3-7-15(17)19/h2-12H,1H3,(H,20,21,22)', 'InChI=1S/C11H11N3/c1-9-5-7-13-11(8-9)14-10-4-2-3-6-12-10/h2-8H,1H3,(H,12,13,14)', 'InChI=1S/C9H11NO/c1-6-3-4-8(9(10)11)7(2)5-6/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H11NO/c1-6-4-3-5-7(2)8(6)9(10)11/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H11NO/c1-7-5-3-4-6-8(7)9(11)10-2/h3-6H,1-2H3,(H,10,11)', 'InChI=1S/C12H16N2O/c1-9-4-2-3-5-11(9)12(15)14-10-6-7-13-8-10/h2-5,10,13H,6-8H2,1H3,(H,14,15)', 'InChI=1S/C9H11NO/c1-6-3-4-8(9(10)11)7(2)5-6/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H12/c1-7-4-8(2)6-9(3)5-7/h4-6H,1-3H3', 'InChI=1S/C9H11NO/c1-6-4-3-5-7(2)8(6)9(10)11/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H12/c1-7-4-8(2)6-9(3)5-7/h4-6H,1-3H3', 'InChI=1S/C9H11NO/c1-6-3-4-8(9(10)11)7(2)5-6/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H11NO/c1-6-3-4-8(9(10)11)7(2)5-6/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H11NO/c1-7-3-5-8(6-4-7)9(11)10-2/h3-6H,1-2H3,(H,10,11)', 'InChI=1S/C9H11NO/c1-6-3-4-8(9(10)11)7(2)5-6/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H12/c1-7-4-8(2)6-9(3)5-7/h4-6H,1-3H3', 'InChI=1S/C9H11NO/c1-6-3-4-8(9(10)11)7(2)5-6/h3-5H,1-2H3,(H2,10,11)', 'InChI=1S/C9H12/c1-7-4-8(2)6-9(3)5-7/h4-6H,1-3H3', 'InChI=1S/C5H8N2S/c1-4-7-5(2-6)3-8-4/h3H,2,6H2,1H3', 'InChI=1S/C6H9NS/c1-3-6-4-8-5(2)7-6/h4H,3H2,1-2H3', 'InChI=1S/C6H9NS/c1-3-6-4-8-5(2)7-6/h4H,3H2,1-2H3', 'InChI=1S/C6H7NO2S/c1-4-7-5(3-10-4)2-6(8)9/h3H,2H2,1H3,(H,8,9)', 'InChI=1S/C11H11NS/c1-9-12-11(8-13-9)7-10-5-3-2-4-6-10/h2-6,8H,7H2,1H3']
+
+    assert hash_list == hash_list_check
+    assert all_inchi == all_inchi_check
+
+def test_convert_to_networkx_canonical():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    f = FragmentMolecule()
+
+    f.add_fragment(0, [0])
+    f.add_fragment(31, [0,1,3,5])
+    f.add_fragment(0, [0])
+    f.add_fragment(11, [0,2])
+
+    f.add_bond(0,1,0,3)
+    f.add_bond(1,2,1,0)
+    f.add_bond(1,3,0,0)
+
+    print('line722')
+    for i in f._graph.fragments:
+        print(f._graph.fragments[i].attachment_points)
+    print('line725')
+
+    print('line727', f._graph.attachment_point_list)
+
+    mol = convert_fragment_molecule_to_mol(f, fragment_database)
+
+    lines = molecule_to_sdf(mol)
+    with open('test2.sdf', 'w') as outfile:
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+    print(fragment_database_graph.fragments[31].get_canonical_mapping())
+    print(f.get_hash(fragment_database_graph))
+
+    print('line740', f._graph.attachment_point_list)
+
+    for i in f._graph.fragments:
+        print(f._graph.fragments[i].attachment_points)
+

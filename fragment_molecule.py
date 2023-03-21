@@ -60,13 +60,14 @@ class FragmentMolecule:
 
         return f
 
-    def get_hash(self):
+    def get_hash(self, fragment_database=None):
 
         f = self.cap()
+        print('line66', f._graph.attachment_point_list)
 
-        g = f._graph.convert_to_networkx()
+        g = f._graph.convert_to_networkx(fragment_database)
 
-        return networkx.weisfeiler_lehman_graph_hash(g)
+        return networkx.weisfeiler_lehman_graph_hash(g, node_attr='frag_id', edge_attr='atoms')
 
     def __str__(self):
         out = ''

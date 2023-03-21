@@ -121,6 +121,35 @@ class FragmentGraph:
     def add_node_attribute(self, node_id, atribute_name, atribute_value):
         self.fragments[node_id].set_attribute(atribute_name, atribute_value)
 
+
+    def convert_to_networkx(self):
+
+        import matplotlib.pyplot as plt
+
+        g = networkx.Graph()
+
+        for i in range(len(self.fragments)):
+
+            g.add_node(i, frag_id=self.fragments[i].get_attribute('frag_id'))
+
+        for bond in self.bonds:
+            i = bond[0]
+            j = bond[1]
+            k = bond[2]
+            l = bond[3]
+
+            left_id, right_id = self.fragments[i].get_attribute('frag_id'), self.fragments[j].get_attribute('frag_id')
+
+            if left_id <= right_id:
+                atoms = {left_id:k, right_id:l}
+            else:
+                atoms = {right_id:l, left_id:k}
+
+            g.add_edge(i, j, atoms=atoms)
+
+        return g
+
+
 def convert_fragment_graph_to_mol(FragmentGraph, fragment_database):
 
     mol = Molecule()

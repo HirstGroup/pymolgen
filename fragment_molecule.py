@@ -1,4 +1,5 @@
 import argparse
+import networkx
 
 from pymolgen.fragment_graph import *
 from pymolgen.fragment_builder import get_fragment_database, get_frag_mapping, get_bond_frequencies, update_bond_frequencies
@@ -45,6 +46,27 @@ class FragmentMolecule:
 
     def get_build_probability(self):
         return self._graph.build_probability
+
+    def cap(self):
+
+        f = copy.deepcopy(self)
+
+        free_valence_list = f.list_free_valence_points()
+
+        for i in range(len(free_valence_list)):
+            for j in free_valence_list[i]:
+                id = f.add_fragment(-1, [0])
+                f.add_bond(i, id, j, 0)
+
+        return f
+
+    def get_hash(self):
+
+        f = self.cap()
+
+        g = f._graph.convert_to_networkx()
+
+        return networkx.weisfeiler_lehman_graph_hash(g)
 
     def __str__(self):
         out = ''

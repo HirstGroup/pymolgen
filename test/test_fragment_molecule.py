@@ -95,6 +95,8 @@ def test_convert_to_networkx():
 			assert g[i][j]['atoms'] == answers[counter]
 			counter += 1
 
+test_convert_to_networkx()
+
 def test_make_canonical():
 
 	f = FragmentMolecule()
@@ -192,13 +194,67 @@ def test_get_hash():
 	f.add_bond(3, 4, 8, 9)
 	f.add_bond(1, 5, 3, 4)
 
-	graph_hash = f.get_hash()
-	assert graph_hash == '13940b99fd894725ee5a8364195d0d4e'
+	graph_hash = f.__hash__()
+	assert graph_hash == 26024027161856727234825668485283908942
 
-def test_get_hash2():
-    G1 = networkx.Graph()
-    G1.add_edges_from([(1, 2, {"label": "A"}), (2, 3, {"label": "A"}), (3, 1, {"label": "A"}), (1, 4, {"label": "B"}),])
-    G2 = networkx.Graph()
-    G2.add_edges_from([(5, 6, {"label": "B"}), (6, 7, {"label": "A"}), (7, 5, {"label": "A"}), (7, 8, {"label": "A"}),])
-    print(networkx.weisfeiler_lehman_graph_hash(G1, edge_attr="label"))
-    print(networkx.weisfeiler_lehman_graph_hash(G2, edge_attr="label"))
+def test_eq():
+
+	# check that two molecules are equal
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [0])
+	f.add_fragment(10, [1])
+
+	f.add_bond(0, 1, 0, 1)
+
+	f2 = FragmentMolecule()
+
+	f2.add_fragment(0, [0])
+	f2.add_fragment(10, [1])
+
+	f2.add_bond(0, 1, 0, 1)
+
+	assert f == f2
+
+def test_eq2():
+
+	# check that molecules with different attachment point labels are different
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [0])
+	f.add_fragment(10, [1])
+
+	f.add_bond(0, 1, 0, 1)
+
+	f2 = FragmentMolecule()
+
+	f2.add_fragment(0, [1])
+	f2.add_fragment(10, [2])
+
+	f2.add_bond(0, 1, 1, 2)
+
+	assert f != f2
+
+def test_eq3():
+
+	# check that molecules with different frag_id but same attachment points are different
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [0])
+	f.add_fragment(10, [1])
+
+	f.add_bond(0, 1, 0, 1)
+
+	f2 = FragmentMolecule()
+
+	f2.add_fragment(0, [0])
+	f2.add_fragment(20, [1])
+
+	f2.add_bond(0, 1, 0, 1)
+
+	assert f != f2
+
+test_eq3()

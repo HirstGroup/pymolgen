@@ -140,7 +140,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
     return total
 
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, output=None, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, output=None, unique=True, threshold=None):
 
     for i in range(depth):
 
@@ -148,9 +148,13 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
-        FragmentMolecule_list = get_unique_molecule_list(FragmentMolecule_list)
+        print('unique = ', unique)
 
-        print(f'FINAL DEPTH {i+1} TOTAL UNIQUE {len(FragmentMolecule_list)}')
+        if unique is True:
+
+            FragmentMolecule_list = get_unique_molecule_list(FragmentMolecule_list, fragment_database=fragment_database_graph)
+
+            print(f'FINAL DEPTH {i+1} TOTAL UNIQUE {len(FragmentMolecule_list)}')
 
         if len(FragmentMolecule_list) == 0:
             # stop building molecules
@@ -166,20 +170,42 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
     return FragmentMolecule_list
 
 
-def get_unique_molecule_list(FragmentMolecule_list):
+def get_unique_molecule_list(FragmentMolecule_list, sort_list=True, fragment_database=None):
+    
+    unique_dict = {}
 
-    unique = set()
-    new_list = []
+    check = {}
+    mol_check = []
 
-    for mol in FragmentMolecule_list:
+    for idx, i in enumerate(FragmentMolecule_list):
+        if i in check:
+            if check[i] != i._graph._build_probability:
+                print('PROBABILITIES NOT THE SAME', )
+                mol_check.append(i)
+        else:
+            check[i] = i._graph._build_probability
 
-        mol_hash = mol.get_hash()
 
-        if mol_hash not in unique:
-            unique.add(mol_hash)
-            new_list.append(mol)
+    for idx, i in enumerate(FragmentMolecule_list):
+        if i in mol_check:
+            print(idx, i._graph._build_probability, i.__hash__())
+            mol = convert_fragment_molecule_to_mol(i, fragment_database)
+            save_mol_to_sdf(mol, 'different.sdf')
 
-    return new_list
+
+
+    for i in FragmentMolecule_list:
+        if i in unique_dict:
+            unique_dict[i]._graph._build_probability += i._graph._build_probability
+        else:
+            unique_dict[i] = i
+
+    if sort_list is False:
+        return unique_dict.keys()
+
+    sorted_list = dict(sorted(unique_dict.items(), key=lambda item: item[1]._graph._build_probability, reverse=True)).keys()
+
+    return sorted_list
 
 
 def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
@@ -275,6 +301,9 @@ if __name__ == '__main__':
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('-w', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
 
+    with open('different.sdf', 'w') as f:
+        print('Writing to different.sdf')
+
     args = parser.parse_args()
 
     bond_frequencies = get_bond_frequencies(args.frequencies_txt)
@@ -303,7 +332,7 @@ if __name__ == '__main__':
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, args.depth, args.output, threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, output=args.output, threshold=threshold)
 
 """
     if args.output is not None:

@@ -12,7 +12,7 @@ print = partial(print, flush=True)
 class FragmentGraphNode:
 
     def __init__(self, attachment_points: List[int]):
-        self._attachment_points = attachment_points
+        self._attachment_points = list(attachment_points)
         self._attributes = dict()
         self._molecule = None
         self._canonical_mapping = None
@@ -42,7 +42,6 @@ class FragmentGraphNode:
         return self._canonical_mapping
 
     def get_canonical_mapping(self):
-        assert self._canonical_mapping is not None
         return self._canonical_mapping
 
 class FragmentGraph:
@@ -122,13 +121,19 @@ class FragmentGraph:
         self.fragments[node_id].set_attribute(atribute_name, atribute_value)
 
 
-    def convert_to_networkx(self, fragment_database=None):
+    def convert_to_networkx(self):
 
         g = networkx.Graph()
+
+        canonicalise = True
 
         for i in range(len(self.fragments)):
 
             g.add_node(i, frag_id=self.fragments[i].get_attribute('frag_id'))
+            if self.fragments[i].get_canonical_mapping() is None:
+                canonicalise = False
+
+        canonicalise = True
 
         for bond in self.bonds:
             i = bond[0]
@@ -138,13 +143,15 @@ class FragmentGraph:
 
             left_id, right_id = self.fragments[i].get_attribute('frag_id'), self.fragments[j].get_attribute('frag_id')
 
-            if fragment_database is not None:
+            if canonicalise is True:
                 # convert to canonical atoms if atom does not have valence greater than 1
-                # this is to convert aromatic rings to canonical atoms but not saturated rings
-                if left_id != -1 and fragment_database.fragments[left_id].attachment_points.count(k) == 1:
-                    k = fragment_database.fragments[left_id].get_canonical_mapping()[k]
-                if right_id != -1 and fragment_database.fragments[right_id].attachment_points.count(l) == 1:
-                    l = fragment_database.fragments[right_id].get_canonical_mapping()[l]
+                # this is done to convert aromatic rings to canonical atoms but not saturated rings
+                if left_id != -1 and self.fragments[i].attachment_points.count(k) == 1:
+                    k = self.fragments[i].get_canonical_mapping()[k]
+                if right_id != -1 and self.fragments[j].attachment_points.count(l) == 1:
+                    l = self.fragments[j].get_canonical_mapping()[l]
+            else:
+                print('Canonicalise is False')
 
             if left_id < right_id:
                 atoms_attr = f'{left_id}:{k}, {right_id}:{l}'

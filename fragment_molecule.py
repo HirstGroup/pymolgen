@@ -1,6 +1,8 @@
 import argparse
 import networkx
 
+from networkx.algorithms import isomorphism
+
 from pymolgen.fragment_graph import *
 from pymolgen.fragment_builder import get_fragment_database, get_frag_mapping, get_bond_frequencies, update_bond_frequencies
 from pymolgen.fragment_mol import get_canonical_mapping
@@ -10,6 +12,31 @@ class FragmentMolecule:
 
     def __init__(self):
         self._graph = FragmentGraph()
+
+    def __hash__(self):
+
+        f = self.cap()
+
+        g = f._graph.convert_to_networkx()
+
+        return int(networkx.weisfeiler_lehman_graph_hash(g, node_attr='frag_id', edge_attr='atoms'), 16)
+
+    def __str__(self):
+        out = ''
+        for i in range(len(self._graph.fragments)):
+            if len(out) > 0:
+                out += '-'
+            out += str(self._graph.fragments[i].get_attribute('frag_id'))
+        return out
+
+    def __eq__(self, other):
+
+        g1 = self.convert_to_networkx()
+        g2 = other.convert_to_networkx()
+
+        gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
+
+        return gm.is_isomorphic()
 
     def add_fragment(self, frag_id: int, attachment_point_list) -> int:
         node_id = len(self._graph.fragments)
@@ -60,21 +87,12 @@ class FragmentMolecule:
 
         return f
 
-    def get_hash(self, fragment_database=None):
+
+    def convert_to_networkx(self):
 
         f = self.cap()
 
-        g = f._graph.convert_to_networkx(fragment_database)
-
-        return networkx.weisfeiler_lehman_graph_hash(g, node_attr='frag_id', edge_attr='atoms')
-
-    def __str__(self):
-        out = ''
-        for i in range(len(self._graph.fragments)):
-            if len(out) > 0:
-                out += '-'
-            out += str(self._graph.fragments[i].get_attribute('frag_id'))
-        return out
+        return f._graph.convert_to_networkx()
 
 def convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database):
 

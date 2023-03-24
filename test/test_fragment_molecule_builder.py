@@ -700,7 +700,6 @@ def test_unique2():
 
     #assert hash_list == hash_list_check
     #assert all_inchi == all_inchi_check
-test_unique2()
 
 def test_convert_to_networkx_canonical():
 
@@ -815,3 +814,148 @@ def test_get_unique_molecule_list_sort3():
     for idx, i in enumerate(sorted_list):
         print(i._graph.build_probability)
         assert i._graph.build_probability == answers[idx]
+
+def test_build_probability():
+
+    error = 1e-8
+
+    f = FragmentMolecule()
+    f.add_fragment(0, [0], {0:0})
+    f.add_fragment(1, [0, 1], {0:0})
+    f.add_bond(0,1,0,0, 1)
+
+    assert f.get_build_probability() == 1
+
+    f.add_fragment(2, [0,1,2], {0:0, 1:1, 2:2})
+    f.add_bond(1,2,1,0, 1)
+
+    assert f.get_build_probability() == 1
+
+    free_valence = f.get_total_free_valence()
+    f.add_fragment(3, [0,1,2], {0:0, 1:1, 2:2})
+    f.add_bond(2,3,1,0, 1/free_valence)
+
+    assert f.get_build_probability() == 0.5
+
+    free_valence = f.get_total_free_valence()
+    print(free_valence)
+    f.add_fragment(4, [0,1,2], {0:0, 1:1, 2:2})
+    f.add_bond(2,4,2,0, 1/free_valence)
+
+    assert f.get_build_probability() - 1/6 < error
+
+    print(free_valence)
+    print(f.get_build_probability())    
+
+
+def test_build_probability_database1():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    ch3 = FragmentMolecule()
+
+    ch3.add_fragment(0, [0], {0:0})
+
+    print(ch3.get_canonical_mapping(0))
+
+    output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=1, unique=False)
+
+    outfile = open('test.sdf', 'w')
+
+    for x in output_mol_list:
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        print(x.get_build_probability())
+        inchi = molecule_to_inchi(mol)
+        assert str(x) == '0-1'
+        assert inchi == 'InChI=1S/C4H5NO/c1-4-2-3-5-6-4/h2-3H,1H3'
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+    output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=2, unique=False)
+
+    outfile = open('test.sdf', 'w')
+
+    for x in output_mol_list:
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        print(x.get_build_probability())
+        inchi = molecule_to_inchi(mol)
+        print(inchi)
+        assert str(x) == '0-1-2'
+        assert inchi == 'InChI=1S/C5H6N2O2/c1-4-2-5(6-3-8)7-9-4/h2-3H,1H3,(H,6,7,8)'
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+    output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=4, unique=False)
+
+    outfile = open('test.sdf', 'w')
+
+    inchi_list = ['InChI=1S/C7H9N3O3/c1-4-2-6(10-13-4)9-7(12)3-5(8)11/h2H,3H2,1H3,(H2,8,11)(H,9,10,12)', 'InChI=1S/C6H8N2O4S/c1-4-2-5(8-12-4)7-6(9)3-13(10)11/h2,13H,3H2,1H3,(H,7,8,9)', 'InChI=1S/C14H13N3O2/c1-10-8-13(16-19-10)15-14(18)9-17-7-6-11-4-2-3-5-12(11)17/h2-8H,9H2,1H3,(H,15,16,18)', 'InChI=1S/C12H12N2O2/c1-9-7-11(14-16-9)13-12(15)8-10-5-3-2-4-6-10/h2-7H,8H2,1H3,(H,13,14,15)']
+
+    total_probability = 0
+
+    for idx, x in enumerate(output_mol_list):
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        print(x.get_build_probability())
+        total_probability += x.get_build_probability()
+        assert x.get_build_probability() == 0.25
+        inchi = molecule_to_inchi(mol)
+        print(inchi)
+        assert inchi == inchi_list[idx]
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+    assert total_probability - 1 < 1e-8
+
+    output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=10, unique=False)
+
+    outfile = open('test.sdf', 'w')
+
+    total_probability = 0
+
+    for idx, x in enumerate(output_mol_list):
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        print(x.get_build_probability())
+        total_probability += x.get_build_probability()
+        #assert x.get_build_probability() == 0.25
+        inchi = molecule_to_inchi(mol)
+        print(inchi)
+        #assert inchi == inchi_list[idx]
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+    assert total_probability - 1 < 1e-8
+
+    output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=6, unique=True)
+
+    outfile = open('test.sdf', 'w')
+
+    total_probability = 0
+
+    for idx, x in enumerate(output_mol_list):
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        print(x.get_build_probability())
+        total_probability += x.get_build_probability()
+        #assert x.get_build_probability() == 0.25
+        inchi = molecule_to_inchi(mol)
+        print(inchi)
+        #assert inchi == inchi_list[idx]
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+    assert total_probability - 1 < 1e-8
+
+test_build_probability_database1()

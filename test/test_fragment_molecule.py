@@ -257,4 +257,12 @@ def test_eq3():
 
 	assert f != f2
 
-test_eq3()
+def test_canonical_mapping():
+
+	f = FragmentMolecule()
+
+	f.add_fragment(0, [0], {0:0})
+
+	assert f._graph.fragments[0].get_canonical_mapping() == {0:0}
+
+test_canonical_mapping()

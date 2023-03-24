@@ -627,8 +627,6 @@ def test_unique():
         inchi_list.append(inchi)
         hash_list.append(x.__hash__())
 
-test_unique()
-
 def test_unique2():
 
     bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
@@ -640,9 +638,9 @@ def test_unique2():
 
     parent = FragmentMolecule()
 
-    parent.add_fragment(0, [0])
+    parent.add_fragment(0, [0], {0:0})
 
-    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=3, threshold=0.0025)
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=3, fragment_database=fragment_database, threshold=0.0025)
 
     all_inchi = []
 
@@ -702,6 +700,7 @@ def test_unique2():
 
     #assert hash_list == hash_list_check
     #assert all_inchi == all_inchi_check
+test_unique2()
 
 def test_convert_to_networkx_canonical():
 
@@ -744,8 +743,6 @@ def test_convert_to_networkx_canonical():
 
     for i in f._graph.fragments:
         print(f._graph.fragments[i].attachment_points)
-
-test_convert_to_networkx_canonical()
 
 
 def test_get_unique_molecule_list_sort():
@@ -793,3 +790,28 @@ def test_get_unique_molecule_list_sort2():
         assert i._graph.build_probability == answers[idx]
 
 
+def test_get_unique_molecule_list_sort3():
+
+    f = FragmentMolecule()
+    f.add_fragment(0, [0], {0:0})
+    f.add_fragment(0, [0], {0:0})
+    f.add_bond(0,1,0,0)
+    f._graph._build_probability = 1
+
+    f2 = FragmentMolecule()
+    f2.add_fragment(0, [0], {0:0})
+    f2.add_fragment(0, [1], {1:0})
+    f2.add_bond(0,1,0,1)
+    f2._graph._build_probability = 2
+
+    f3 = FragmentMolecule()
+    f3.add_fragment(2, [0], {0:0})
+    f3._graph._build_probability = 3
+
+    sorted_list = get_unique_molecule_list([f, f2, f3])
+
+    answers = [3,3]
+
+    for idx, i in enumerate(sorted_list):
+        print(i._graph.build_probability)
+        assert i._graph.build_probability == answers[idx]

@@ -76,8 +76,9 @@ class FragmentGraph:
     def build_probability(self):
         return self._build_probability
 
-    def add_fragment(self, id: int, attachment_points: List[int]):
+    def add_fragment(self, id: int, attachment_points: List[int], canonical_mapping=None):
         self._fragments[id] = FragmentGraphNode(attachment_points)
+        self._fragments[id].manual_canonical_mapping(canonical_mapping)
         self._attachment_point_list.append(attachment_points)
         self._free_valence_points.append(attachment_points)
 
@@ -122,7 +123,6 @@ class FragmentGraph:
 
 
     def convert_to_networkx(self):
-
         g = networkx.Graph()
 
         canonicalise = True
@@ -130,10 +130,8 @@ class FragmentGraph:
         for i in range(len(self.fragments)):
 
             g.add_node(i, frag_id=self.fragments[i].get_attribute('frag_id'))
-            if self.fragments[i].get_canonical_mapping() is None:
+            if self.fragments[i].get_attribute('frag_id') != -1 and self.fragments[i].get_canonical_mapping() is None:
                 canonicalise = False
-
-        canonicalise = True
 
         for bond in self.bonds:
             i = bond[0]
@@ -221,5 +219,10 @@ def convert_fragment_database_to_graph(fragment_database):
         f.add_fragment(x, fragment_database[x].free_valence_list)
         f.fragments[x].set_attribute('frag_id', x)
         f.fragments[x].set_canonical_mapping(fragment_database)
+
+    for x in range(len(f)):
+        print(f.fragments[x].get_canonical_mapping())
+    import time
+
     print('Converting fragment database to graph FINISHED')
     return f

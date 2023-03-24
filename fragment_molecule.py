@@ -30,7 +30,6 @@ class FragmentMolecule:
         return out
 
     def __eq__(self, other):
-
         g1 = self.convert_to_networkx()
         g2 = other.convert_to_networkx()
 
@@ -38,9 +37,9 @@ class FragmentMolecule:
 
         return gm.is_isomorphic()
 
-    def add_fragment(self, frag_id: int, attachment_point_list) -> int:
+    def add_fragment(self, frag_id: int, attachment_point_list, canonical_mapping=None) -> int:
         node_id = len(self._graph.fragments)
-        self._graph.add_fragment(node_id, attachment_point_list)
+        self._graph.add_fragment(node_id, attachment_point_list, canonical_mapping)
         self._graph.add_node_attribute(node_id, "frag_id", frag_id)
         return node_id
 
@@ -82,7 +81,7 @@ class FragmentMolecule:
 
         for i in range(len(free_valence_list)):
             for j in free_valence_list[i]:
-                id = f.add_fragment(-1, [0])
+                id = f.add_fragment(-1, [0], {0:0})
                 f.add_bond(i, id, j, 0)
 
         return f

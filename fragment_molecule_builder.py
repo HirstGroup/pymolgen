@@ -10,7 +10,7 @@ import sys
 from pymolgen.fragment_molecule import *
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
-from pymolgen.fragment_builder import bond_frequencies_to_np, get_bond_frequencies, get_fragment_database, get_fragment_bond_frequencies_np
+from pymolgen.fragment_builder import bond_frequencies_to_np, find_fragment, get_bond_frequencies, get_fragment_database, get_fragment_bond_frequencies_np, map_mols
 
 from functools import partial
 print = partial(print, flush=True)
@@ -249,7 +249,20 @@ def write_fragment_database_graph(fragment_database, filename):
 
     print('Writing fragment database graph FINISHED')
 
-def prepare_parent():
+def prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1, remove_hydrogens, remove_hydrogens_parent_fragment):
+
+    assert parent_fragment_file_list is not None
+    assert parent_mapping_1 is not None
+    assert remove_hydrogens is not None
+    assert remove_hydrogens_parent_fragment is not None
+
+    # convert parent_mapping_1 list to dictionary
+    new_dict = {}
+    for i in range(0, len(parent_mapping_1), 2):
+        new_dict[parent_mapping_1[i]] = parent_mapping_1[i+1]
+    parent_mapping_1 = new_dict
+
+    parent_mol = molecule_from_sdf(parent_file)
 
     attachment_points = []
 
@@ -260,15 +273,12 @@ def prepare_parent():
             if j not in attachment_points:
                 attachment_points.append(j)
 
-    parent_mw = Molecule.molecular_weight(parent_mol)
-
     # make list of equivalent fragments to build on parent
     parent_fragment_list = [molecule_from_sdf(x) for x in parent_fragment_file_list]
 
     # remove hydrogens from equivalent fragments
     for i in range(len(parent_fragment_list)):
         parent_fragment_list[i] = parent_fragment_list[i].remove_atom(remove_hydrogens_parent_fragment[i])
-
 
     # the original equivalent fragments will be mapped to those in the database to account for the different atom numberings
     parent_fragment_original_list = [x for x in parent_fragment_list]
@@ -277,9 +287,9 @@ def prepare_parent():
     # make a list parent_fragment_i_list that will contain all equivalent fragments ids
     parent_fragment_i_dict = {}
     parent_fragment_i_list = []
+
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
-        print(attachment_points); print('j =', j)
         parent_fragment_i_dict[attachment_points[i]] = j
         parent_fragment_i_list.append(j)
 
@@ -294,13 +304,38 @@ def prepare_parent():
         if j is False:
             sys.exit('Parent fragment not found')
 
-    # make list of all fragments as molecule objects
-    parent_fragment_list = [fragment_database[x] for x in parent_fragment_i_list]
-
     # map all atoms in each equivalent fragment to the atom numbers in the database
     parent_mapping_2 = []
     for i in range(len(parent_fragment_list)):
         parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
+
+    # parent_mapping will map the atoms in the parent with those atom numbers in the equivalent fragments in the database
+    parent_mapping = {}
+    n = 0
+    for key, val in parent_mapping_1.items():
+        parent_mapping[key] = parent_mapping_2[n][val]
+        n += 1
+
+    # include parent in fragment_database and fragment_database_graph
+    parent_id = len(fragment_database)
+    fragment_database.add_mol(parent_mol)
+    fragment_database_graph.add_fragment(parent_id, attachment_points)
+    fragment_database_graph.fragments[parent_id].set_attribute('frag_id', parent_id)
+    fragment_database_graph.fragments[parent_id].set_canonical_mapping(fragment_database)
+
+    # create parent FragmentMolecule object
+    parent = FragmentMolecule()
+    parent.add_fragment(parent_id, attachment_points, fragment_database_graph.fragments[parent_id].get_canonical_mapping())
+
+    # update bond frequencies for parent
+    for attachment_point, equivalent_frag_id in parent_fragment_i_dict.items():
+        equivalent_frag = fragment_database[equivalent_frag_id]
+        if len(equivalent_frag.attach_points) > 1:
+            sys.error('Equivalent fragment cannot have more than 1 attachment point')
+        equivalent_frag_atom = equivalent_frag.attach_points[0]
+        bond_frequencies[(parent_id, attachment_point)] = bond_frequencies[(equivalent_frag_id, equivalent_frag_atom)]
+
+    return parent, bond_frequencies, fragment_database, fragment_database_graph
 
 def convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies, sort_dict=True):
 
@@ -391,9 +426,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
-    parser.add_argument('--atom', type=int, help='Atom to build on parent',required=True)
     parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
-    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=True)    
     
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=False)
@@ -403,6 +436,17 @@ if __name__ == '__main__':
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('-w', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
+
+    # build from database fragment
+    parser.add_argument('--atom', type=int, help='Atom to build on parent',required=False)
+    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=False)   
+
+    # build from parent file
+    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
+    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
+    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
 
     args = parser.parse_args()
 
@@ -426,9 +470,14 @@ if __name__ == '__main__':
     if args.write_bond_frequencies_dict is not None:
         write_bond_frequencies_dict(bond_frequencies, args.write_bond_frequencies_dict)
 
-    parent = FragmentMolecule()
+    if args.parent_file is not None:
 
-    parent.add_fragment(args.parent_id, [args.atom], {args.atom:args.atom})
+        parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, args.parent_file, args.parent_fragment_file_list, args.parent_mapping_1, args.remove_hydrogens, args.remove_hydrogens_parent_fragment)
+
+    else:
+        parent = FragmentMolecule()
+
+        parent.add_fragment(args.parent_id, [args.atom], {args.atom:args.atom})
 
     if args.threshold is not None:
         threshold = 10 ** args.threshold

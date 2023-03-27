@@ -22,6 +22,10 @@ class MoleculeDataset(ABC):
         self.mols[i] = new_mol
         return new_mol
 
+    def add_mol(self, mol):
+        mol_id = len(self.mols)
+        self.mols[mol_id] = mol
+
     def random_molecule(self) -> Molecule:
         random_molecule_i = random.randint(0, len(self) - 1)
         #print('Random molecule i =', random_molecule_i)

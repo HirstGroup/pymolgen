@@ -410,8 +410,6 @@ def test_extend_molecule_list_model3():
         assert str(x) == mols[idx]
         assert x.list_bonds() == bonds[idx]
 
-test_extend_molecule_list_model3()
-
 def test_extend_molecule_list_model4():
 
     f = FragmentMolecule()
@@ -892,4 +890,42 @@ def test_read_write_bond_frequencies_dict():
 
     assert bond_frequencies == bond_frequencies_read
 
-test_read_write_bond_frequencies_dict()
+
+def test_prepare_fragment():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies11-20.txt')
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments11-20.sdf')
+  
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies_np)    
+
+    parent_file = '../datasets/database1000/benzene.sdf'
+    parent_fragment_file_list = ['../datasets/database1000/ch4.sdf', '../datasets/database1000/nh3.sdf']
+
+    remove_hydrogens = [11, 6]
+    remove_hydrogens_parent_fragment = [4, 3]
+
+    parent_mapping_1 = [0, 0, 1, 0]
+
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
+
+    print(len(fragment_database))
+
+    assert bond_frequencies == {(0, 0): {(1, 0): 4, (7, 0): 3, (31, 1): 2, (15, 0): 1, (18, 0): 1, (23, 0): 1, (23, 2): 1, (23, 3): 1, (25, 0): 1, (28, 4): 1, (28, 5): 1, (30, 0): 1, (31, 3): 1, (34, 4): 1}, (1, 0): {(0, 0): 4, (2, 2): 1, (5, 11): 1, (10, 4): 1, (4, 1): 1}, (2, 2): {(1, 0): 1}, (2, 4): {(3, 0): 1}, (3, 0): {(4, 1): 3, (2, 4): 1, (5, 0): 1, (30, 4): 1}, (4, 1): {(3, 0): 3, (4, 1): 3, (12, 0): 3, (10, 4): 3, (14, 3): 2, (33, 0): 1, (1, 0): 1, (32, 0): 1, (25, 1): 1, (24, 11): 1, (11, 0): 1, (16, 5): 1, (33, 2): 1, (9, 1): 1, (15, 0): 1, (13, 1): 1, (8, 0): 1, (7, 0): 1, (17, 5): 1, (34, 1): 1}, (5, 0): {(3, 0): 1}, (5, 4): {(6, 0): 1}, (5, 11): {(1, 0): 1}, (6, 0): {(5, 4): 1, (16, 3): 1}, (7, 0): {(0, 0): 3, (10, 4): 2, (4, 1): 1}, (8, 0): {(4, 1): 1}, (8, 5): {(9, 1): 1}, (8, 7): {(9, 1): 1}, (9, 1): {(8, 5): 1, (8, 7): 1, (4, 1): 1, (18, 5): 1}, (10, 4): {(4, 1): 3, (7, 0): 2, (11, 0): 1, (21, 7): 1, (22, 0): 1, (1, 0): 1, (27, 2): 1, (10, 4): 1}, (11, 0): {(10, 4): 1, (4, 1): 1, (31, 0): 1}, (11, 2): {(12, 0): 2, (21, 7): 1}, (12, 0): {(4, 1): 3, (14, 3): 3, (11, 2): 2, (13, 1): 1}, (13, 1): {(4, 1): 1, (12, 0): 1}, (14, 3): {(12, 0): 3, (4, 1): 2, (35, 0): 1}, (15, 0): {(0, 0): 1, (4, 1): 1}, (15, 4): {(16, 0): 1}, (16, 0): {(15, 4): 1}, (16, 3): {(6, 0): 1}, (16, 5): {(4, 1): 1}, (17, 5): {(4, 1): 1, (19, 4): 1}, (18, 0): {(0, 0): 1}, (18, 5): {(9, 1): 1}, (18, 8): {(19, 4): 1}, (19, 4): {(18, 8): 1, (20, 0): 1, (32, 11): 1, (17, 5): 1}, (20, 0): {(19, 4): 1}, (21, 7): {(11, 2): 1, (10, 4): 1}, (22, 0): {(10, 4): 1}, (23, 0): {(0, 0): 1}, (23, 2): {(0, 0): 1}, (23, 3): {(0, 0): 1}, (23, 4): {(24, 7): 1}, (24, 7): {(23, 4): 1}, (24, 11): {(4, 1): 1}, (25, 0): {(0, 0): 1, (26, 2): 1}, (25, 1): {(4, 1): 1}, (26, 2): {(25, 0): 1}, (27, 2): {(10, 4): 1, (28, 0): 1}, (28, 0): {(27, 2): 1, (29, 0): 1}, (28, 4): {(0, 0): 1}, (28, 5): {(0, 0): 1}, (29, 0): {(28, 0): 1}, (30, 0): {(0, 0): 1}, (30, 4): {(3, 0): 1}, (31, 0): {(11, 0): 1}, (31, 1): {(0, 0): 2}, (31, 3): {(0, 0): 1}, (32, 0): {(4, 1): 1}, (32, 11): {(19, 4): 1}, (33, 0): {(4, 1): 1}, (33, 2): {(4, 1): 1}, (34, 1): {(4, 1): 1}, (34, 4): {(0, 0): 1}, (35, 0): {(36, 0): 3, (14, 3): 1}, (36, 0): {(35, 0): 3}, (37, 0): {(1, 0): 4, (7, 0): 3, (31, 1): 2, (15, 0): 1, (18, 0): 1, (23, 0): 1, (23, 2): 1, (23, 3): 1, (25, 0): 1, (28, 4): 1, (28, 5): 1, (30, 0): 1, (31, 3): 1, (34, 4): 1}, (37, 1): {(8, 5): 1, (8, 7): 1, (4, 1): 1, (18, 5): 1}}
+
+    assert parent.get_frag_id(0) == 37
+    assert parent.get_canonical_mapping(0) == {0: 0, 1: 0, 2: 2, 3: 3, 4: 3, 5: 2, 7: 7, 8: 8, 9: 8, 10: 7}
+    assert parent.list_free_valence_points() == [[0,1]]
+    print(len(fragment_database))
+    print(len(fragment_database_graph))
+
+    assert fragment_database_graph.fragments[37].attachment_points == [0,1]
+    assert fragment_database_graph.fragments[37].get_attribute('frag_id') == 37 
+    assert fragment_database_graph.fragments[37].get_canonical_mapping() == {0: 0, 1: 0, 2: 2, 3: 3, 4: 3, 5: 2, 7: 7, 8: 8, 9: 8, 10: 7}
+
+    # add mol not working in fragment database
+
+test_prepare_fragment()

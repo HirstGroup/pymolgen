@@ -221,9 +221,5 @@ def convert_fragment_database_to_graph(fragment_database):
         f.fragments[x].set_attribute('frag_id', x)
         f.fragments[x].set_canonical_mapping(fragment_database)
 
-    for x in range(len(f)):
-        print(f.fragments[x].get_canonical_mapping())
-    import time
-
     print('Converting fragment database to graph FINISHED')
     return f

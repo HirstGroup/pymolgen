@@ -177,7 +177,7 @@ def get_unique_molecule_list(FragmentMolecule_list, sort_list=True, fragment_dat
         print('Writing to different.sdf')
     
     unique_dict = {}
-    if fragment_database is not None:
+    if fragment_database is not None and len(fragment_database) <= 1000:
         check = {}
         mol_check = []
 
@@ -337,7 +337,7 @@ if __name__ == '__main__':
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, output=args.output, threshold=threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, threshold=threshold)
 
 """
     if args.output is not None:

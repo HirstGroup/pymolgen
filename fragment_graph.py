@@ -211,8 +211,9 @@ def convert_fragment_graph_to_mol(FragmentGraph, fragment_database):
 
 def convert_fragment_database_to_graph(fragment_database):
 
+    print('Converting fragment database to graph ...')
+
     f = FragmentGraph()
-    print('Converting fragment database to graph')
     for x in range(len(fragment_database)):
         if x % 100 == 0:
             print('%s' %x, end = ' ')

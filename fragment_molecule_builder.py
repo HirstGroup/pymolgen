@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import ast
 import copy
 import numpy as np
 import os
@@ -366,8 +367,8 @@ def read_bond_frequencies_dict(infile):
     with open(infile) as f:
         for line in f:
 
-            key = eval(line.split(':')[0])
-            val = eval('{' + line.strip('\n').split(': {')[1])
+            key = ast.literal_eval(line.split(':')[0])
+            val = ast.literal_eval('{' + line.strip('\n').split(': {')[1])
 
             bond_frequencies_dict[key] = val
 

@@ -119,36 +119,39 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
     return FragmentMolecule_list
 
 
-def get_unique_molecule_list(FragmentMolecule_list, sort_list=True, fragment_database=None):
+def get_unique_molecule_list(FragmentMolecule_list, debug=False, fragment_database=None, sort_list=True):
 
-    with open('different.sdf', 'w') as f:
-        print('Writing to different.sdf')
-    
     unique_dict = {}
-    if fragment_database is not None:
-        check = {}
-        mol_check = []
 
-        for idx, i in enumerate(FragmentMolecule_list):
-            if i in check:
-                if check[i] != i._graph._build_probability:
-                    print('PROBABILITIES NOT THE SAME')
-                    mol_check.append(i)
-            else:
-                check[i] = i._graph._build_probability
+    # code is generated same molecule with different probabilities, probably due to fragment database having repeated fragments
+    if debug is True:
+        with open('different.sdf', 'w') as f:
+            print('Writing to different.sdf')
+        
+        if fragment_database is not None:
+            check = {}
+            mol_check = []
 
-        new_check = []
+            for idx, i in enumerate(FragmentMolecule_list):
+                if i in check:
+                    if check[i] != i._graph._build_probability:
+                        print('PROBABILITIES NOT THE SAME')
+                        mol_check.append(i)
+                else:
+                    check[i] = i._graph._build_probability
 
-        for i in check.keys():
-            for j in FragmentMolecule_list:
-                if i == j:
-                    new_check.append(j)
-                    print('CHECK', i.__hash__(), i.get_build_probability(), j.get_build_probability())
+            new_check = []
 
-        for i in new_check:
-            print(idx, i._graph._build_probability, i.__hash__())
-            mol = convert_fragment_molecule_to_mol(i, fragment_database)
-            save_mol_to_sdf(mol, 'different.sdf')
+            for i in check.keys():
+                for j in FragmentMolecule_list:
+                    if i == j:
+                        new_check.append(j)
+                        print('CHECK', i.__hash__(), i.get_build_probability(), j.get_build_probability())
+
+            for i in new_check:
+                print(idx, i._graph._build_probability, i.__hash__())
+                mol = convert_fragment_molecule_to_mol(i, fragment_database)
+                save_mol_to_sdf(mol, 'different.sdf')
 
     for i in FragmentMolecule_list:
         if i in unique_dict:
@@ -251,6 +254,8 @@ def write_fragment_database_graph(fragment_database, filename):
 
 def prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1, remove_hydrogens, remove_hydrogens_parent_fragment):
 
+    assert bond_frequencies is not None
+    assert fragment_database is not None
     assert parent_fragment_file_list is not None
     assert parent_mapping_1 is not None
     assert remove_hydrogens is not None
@@ -425,16 +430,19 @@ def write_bond_frequencies_dict(bond_frequencies_dict, outfile):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
+
+    # required arguments
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
     parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
     
+    # optional arguments
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
-    parser.add_argument('-r', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
+    parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
-    parser.add_argument('-w', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
+    parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
 
     # build from database fragment
@@ -471,7 +479,7 @@ if __name__ == '__main__':
         write_bond_frequencies_dict(bond_frequencies, args.write_bond_frequencies_dict)
 
     if args.parent_file is not None:
-
+        
         parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, args.parent_file, args.parent_fragment_file_list, args.parent_mapping_1, args.remove_hydrogens, args.remove_hydrogens_parent_fragment)
 
     else:
@@ -488,6 +496,6 @@ if __name__ == '__main__':
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, output=args.output, threshold=threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, threshold=threshold)
 
 

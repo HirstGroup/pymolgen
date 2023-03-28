@@ -963,10 +963,19 @@ def test_prepare_fragment_build():
 
     output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2)
 
+    outfile = open('test.sdf', 'w')
+
     for idx, x in enumerate(output_mol_list):
 
         mol = convert_fragment_molecule_to_mol(x, fragment_database)
         inchi = molecule_to_inchi(mol)
+        title = '%.2f' %np.log(x.get_build_probability())
+        lines = molecule_to_sdf(mol, title)
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
+
+test_prepare_fragment_build()
 
 def test_prepare_fragment_build2():
 

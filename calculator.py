@@ -8,7 +8,7 @@ from pymolgen.molecule_formats import molecule_to_smiles, molecule_to_inchi, mol
 from pymolgen.properties_pymolgen import *
 
 from rdkit import Chem
-from PP_ML_models.predictive_models.ml_model_gcnn_ens import Ensemble_Model_DC
+from PP_ML_models.predictive_models.ml_model_gcnn import Ensemble_Model_DC
 
 # Import Openeye Modules
 from openeye import oechem

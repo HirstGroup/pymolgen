@@ -912,20 +912,103 @@ def test_prepare_fragment():
 
     parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
 
-    print(len(fragment_database))
-
     assert bond_frequencies == {(0, 0): {(1, 0): 4, (7, 0): 3, (31, 1): 2, (15, 0): 1, (18, 0): 1, (23, 0): 1, (23, 2): 1, (23, 3): 1, (25, 0): 1, (28, 4): 1, (28, 5): 1, (30, 0): 1, (31, 3): 1, (34, 4): 1}, (1, 0): {(0, 0): 4, (2, 2): 1, (5, 11): 1, (10, 4): 1, (4, 1): 1}, (2, 2): {(1, 0): 1}, (2, 4): {(3, 0): 1}, (3, 0): {(4, 1): 3, (2, 4): 1, (5, 0): 1, (30, 4): 1}, (4, 1): {(3, 0): 3, (4, 1): 3, (12, 0): 3, (10, 4): 3, (14, 3): 2, (33, 0): 1, (1, 0): 1, (32, 0): 1, (25, 1): 1, (24, 11): 1, (11, 0): 1, (16, 5): 1, (33, 2): 1, (9, 1): 1, (15, 0): 1, (13, 1): 1, (8, 0): 1, (7, 0): 1, (17, 5): 1, (34, 1): 1}, (5, 0): {(3, 0): 1}, (5, 4): {(6, 0): 1}, (5, 11): {(1, 0): 1}, (6, 0): {(5, 4): 1, (16, 3): 1}, (7, 0): {(0, 0): 3, (10, 4): 2, (4, 1): 1}, (8, 0): {(4, 1): 1}, (8, 5): {(9, 1): 1}, (8, 7): {(9, 1): 1}, (9, 1): {(8, 5): 1, (8, 7): 1, (4, 1): 1, (18, 5): 1}, (10, 4): {(4, 1): 3, (7, 0): 2, (11, 0): 1, (21, 7): 1, (22, 0): 1, (1, 0): 1, (27, 2): 1, (10, 4): 1}, (11, 0): {(10, 4): 1, (4, 1): 1, (31, 0): 1}, (11, 2): {(12, 0): 2, (21, 7): 1}, (12, 0): {(4, 1): 3, (14, 3): 3, (11, 2): 2, (13, 1): 1}, (13, 1): {(4, 1): 1, (12, 0): 1}, (14, 3): {(12, 0): 3, (4, 1): 2, (35, 0): 1}, (15, 0): {(0, 0): 1, (4, 1): 1}, (15, 4): {(16, 0): 1}, (16, 0): {(15, 4): 1}, (16, 3): {(6, 0): 1}, (16, 5): {(4, 1): 1}, (17, 5): {(4, 1): 1, (19, 4): 1}, (18, 0): {(0, 0): 1}, (18, 5): {(9, 1): 1}, (18, 8): {(19, 4): 1}, (19, 4): {(18, 8): 1, (20, 0): 1, (32, 11): 1, (17, 5): 1}, (20, 0): {(19, 4): 1}, (21, 7): {(11, 2): 1, (10, 4): 1}, (22, 0): {(10, 4): 1}, (23, 0): {(0, 0): 1}, (23, 2): {(0, 0): 1}, (23, 3): {(0, 0): 1}, (23, 4): {(24, 7): 1}, (24, 7): {(23, 4): 1}, (24, 11): {(4, 1): 1}, (25, 0): {(0, 0): 1, (26, 2): 1}, (25, 1): {(4, 1): 1}, (26, 2): {(25, 0): 1}, (27, 2): {(10, 4): 1, (28, 0): 1}, (28, 0): {(27, 2): 1, (29, 0): 1}, (28, 4): {(0, 0): 1}, (28, 5): {(0, 0): 1}, (29, 0): {(28, 0): 1}, (30, 0): {(0, 0): 1}, (30, 4): {(3, 0): 1}, (31, 0): {(11, 0): 1}, (31, 1): {(0, 0): 2}, (31, 3): {(0, 0): 1}, (32, 0): {(4, 1): 1}, (32, 11): {(19, 4): 1}, (33, 0): {(4, 1): 1}, (33, 2): {(4, 1): 1}, (34, 1): {(4, 1): 1}, (34, 4): {(0, 0): 1}, (35, 0): {(36, 0): 3, (14, 3): 1}, (36, 0): {(35, 0): 3}, (37, 0): {(1, 0): 4, (7, 0): 3, (31, 1): 2, (15, 0): 1, (18, 0): 1, (23, 0): 1, (23, 2): 1, (23, 3): 1, (25, 0): 1, (28, 4): 1, (28, 5): 1, (30, 0): 1, (31, 3): 1, (34, 4): 1}, (37, 1): {(8, 5): 1, (8, 7): 1, (4, 1): 1, (18, 5): 1}}
 
     assert parent.get_frag_id(0) == 37
     assert parent.get_canonical_mapping(0) == {0: 0, 1: 0, 2: 2, 3: 3, 4: 3, 5: 2, 7: 7, 8: 8, 9: 8, 10: 7}
     assert parent.list_free_valence_points() == [[0,1]]
-    print(len(fragment_database))
-    print(len(fragment_database_graph))
 
     assert fragment_database_graph.fragments[37].attachment_points == [0,1]
     assert fragment_database_graph.fragments[37].get_attribute('frag_id') == 37 
     assert fragment_database_graph.fragments[37].get_canonical_mapping() == {0: 0, 1: 0, 2: 2, 3: 3, 4: 3, 5: 2, 7: 7, 8: 8, 9: 8, 10: 7}
 
-    # add mol not working in fragment database
+    assert fragment_database[37].atom_count == 10
+    assert fragment_database[37].attach_points == [0,1]
+    assert molecule_to_inchi(fragment_database[37]) == 'InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H'
 
-test_prepare_fragment()
+
+def test_prepare_fragment_build():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies11-20.txt')
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments11-20.sdf')
+  
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies_np)    
+
+    parent_file = '../datasets/database1000/benzene.sdf'
+    parent_fragment_file_list = ['../datasets/database1000/ch4.sdf', '../datasets/database1000/nh3.sdf']
+
+    remove_hydrogens = [11, 6]
+    remove_hydrogens_parent_fragment = [4, 3]
+
+    parent_mapping_1 = [0, 0, 1, 0]
+
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=1)
+
+    inchi_list = ['InChI=1S/C6H6O/c7-6-4-2-1-3-5-6/h1-5,7H', 'InChI=1S/C6H7N/c7-6-4-2-1-3-5-6/h1-5H,7H2', 'InChI=1S/C12H10/c1-3-7-11(8-4-1)12-9-5-2-6-10-12/h1-10H', 'InChI=1S/C8H7N3/c1-2-4-7(5-3-1)8-9-6-10-11-8/h1-6H,(H,9,10,11)', 'InChI=1S/C23H18N4O/c28-21-23(24-15-27(21)19-7-2-1-3-8-19)20-9-5-4-6-16(20)10-22(23)11-17-13-25-26-14-18(17)12-22/h1-9,13-15H,10-12H2', 'InChI=1S/C9H8N2/c1-2-4-8(5-3-1)9-6-7-10-11-9/h1-7H,(H,10,11)', 'InChI=1S/C9H8N2/c1-2-5-9(6-3-1)11-8-4-7-10-11/h1-8H', 'InChI=1S/C9H8N2/c1-2-4-8(5-3-1)9-6-7-10-11-9/h1-7H,(H,10,11)', 'InChI=1S/C7H7NO/c9-6-8-7-4-2-1-3-5-7/h1-6H,(H,8,9)', 'InChI=1S/C18H15NO2/c1-12-15-11-17(21-16-10-6-5-9-14(15)16)19(18(12)20)13-7-3-2-4-8-13/h2-10,15,17H,1,11H2', 'InChI=1S/C18H15NO2/c1-12-15-11-18(19-17(12)20,13-7-3-2-4-8-13)21-16-10-6-5-9-14(15)16/h2-10,15H,1,11H2,(H,19,20)', 'InChI=1S/C11H9N/c1-2-4-10(5-3-1)11-6-8-12-9-7-11/h1-9H', 'InChI=1S/C12H10/c1-3-7-11(8-4-1)12-9-5-2-6-10-12/h1-10H', 'InChI=1S/C9H7NS/c1-2-4-8(5-3-1)9-10-6-7-11-9/h1-7H']
+
+    hash_list = [125802373934658707707893645554295972548, 88521189801922557581851890623688369918, 185016806822050280645065174610926512648, 203245963156018616531765155380059346369, 215101461220035878410385525708566155712, 42110026445331953472719390742051602718, 198648592917689414410200893098094437002, 298526144675828661713121490930053134784, 240799315853208735634486799433609239627, 236595904547148108550302000072166620872, 182109617293892055651242913032300270212, 257425220052696418238859640103740475101, 87832430771548556856051116923837735216, 193381843236587739311437911179097861192]
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+        assert hash_list[idx] == x.__hash__()
+        assert inchi == inchi_list[idx]
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2)
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+
+def test_prepare_fragment_build2():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies11-20.txt')
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments11-20.sdf')
+  
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies_np)    
+
+    parent_file = '../datasets/database1000/benzene.sdf'
+    parent_fragment_file_list = ['../datasets/database1000/ch4.sdf']
+
+    remove_hydrogens = [11]
+    remove_hydrogens_parent_fragment = [4]
+
+    parent_mapping_1 = [0, 0]
+
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=1)
+
+    outfile = open('test.sdf', 'w')
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+        save_mol_to_sdf(mol, 'test.sdf')
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2)
+
+    hash_list = [309998792847148094828322024151722663814, 123764599579525826580282299059206259828, 324144588138549048198429533481210749387, 264340246879732136907875213722820413799, 304068929864717539119540402945941095504, 239121919240457570636403429526874362877, 168648287652676636970686391813478387431, 9993290589958208775915181342961112599, 211068782553993288394216050529189210141, 206060792790214201008700984382338418952, 161648038428814051415565329181694322896, 137417524114043676146754920139041171181, 333454990233660616503730359661910717463, 213914180483352151224279050196811939538, 156684087297210049427457889909207253852, 62265905220271202667141985892332222414, 188405892577415086394959553755022933725, 118421092408072340629612667279565634976, 299367742368566981382334595067055052099, 106191428233857427243640698524507189131, 218528620715444521516814285019367283292, 1732865986249859954338745331014439316, 96862779942582648564780585926051774652, 177391752435918972501679204585273915349, 199507941837374560729148465026600455673, 149810688827556965031365657390021101372, 314939876586477140630913166036850275734, 221146620805436069869255496464570118364, 119923012430433255693047212744267710787, 4092183221622884976553169900231213064, 129936790353359117151196465944132149462, 310798800441818263351074465797216235404, 177850325211458087029088411854750546020, 273529420383467636261485396573122049005, 13700610047938538387780625282120401232, 32752670731035548519599156045222248147, 10208184587346630186634211706165077115, 151228314401512051774163007042763579422]
+
+    inchi_list = ['InChI=1S/C7H8O/c1-8-7-5-3-2-4-6-7/h2-6H,1H3', 'InChI=1S/C7H9N/c1-8-7-5-3-2-4-6-7/h2-6,8H,1H3', 'InChI=1S/C11H10N2/c12-11-8-10(6-7-13-11)9-4-2-1-3-5-9/h1-8H,(H2,12,13)', 'InChI=1S/C10H9NS/c1-8-7-12-10(11-8)9-5-3-2-4-6-9/h2-7H,1H3', 'InChI=1S/C12H11N/c1-3-7-11(8-4-1)13-12-9-5-2-6-10-12/h1-10,13H', 'InChI=1S/C13H11NO/c14-13(15)12-9-5-4-8-11(12)10-6-2-1-3-7-10/h1-9H,(H2,14,15)', 'InChI=1S/C13H12/c1-11-6-5-9-13(10-11)12-7-3-2-4-8-12/h2-10H,1H3', 'InChI=1S/C13H12/c1-11-6-5-9-13(10-11)12-7-3-2-4-8-12/h2-10H,1H3', 'InChI=1S/C13H12/c1-11-6-5-9-13(10-11)12-7-3-2-4-8-12/h2-10H,1H3', 'InChI=1S/C15H11NO/c1-2-6-13(7-3-1)17-14-8-9-15-12(11-14)5-4-10-16-15/h1-11H', 'InChI=1S/C19H13NO/c1-2-7-16(8-3-1)21-17-10-11-19-15(13-17)12-14-6-4-5-9-18(14)20-19/h1-13H', 'InChI=1S/C12H10O/c1-3-7-11(8-4-1)13-12-9-5-2-6-10-12/h1-10H', 'InChI=1S/C7H8O/c1-8-7-5-3-2-4-6-7/h2-6H,1H3', 'InChI=1S/C14H11N3/c1-3-7-12(8-4-1)14-16-15-11-17(14)13-9-5-2-6-10-13/h1-11H', 'InChI=1S/C23H19N5O/c24-21-27-23(20(29)28(21)18-7-2-1-3-8-18)19-9-5-4-6-15(19)10-22(23)11-16-13-25-26-14-17(16)12-22/h1-9,13-14H,10-12H2,(H2,24,27)', 'InChI=1S/C29H22N4O/c34-27-29(30-19-33(27)25-9-5-2-6-10-25)26-13-21(20-7-3-1-4-8-20)11-12-22(26)14-28(29)15-23-17-31-32-18-24(23)16-28/h1-13,17-19H,14-16H2', 'InChI=1S/C8H9NO/c1-7(10)9-8-5-3-2-4-6-8/h2-6H,1H3,(H,9,10)', 'InChI=1S/C7H9N/c1-8-7-5-3-2-4-6-7/h2-6,8H,1H3', 'InChI=1S/C10H10N2/c1-12-8-7-10(11-12)9-5-3-2-4-6-9/h2-8H,1H3', 'InChI=1S/C10H10N2/c1-8-7-10(12-11-8)9-5-3-2-4-6-9/h2-7H,1H3,(H,11,12)', 'InChI=1S/C13H15N3/c1-2-5-10(6-3-1)13-11(9-15-16-13)12-7-4-8-14-12/h1-3,5-6,9,12,14H,4,7-8H2,(H,15,16)', 'InChI=1S/C10H10N2/c1-9-7-8-12(11-9)10-5-3-2-4-6-10/h2-8H,1H3', 'InChI=1S/C10H10N2/c1-9-7-8-11-12(9)10-5-3-2-4-6-10/h2-8H,1H3', 'InChI=1S/C13H15N3/c1-2-5-12(6-3-1)16-10-11(9-15-16)13-7-4-8-14-13/h1-3,5-6,9-10,13-14H,4,7-8H2', 'InChI=1S/C10H10N2/c1-8-7-10(12-11-8)9-5-3-2-4-6-9/h2-7H,1H3,(H,11,12)', 'InChI=1S/C10H10N2/c1-12-10(7-8-11-12)9-5-3-2-4-6-9/h2-8H,1H3', 'InChI=1S/C13H15N3/c1-2-5-10(6-3-1)13-11(9-15-16-13)12-7-4-8-14-12/h1-3,5-6,9,12,14H,4,7-8H2,(H,15,16)', 'InChI=1S/C20H17NO2/c1-2-8-16-17-13-19(23-18-12-7-6-11-15(17)18)21(20(16)22)14-9-4-3-5-10-14/h2-12,17,19H,1,13H2', 'InChI=1S/C18H15NO3/c20-11-15-14-10-17(22-16-9-5-4-8-13(14)16)19(18(15)21)12-6-2-1-3-7-12/h1-9,11,14,17,20H,10H2', 'InChI=1S/C19H17NO2/c1-13-16-12-19(2,22-17-11-7-6-10-15(16)17)20(18(13)21)14-8-4-3-5-9-14/h3-11,16H,1,12H2,2H3', 'InChI=1S/C20H17NO2/c1-2-8-16-17-13-20(21-19(16)22,14-9-4-3-5-10-14)23-18-12-7-6-11-15(17)18/h2-12,17H,1,13H2,(H,21,22)', 'InChI=1S/C18H15NO3/c20-11-15-14-10-18(19-17(15)21,12-6-2-1-3-7-12)22-16-9-5-4-8-13(14)16/h1-9,11,14,20H,10H2,(H,19,21)', 'InChI=1S/C19H17NO2/c1-13-16-12-19(20(2)18(13)21,14-8-4-3-5-9-14)22-17-11-7-6-10-15(16)17/h3-11,16H,1,12H2,2H3', 'InChI=1S/C13H11NO/c14-13(15)12-8-6-11(7-9-12)10-4-2-1-3-5-10/h1-9H,(H2,14,15)', 'InChI=1S/C9H9N3/c1-7-10-9(12-11-7)8-5-3-2-4-6-8/h2-6H,1H3,(H,10,11,12)', 'InChI=1S/C9H9N3/c1-7-10-9(12-11-7)8-5-3-2-4-6-8/h2-6H,1H3,(H,10,11,12)', 'InChI=1S/C8H9NO/c1-9(7-10)8-5-3-2-4-6-8/h2-7H,1H3', 'InChI=1S/C10H8N2OS/c13-8-12(10-11-6-7-14-10)9-4-2-1-3-5-9/h1-8H']
+
+    for idx, x in enumerate(output_mol_list):
+
+        mol = convert_fragment_molecule_to_mol(x, fragment_database)
+        inchi = molecule_to_inchi(mol)
+        assert hash_list[idx] == x.__hash__()
+        assert inchi == inchi_list[idx]
+

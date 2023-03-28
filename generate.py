@@ -14,17 +14,13 @@ class MoleculeDataset(ABC):
 
     def __getitem__(self, i: int) -> Molecule:
         # Retrieve existing molecule
-        if i in self.mols:
+        if i in self.mols and self.mols[i] is not None:
             return self.mols[i]
 
         # Store and return new molecule
         new_mol = self.load_molecule(i)
         self.mols[i] = new_mol
         return new_mol
-
-    def add_mol(self, mol):
-        mol_id = len(self.mols)
-        self.mols[mol_id] = mol
 
     def random_molecule(self) -> Molecule:
         random_molecule_i = random.randint(0, len(self) - 1)
@@ -121,7 +117,16 @@ class SDFDatasetLargeRAM(MoleculeDataset):
         if max_n is not None and max_n > len(self.lines):
             self.lines = self.lines[:start_lines[max_n+1]]
 
+        self.mols = {i: None for i in range(len(self.start_lines))}
+
         print('DATABASE MOLECULES LINES =', len(self.lines))
+
+    def __len__(self):
+        return len(self.mols)
+
+    def add_mol(self, mol):
+        mol_id = len(self.mols)
+        self.mols[mol_id] = mol
 
     def load_molecule(self, i: int) -> Molecule:
         start_line = self.start_lines[i]
@@ -133,9 +138,6 @@ class SDFDatasetLargeRAM(MoleculeDataset):
             mol_lines = self.lines[start_line:]
 
         return molecule_from_sdf_lines(mol_lines)
-
-    def __len__(self):
-        return len(self.start_lines)
 
     def get_start_lines(self):
         

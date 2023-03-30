@@ -46,12 +46,15 @@ class FragmentGraphNode:
 
 class FragmentGraph:
 
-    def __init__(self):
+    def __init__(self, build_probability=None):
         self._fragments: Dict[int, FragmentGraphNode] = dict()
         self._bonds: List[Tuple(int, int, int, int)] = []
         self._attachment_point_list = []
         self._free_valence_points = []
-        self._build_probability = 1
+        if build_probability is not None:
+            self._build_probability = build_probability
+        else:
+            self._build_probability = 1
 
     def __len__(self):
         return len(self._fragments)

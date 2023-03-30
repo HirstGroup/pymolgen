@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 
@@ -62,11 +63,10 @@ def test_extend_molecule_list():
 
     output_mol_list = extend_molecule_list([ch3], bond_frequencies, fragment_database_graph)
 
-    answers = ['0-1']
+    answers = ['0-1:(0, 1, 0, 0)']
 
     for idx, x in enumerate(output_mol_list):
         assert str(x) == answers[idx]
-
 
 def test_extend_molecule_list_2():
 
@@ -975,7 +975,6 @@ def test_prepare_fragment_build():
             outfile.write(line)
         outfile.write('$$$$\n')
 
-test_prepare_fragment_build()
 
 def test_prepare_fragment_build2():
 
@@ -1021,3 +1020,103 @@ def test_prepare_fragment_build2():
         assert hash_list[idx] == x.__hash__()
         assert inchi == inchi_list[idx]
 
+
+def test_print_fragment_molecule():
+
+    f = FragmentMolecule()
+    f.add_fragment(0, [0], {0:0})
+    f.add_fragment(0, [0], {0:0})
+    f.add_bond(0,1,0,0)
+
+    assert str(f) == '0-0:(0, 1, 0, 0):1'
+
+    f = FragmentMolecule()
+    f.add_fragment(0, [0], {0:0})
+    f.add_fragment(0, [0,1], {0:0,1:1})
+    f.add_fragment(1, [2], {2:2})
+    f.add_bond(0,1,0,0)
+    f.add_bond(1,2,1,2)
+
+    assert str(f) == '0-0-1:(0, 1, 0, 0),(1, 2, 1, 2):1'
+
+
+def test_read_fragment_molecule_file():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies11-20.txt')
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments11-20.sdf')
+  
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies_np)    
+
+    parent_file = '../datasets/database1000/benzene.sdf'
+    parent_fragment_file_list = ['../datasets/database1000/ch4.sdf']
+
+    remove_hydrogens = [11]
+    remove_hydrogens_parent_fragment = [4]
+
+    parent_mapping_1 = [0, 0]
+
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=1, fragment_database=fragment_database, output='test')
+
+    read_mol_list = read_fragment_molecule_file('test-depth1.txt', fragment_database_graph)
+
+    assert len(output_mol_list) == len(read_mol_list)
+
+    for i in range(len(output_mol_list)):
+        assert output_mol_list[i] == read_mol_list[i]
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, fragment_database=fragment_database, output='test')
+
+    read_mol_list = read_fragment_molecule_file('test-depth2.txt', fragment_database_graph)
+
+    assert len(output_mol_list) == len(read_mol_list)
+
+    for i in range(len(output_mol_list)):
+        assert output_mol_list[i] == read_mol_list[i]
+
+
+def test_restart():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies11-20.txt')
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments11-20.sdf')
+  
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies_np)    
+
+    parent_file = '../datasets/database1000/benzene.sdf'
+    parent_fragment_file_list = ['../datasets/database1000/ch4.sdf']
+
+    remove_hydrogens = [11]
+    remove_hydrogens_parent_fragment = [4]
+
+    parent_mapping_1 = [0, 0]
+
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=1, fragment_database=fragment_database, output='test')
+
+    read_mol_list = read_fragment_molecule_file('test-depth1.txt', fragment_database_graph)
+
+    assert len(output_mol_list) == len(read_mol_list)
+
+    for i in range(len(output_mol_list)):
+        assert output_mol_list[i] == read_mol_list[i]
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, fragment_database=fragment_database, output='test')
+
+    restart_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, fragment_database=fragment_database, output='test', restart=2, restart_file='test-depth1.txt')
+
+    assert len(output_mol_list) == len(restart_mol_list)
+
+    for i in range(len(output_mol_list)):
+        assert output_mol_list[i] == restart_mol_list[i]
+
+test_restart()

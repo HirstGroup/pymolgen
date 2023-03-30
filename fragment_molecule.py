@@ -10,8 +10,8 @@ from pymolgen.molecule_formats import *
 
 class FragmentMolecule:
 
-    def __init__(self):
-        self._graph = FragmentGraph()
+    def __init__(self, build_probability=None):
+        self._graph = FragmentGraph(build_probability)
 
     def __hash__(self):
 
@@ -27,6 +27,12 @@ class FragmentMolecule:
             if len(out) > 0:
                 out += '-'
             out += str(self._graph.fragments[i].get_attribute('frag_id'))
+        out += ':'
+        for i in range(len(self._graph.bonds)):
+            if i > 0:
+                out += ';'
+            out += f'{self._graph.bonds[i]}'
+        out += f':{self.get_build_probability()}'
         return out
 
     def __eq__(self, other):

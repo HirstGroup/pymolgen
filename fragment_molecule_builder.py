@@ -91,30 +91,40 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
     return total
 
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, unique=True, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, restart=None, restart_file=None, unique=True, threshold=None):
 
-    for i in range(depth):
+    if restart is not None:
+        assert restart_file is not None
+        FragmentMolecule_list  = read_fragment_molecule_file(restart_file, fragment_database_graph)
+    else:
+        restart = 1
 
-        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1, threshold)
+    for i in range(restart, depth + 1):
 
-        print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
+        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i, threshold)
+
+        print(f'FINAL DEPTH {i} TOTAL {len(FragmentMolecule_list)}')
 
         if unique is True:
 
             FragmentMolecule_list = get_unique_molecule_list(FragmentMolecule_list, fragment_database=fragment_database)
 
-            print(f'FINAL DEPTH {i+1} TOTAL UNIQUE {len(FragmentMolecule_list)}')
+            print(f'FINAL DEPTH {i} TOTAL UNIQUE {len(FragmentMolecule_list)}')
 
         if len(FragmentMolecule_list) == 0:
             # stop building molecules
             return FragmentMolecule_list
 
         if output is not None:
-            with open('%s-depth%s.inchi' %(output, i+1), 'w') as f:
+            with open('%s-depth%s.inchi' %(output, i), 'w') as f:
                 for j in FragmentMolecule_list:
                     mol = convert_fragment_molecule_to_mol(j, fragment_database)
                     inchi = molecule_to_inchi(mol)
                     f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
+
+            with open('%s-depth%s.txt' %(output, i), 'w') as f:
+                for j in FragmentMolecule_list:
+                    f.write(f'{str(j)}\n')
 
     return FragmentMolecule_list
 
@@ -162,9 +172,39 @@ def get_unique_molecule_list(FragmentMolecule_list, debug=False, fragment_databa
     if sort_list is False:
         return unique_dict.keys()
 
-    sorted_list = dict(sorted(unique_dict.items(), key=lambda item: item[1]._graph._build_probability, reverse=True)).keys()
+    sorted_list = list(dict(sorted(unique_dict.items(), key=lambda item: item[1]._graph._build_probability, reverse=True)).keys())
 
     return sorted_list
+
+
+def read_fragment_molecule_file(filename, fragment_database_graph):
+
+    mol_list = []
+
+    with open(filename) as infile:
+
+        for line in infile:
+            # read fragment molecule information
+            frag_id_list = [int(x) for x in line.split(':')[0].split('-')]
+            bond_list = [ast.literal_eval(x) for x in line.split(':')[1].split(';')]
+            build_probability = float(line.strip().split(':')[2])
+
+            f = FragmentMolecule(build_probability)
+
+            # add fragments
+            for frag_id in frag_id_list:
+                attachment_points = fragment_database_graph.fragments[frag_id].attachment_points
+                canonical_mapping = fragment_database_graph.fragments[frag_id].get_canonical_mapping()
+                f.add_fragment(frag_id, attachment_points, canonical_mapping)
+
+            # add bonds
+            for bond in bond_list:
+                f.add_bond(bond[0], bond[1], bond[2], bond[3])
+
+            mol_list.append(f)
+
+    return mol_list
+
 
 
 def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
@@ -434,27 +474,31 @@ if __name__ == '__main__':
     # required arguments
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
     parser.add_argument('--depth', type=int, help='Depth to build up to',required=True)
+
+    # either 1. build from database fragment or 2. build from parent file must be used
     
+    # 1. build from database fragment
+    parser.add_argument('--atom', type=int, help='Atom to build on parent',required=False)
+    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=False)   
+
+    # 2. build from parent file
+    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
+    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
+    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
+
     # optional arguments
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
+    parser.add_argument('--restart', type=int, help='Restart from depth', required=False)
+    parser.add_argument('--restart_file', type=int, help='Restart filename containing molecules built up to restart depth', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
-
-    # build from database fragment
-    parser.add_argument('--atom', type=int, help='Atom to build on parent',required=False)
-    parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=False)   
-
-    # build from parent file
-    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
-    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
-    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
-    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
-    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
 
     args = parser.parse_args()
 
@@ -496,6 +540,6 @@ if __name__ == '__main__':
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, threshold=threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, restart=args.restart, restart_file=args.restart_file, threshold=threshold)
 
 

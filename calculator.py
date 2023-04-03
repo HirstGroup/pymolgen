@@ -78,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('-o','--output', help='Output file',required=True)
     parser.add_argument('-bp', '--build_probability', action='store_true', default=False, help='Read build probability from input and save into output', required=False)
     parser.add_argument('--mw_threshold', type=float, help='MW threshold', default = 500.0, required=False)
-    
+
     args = parser.parse_args()
 
     WEIGHT_THRESHOLD = args.mw_threshold
@@ -120,64 +120,50 @@ if __name__ == '__main__':
 
             mw = round(Chem.Descriptors.MolWt(rdmol), 2)
 
-            if filter_pass is not False:
+            oemol = oechem.OEGraphMol()
+            oechem.OESmilesToMol(oemol, smi)
+            oechem.OEAddExplicitHydrogens(oemol)
 
-                oemol = oechem.OEGraphMol()
-                oechem.OESmilesToMol(oemol, smi)
-                oechem.OEAddExplicitHydrogens(oemol)
+            n_rot_bonds = num_rot_bond(oemol)
 
-                n_rot_bonds = num_rot_bond(oemol)
+            if n_rot_bonds > ROTBOND_THRESHOLD:
+                filter_pass = False
 
-                if n_rot_bonds > ROTBOND_THRESHOLD:
-                    filter_pass = False
+            n_chiral = num_chiral_centres(oemol)
 
-            if filter_pass is not False:
+            if n_chiral > CHIRAL_THRESHOLD:
+                filter_pass = False
 
-                n_chiral = num_chiral_centres(oemol)
+            h_acc = num_lipinsky_acceptors(oemol)
 
-                if n_chiral > CHIRAL_THRESHOLD:
-                    filter_pass = False
+            if h_acc > H_ACC_THRESHOLD:
+                filter_pass = False
 
-            if filter_pass is not False:
+            h_don = num_lipinsky_donors(oemol)
 
-                h_acc = num_lipinsky_acceptors(oemol)
+            if h_don > H_DON_THRESHOLD:
+                filter_pass = False
 
-                if h_acc > H_ACC_THRESHOLD:
-                    filter_pass = False
+            psa = round(mp.OEGet2dPSA(oemol,atomPSA = None), 2)
 
-            if filter_pass is not False:
+            if psa > PSA_THRESHOLD:
+                filter_pass = False
 
-                h_don = num_lipinsky_donors(oemol)
+            logp = round(mp.OEGetXLogP(oemol, atomxlogps=None), 2)
 
-                if h_don > H_DON_THRESHOLD:
-                    filter_pass = False
+            if logp > LOGP_THRESHOLD_UP:
+                filter_pass = False
 
-            if filter_pass is not False:
+            if logp < LOGP_THRESHOLD_LOW:
+                filter_pass = False
 
-                psa = round(mp.OEGet2dPSA(oemol,atomPSA = None), 2)
+            n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
 
-                if psa > PSA_THRESHOLD:
-                    filter_pass = False
+            pfi = round(n_aromatic + logp, 2)
 
-            if filter_pass is not False:
+            pIC50_pred = round(pIC50_pred_model.predict(smi)[0], 2)
 
-                logp = round(mp.OEGetXLogP(oemol, atomxlogps=None), 2)
-
-                if logp > LOGP_THRESHOLD_UP:
-                    filter_pass = False
-
-                if logp < LOGP_THRESHOLD_LOW:
-                    filter_pass = False
-
-                n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
-
-                pfi = round(n_aromatic + logp, 2)
-
-            if filter_pass is not False:
-
-                pIC50_pred = round(pIC50_pred_model.predict(smi)[0], 2)
-
-                mpo = round((-pIC50_pred)*(1/(1 + np.exp(pfi - 8))), 2)
+            mpo = round((-pIC50_pred)*(1/(1 + np.exp(pfi - 8))), 2)
 
         except:
             print('Could not calculate properties for', inchi)

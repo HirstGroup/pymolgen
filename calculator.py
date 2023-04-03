@@ -99,7 +99,7 @@ if __name__ == '__main__':
         inchi = line.split()[0].strip('\n')
 
         if args.build_probability is True:
-            build_probability = float(line.strip().split()[1])
+            build_probability = line.strip().split()[1]
 
         try:
             rdmod, smi, oemol = None, None, None

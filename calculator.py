@@ -105,7 +105,7 @@ if __name__ == '__main__':
         mw, n_rot_bonds, n_chiral, h_acc, h_don, psa, logp, n_aromatic, pfi, pIC50_pred, mpo = '', '', '', '', '', '', '', '', '', '', ''
 
         if args.build_probability is True:
-            build_probability = line.strip().split()[1]
+            build_probability = round(np.log(float(line.strip().split()[1])), 2)
 
         try:
             rdmod, smi, oemol = None, None, None
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
             filter_pass = True
 
-            mw = Chem.Descriptors.MolWt(rdmol)
+            mw = round(Chem.Descriptors.MolWt(rdmol), 2)
 
             if filter_pass is not False:
 
@@ -154,14 +154,14 @@ if __name__ == '__main__':
 
             if filter_pass is not False:
 
-                psa = mp.OEGet2dPSA(oemol,atomPSA = None)
+                psa = round(mp.OEGet2dPSA(oemol,atomPSA = None), 2)
 
                 if psa > PSA_THRESHOLD:
                     filter_pass = False
 
             if filter_pass is not False:
 
-                logp = mp.OEGetXLogP(oemol, atomxlogps=None)
+                logp = round(mp.OEGetXLogP(oemol, atomxlogps=None), 2)
 
                 if logp > LOGP_THRESHOLD_UP:
                     filter_pass = False
@@ -171,13 +171,13 @@ if __name__ == '__main__':
 
                 n_aromatic = Chem.rdMolDescriptors.CalcNumAromaticRings(Chem.MolFromSmiles(smi))
 
-                pfi = n_aromatic + logp
+                pfi = round(n_aromatic + logp, 2)
 
             if filter_pass is not False:
 
-                pIC50_pred = pIC50_pred_model.predict(smi)[0]
+                pIC50_pred = round(pIC50_pred_model.predict(smi)[0], 2)
 
-                mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
+                mpo = round((-pIC50_pred)*(1/(1 + np.exp(pfi - 8))), 2)
 
         except:
             print('Could not calculate properties for', inchi)

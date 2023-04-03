@@ -91,11 +91,12 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
     return total
 
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, restart=None, restart_file=None, unique=True, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, restart=None, restart_file=None, savesdf=False, unique=True, threshold=None):
 
     if restart is not None:
         assert restart_file is not None
         FragmentMolecule_list  = read_fragment_molecule_file(restart_file, fragment_database_graph)
+        print('Restarting from', restart_file)
     else:
         restart = 1
 
@@ -116,15 +117,30 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
             return FragmentMolecule_list
 
         if output is not None:
-            with open('%s-depth%s.inchi' %(output, i), 'w') as f:
-                for j in FragmentMolecule_list:
-                    mol = convert_fragment_molecule_to_mol(j, fragment_database)
-                    inchi = molecule_to_inchi(mol)
-                    f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
 
             with open('%s-depth%s.txt' %(output, i), 'w') as f:
                 for j in FragmentMolecule_list:
                     f.write(f'{str(j)}\n')
+
+            if args.savesdf is True:
+                with open('%s-depth%s.inchi' %(output, i), 'w') as f, open('%s-depth%s.sdf' %(output, i), 'w') as f2:
+                    for j in FragmentMolecule_list:
+                        mol = convert_fragment_molecule_to_mol(j, fragment_database)
+                        inchi = molecule_to_inchi(mol)
+                        f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
+
+                        lines = molecule_to_sdf(mol)
+
+                        for line in lines:
+                            f2.write(line)
+                        f2.write('$$$$\n')
+
+            else:
+                with open('%s-depth%s.inchi' %(output, i), 'w') as f:
+                    for j in FragmentMolecule_list:
+                        mol = convert_fragment_molecule_to_mol(j, fragment_database)
+                        inchi = molecule_to_inchi(mol)
+                        f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
 
     return FragmentMolecule_list
 
@@ -496,6 +512,7 @@ if __name__ == '__main__':
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('--restart', type=int, help='Restart from depth', required=False)
     parser.add_argument('--restart_file', help='Restart filename containing molecules built up to restart depth', required=False)
+    parser.add_argument('--savesdf', action='store_true', default=False, help='Save generated molecules as SDF file', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
@@ -540,6 +557,6 @@ if __name__ == '__main__':
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, restart=args.restart, restart_file=args.restart_file, threshold=threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, threshold=threshold)
 
 

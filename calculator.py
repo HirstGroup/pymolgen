@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
     parser.add_argument('-i','--input', help='Input file of inchi',required=True)
     parser.add_argument('-o','--output', help='Output file',required=True)
-
+    parser.add_argument('-bp', '--build_probability', action='store_true', default=False, help='Read build probability from input and save into output', required=False)
     parser.add_argument('--mw_threshold', type=float, help='MW threshold', default = 500.0, required=False)
     
     args = parser.parse_args()
@@ -86,7 +86,10 @@ if __name__ == '__main__':
     _ = pIC50_pred_model.predict('C')[0]
 
     with open(args.output  , 'w') as outfile:
-        outfile.write('inchi;smi;mw;n_rot_bonds;n_chiral;h_acc;h_don;psa;logp;n_aromatic;pfi;pIC50_pred;mpo;filter_pass\n')
+        outfile.write('inchi;smi;mw;n_rot_bonds;n_chiral;h_acc;h_don;psa;logp;n_aromatic;pfi;pIC50_pred;mpo;filter_pass')
+        if args.build_probability is True:
+            outfile.write(';build_probability')
+        outfile.write('\n')
         print('Writing to', args.output)
 
     infile = open(args.input)
@@ -94,6 +97,9 @@ if __name__ == '__main__':
     for line in infile:
 
         inchi = line.split()[0].strip('\n')
+
+        if args.build_probability is True:
+            build_probability = float(line.strip().split()[1])
 
         try:
             rdmod, smi, oemol = None, None, None
@@ -167,7 +173,10 @@ if __name__ == '__main__':
                 mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
 
             with open(args.output, 'a') as out:
-                out.write(f'{inchi};{smi};{mw};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{psa};{logp};{n_aromatic};{pfi};{pIC50_pred};{mpo};{filter_pass}\n')
+                out.write(f'{inchi};{smi};{mw};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{psa};{logp};{n_aromatic};{pfi};{pIC50_pred};{mpo};{filter_pass}')
+                if args.build_probability is True:
+                    out.write(f';{build_probability}')
+                out.write('\n')
 
         except:
             print('Could not calculate properties for', inchi)

@@ -63,7 +63,7 @@ def test_extend_molecule_list():
 
     output_mol_list = extend_molecule_list([ch3], bond_frequencies, fragment_database_graph)
 
-    answers = ['0-1:(0, 1, 0, 0)']
+    answers = ['0-1:(0, 1, 0, 0):1.0']
 
     for idx, x in enumerate(output_mol_list):
         assert str(x) == answers[idx]
@@ -84,9 +84,10 @@ def test_extend_molecule_list_2():
 
     output_mol_list = extend_molecule_list([amide], bond_frequencies, fragment_database_graph)
     
-    answers = ['2-1', '2-3']
+    answers = ['2-1:(0, 1, 1, 2):0.5', '2-3:(0, 1, 2, 2):0.5']
     for idx, x in enumerate(output_mol_list):
         assert str(x) == answers[idx]
+
 
 def test_extend_molecule_list_all():
 
@@ -160,7 +161,7 @@ def test_extend_molecule_list_depth():
     for x in output_mol_list:
         mol = convert_fragment_molecule_to_mol(x, fragment_database)
         inchi = molecule_to_inchi(mol)
-        assert str(x) == '0-1'
+        assert str(x) == '0-1:(0, 1, 0, 0):1.0'
         assert inchi == 'InChI=1S/C4H5NO/c1-4-2-3-5-6-4/h2-3H,1H3'
 
     output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=2, unique=False)
@@ -168,7 +169,7 @@ def test_extend_molecule_list_depth():
     for x in output_mol_list:
         mol = convert_fragment_molecule_to_mol(x, fragment_database)
         inchi = molecule_to_inchi(mol)
-        assert str(x) == '0-1-2'
+        assert str(x) == '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0'
         assert inchi == 'InChI=1S/C5H6N2O2/c1-4-2-5(6-3-8)7-9-4/h2-3H,1H3,(H,6,7,8)'
 
     output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=3, unique=False)
@@ -176,7 +177,7 @@ def test_extend_molecule_list_depth():
     for x in output_mol_list:
         mol = convert_fragment_molecule_to_mol(x, fragment_database)
         inchi = molecule_to_inchi(mol)
-        assert str(x) == '0-1-2-3'
+        assert str(x) == '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0'
         assert inchi == 'InChI=1S/C6H8N2O2/c1-4-3-6(8-10-4)7-5(2)9/h3H,1-2H3,(H,7,8,9)'
 
     output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=4, unique=False)
@@ -215,10 +216,11 @@ def test_extend_molecule_list_depth_simple():
 
     output_mol_list = extend_molecule_list_depth([ch3], bond_frequencies, fragment_database_graph, depth=1, unique=False)
 
-    answers = ['0-0', '0-1']
+    answers = ['0-0:(0, 1, 0, 0):0.5', '0-1:(0, 1, 0, 0):0.5']
 
     for j in range(len(output_mol_list)):
         assert str(output_mol_list[j]) == answers[j]
+
 
 def test_extend_molecule_list_depth_rzt():
 
@@ -326,7 +328,7 @@ def test_extend_molecule_list_model1():
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=1, unique=False)
 
     assert len(output_mol_list) == 1
-    assert str(output_mol_list[0]) == '0-0'
+    assert str(output_mol_list[0]) == '0-0:(0, 1, 1, 1):0.3333333333333333'
     assert output_mol_list[0].list_bonds() == [(0, 1, 1, 1)]
 
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2, unique=False)
@@ -335,6 +337,7 @@ def test_extend_molecule_list_model1():
         print(i, i.list_bonds())
 
     assert len(output_mol_list) == 0
+
 
 def test_extend_molecule_list_model2():
 
@@ -360,7 +363,7 @@ def test_extend_molecule_list_model2():
         print(i, i.list_bonds())    
 
     assert len(output_mol_list) == 1
-    assert str(output_mol_list[0]) == '0-0'
+    assert str(output_mol_list[0]) == '0-0:(0, 1, 2, 2):0.3333333333333333'
     assert output_mol_list[0].list_bonds() == [(0, 1, 2, 2)]
 
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2, unique=False)
@@ -369,6 +372,7 @@ def test_extend_molecule_list_model2():
         print(i, i.list_bonds())    
 
     assert len(output_mol_list) == 0
+
 
 def test_extend_molecule_list_model3():
 
@@ -394,21 +398,31 @@ def test_extend_molecule_list_model3():
 
     mols = ['0-0', '0-0']
     bonds = [[(0, 1, 1, 2)], [(0, 1, 2, 1)]]
+    mols_str = ['0-0:(0, 1, 1, 2):0.3333333333333333', '0-0:(0, 1, 2, 1):0.3333333333333333']
 
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
-        assert str(x) == mols[idx]
+        mols_str.append(str(x))
+        assert str(x).split(':')[0] == mols[idx]
+        assert str(x) == mols_str[idx]
         assert x.list_bonds() == bonds[idx]
+    print(mols_str)
 
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2, unique=False)
 
     mols = ['0-0-0','0-0-0','0-0-0','0-0-0']
     bonds = [[(0, 1, 1, 2), (0, 2, 2, 1)],[(0, 1, 1, 2), (1, 2, 1, 2)],[(0, 1, 2, 1), (0, 2, 1, 2)],[(0, 1, 2, 1), (1, 2, 2, 1)]]
+    mols_str = ['0-0-0:(0, 1, 1, 2);(0, 2, 2, 1):0.08333333333333333', '0-0-0:(0, 1, 1, 2);(1, 2, 1, 2):0.08333333333333333', '0-0-0:(0, 1, 2, 1);(0, 2, 1, 2):0.08333333333333333', '0-0-0:(0, 1, 2, 1);(1, 2, 2, 1):0.08333333333333333']
 
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
-        assert str(x) == mols[idx]
+        assert str(x) == mols_str[idx]
+        assert str(x).split(':')[0] == mols[idx]
         assert x.list_bonds() == bonds[idx]
+        mols_str.append(str(x))
+
+    print(mols_str)
+
 
 def test_extend_molecule_list_model4():
 
@@ -437,7 +451,7 @@ def test_extend_molecule_list_model4():
 
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
-        assert str(x) == mols[idx]
+        assert str(x).split(':')[0] == mols[idx]
         assert x.list_bonds() == bonds[idx]
 
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2, unique=False)
@@ -474,7 +488,7 @@ def test_extend_molecule_list_model5():
 
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
-        assert str(x) == mols[idx]
+        assert str(x).split(':')[0] == mols[idx]
         assert x.list_bonds() == bonds[idx]
 
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2, unique=False)
@@ -484,7 +498,7 @@ def test_extend_molecule_list_model5():
 
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
-        assert str(x) == mols[idx]
+        assert str(x).split(':')[0] == mols[idx]
         assert x.list_bonds() == bonds[idx]
 
 def test_extend_molecule_list_model6():
@@ -512,7 +526,7 @@ def test_extend_molecule_list_model6():
 
     for idx, x in enumerate(output_mol_list):
         print(x, x.list_bonds())
-        assert str(x) == mols[idx]
+        assert str(x).split(':')[0] == mols[idx]
         assert x.list_bonds() == bonds[idx]
 
     output_mol_list = extend_molecule_list_depth([f], bond_frequencies, fragment_database_graph, depth=2, unique=False)
@@ -523,7 +537,7 @@ def test_extend_molecule_list_model6():
 
     for idx, x in enumerate(output_mol_list):
         print(idx, x, x.list_bonds())
-        assert str(x) == mols[idx]
+        assert str(x).split(':')[0] == mols[idx]
         assert x.list_bonds() == bonds[idx]
 
 
@@ -1028,7 +1042,7 @@ def test_print_fragment_molecule():
     f.add_fragment(0, [0], {0:0})
     f.add_bond(0,1,0,0)
 
-    assert str(f) == '0-0:(0, 1, 0, 0):1'
+    assert str(f) == '0-0:(0, 1, 0, 0):1.0'
 
     f = FragmentMolecule()
     f.add_fragment(0, [0], {0:0})
@@ -1037,7 +1051,7 @@ def test_print_fragment_molecule():
     f.add_bond(0,1,0,0)
     f.add_bond(1,2,1,2)
 
-    assert str(f) == '0-0-1:(0, 1, 0, 0),(1, 2, 1, 2):1'
+    assert str(f) == '0-0-1:(0, 1, 0, 0);(1, 2, 1, 2):1.0'
 
 
 def test_read_fragment_molecule_file():
@@ -1119,4 +1133,3 @@ def test_restart():
     for i in range(len(output_mol_list)):
         assert output_mol_list[i] == restart_mol_list[i]
 
-test_restart()

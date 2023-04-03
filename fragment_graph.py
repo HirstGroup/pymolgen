@@ -54,7 +54,7 @@ class FragmentGraph:
         if build_probability is not None:
             self._build_probability = build_probability
         else:
-            self._build_probability = 1
+            self._build_probability = 1.0
 
     def __len__(self):
         return len(self._fragments)

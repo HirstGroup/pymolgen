@@ -1,9 +1,13 @@
-import sys,os
+#!/usr/bin/env python
+
 import argparse
 import numpy as np
 import random
+import os
+import sys
 import time
 
+from pymolgen.canonicalise_tautomer import canonicalise_tautomer
 from pymolgen.molecule_formats import molecule_to_smiles, molecule_to_inchi, molecule_to_sdf
 from pymolgen.properties_pymolgen import *
 
@@ -79,7 +83,7 @@ if __name__ == '__main__':
 
     WEIGHT_THRESHOLD = args.mw_threshold
 
-    pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk')
+    pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk', tauto=False)
     print(pIC50_pred_model.info)
     print(pIC50_pred_model.version)
     # Run prediction model once to initialise:
@@ -98,6 +102,8 @@ if __name__ == '__main__':
 
         inchi = line.split()[0].strip('\n')
 
+        mw, n_rot_bonds, n_chiral, h_acc, h_don, psa, logp, n_aromatic, pfi, pIC50_pred, mpo = '', '', '', '', '', '', '', '', '', '', ''
+
         if args.build_probability is True:
             build_probability = line.strip().split()[1]
 
@@ -105,11 +111,12 @@ if __name__ == '__main__':
             rdmod, smi, oemol = None, None, None
 
             rdmol = Chem.MolFromInchi(inchi)
+
             smi = Chem.MolToSmiles(rdmol)
 
-            filter_pass = True
+            smi = canonicalise_tautomer(smi)
 
-            mw, n_rot_bonds, n_chiral, h_acc, h_don, psa, logp, n_aromatic, pfi, pIC50_pred, mpo = '', '', '', '', '', '', '', '', '', '', '' 
+            filter_pass = True
 
             mw = Chem.Descriptors.MolWt(rdmol)
 
@@ -172,17 +179,14 @@ if __name__ == '__main__':
 
                 mpo = (-pIC50_pred)*(1/(1 + np.exp(pfi - 8)))
 
-            with open(args.output, 'a') as out:
-                out.write(f'{inchi};{smi};{mw};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{psa};{logp};{n_aromatic};{pfi};{pIC50_pred};{mpo};{filter_pass}')
-                if args.build_probability is True:
-                    out.write(f';{build_probability}')
-                out.write('\n')
-
         except:
             print('Could not calculate properties for', inchi)
-            continue
 
-
+        with open(args.output, 'a') as out:
+            out.write(f'{inchi};{smi};{mw};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{psa};{logp};{n_aromatic};{pfi};{pIC50_pred};{mpo};{filter_pass}')
+            if args.build_probability is True:
+                out.write(f';{build_probability}')
+            out.write('\n')
 
     sys.exit('Normal termination')
 

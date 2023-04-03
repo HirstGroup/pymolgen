@@ -8,5 +8,3 @@ def test():
 
 	assert filecmp.cmp('test_inchi2svg_input.can', 'test_inchi2svg_model.txt')
 
-test()
-

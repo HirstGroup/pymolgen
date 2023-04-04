@@ -10,6 +10,7 @@ parser.add_argument('-i','--input', help='Input file containing filenames and de
 parser.add_argument('-o','--output', help='Output file',required=True)
 parser.add_argument('--sort', help='Name of column to sort by',required=False)
 parser.add_argument('--reverse', action='store_true', default=False, help='Reverse sort', required=False)
+parser.add_argument('--filters', action='store_true', default=False, help='Remove lines that did not pass filters and rules', required=False)
 
 args = parser.parse_args()
 
@@ -27,7 +28,7 @@ df = pd.read_csv(file_list[0], sep=';')
 
 df['depth'] = depth_list[0]
 
-for i in range(len(file_list)):
+for i in range(1, len(file_list)):
 
 	print(file_list[i], depth_list[i])
 
@@ -36,6 +37,10 @@ for i in range(len(file_list)):
 	df2['depth'] = depth_list[i]
 
 	df = pd.concat([df, df2])
+
+if args.filters:
+	df = df.loc[df['filter_pass'] == True]
+	df = df.loc[df['rules_filter'] == True]
 
 if args.sort is not None:
 	df.sort_values(args.sort, ascending=not args.reverse, inplace=True)

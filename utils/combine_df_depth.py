@@ -23,14 +23,13 @@ with open(args.input) as infile:
 		file_list.append(line.split()[0])
 		depth_list.append(line.split()[1])
 
-print(file_list)
-print(depth_list)
-
 df = pd.read_csv(file_list[0], sep=';')
 
 df['depth'] = depth_list[0]
 
 for i in range(len(file_list)):
+
+	print(file_list[i], depth_list[i])
 
 	df2 = pd.read_csv(file_list[i], sep=';')
 
@@ -42,5 +41,3 @@ if args.sort is not None:
 	df.sort_values(args.sort, ascending=not args.reverse, inplace=True)
 
 df.to_csv(args.output, sep=';', index=False)
-
-print(df)

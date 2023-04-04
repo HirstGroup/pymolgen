@@ -22,4 +22,4 @@ if bn - an - args.difference == 0:
 else:
 	result = 'NOK'
 
-print(args.afile, args.bfile, result)
+print(args.afile, args.bfile, result, an, bn)

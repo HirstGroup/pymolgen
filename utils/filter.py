@@ -48,10 +48,12 @@ def filter(row):
 		return 0
 	return 1
 
+if 'filter_pass' in df.columns:
+	df['filter_pass_original'] = df['filter_pass']	
+
 df['filter_pass'] = df.apply (lambda row: filter(row), axis=1)
 
 df.sort_values(['filter_pass','mpo'], ascending=[False, True], inplace=True)
-#df.sort_values(['n_chiral'], inplace=True)
 
 total_pass = df['filter_pass'].sum()
 print('Total_pass = ', total_pass)

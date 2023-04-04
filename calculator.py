@@ -107,7 +107,7 @@ if __name__ == '__main__':
         filter_pass = None
 
         if args.build_probability is True:
-            build_probability = round(np.log(float(line.strip().split()[1])), 2)
+            build_probability = round(np.log10(float(line.strip().split()[1])), 2)
 
         try:
             rdmod, smi, oemol = None, None, None

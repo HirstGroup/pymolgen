@@ -42,8 +42,8 @@ def filter(row):
 		return False
 	if np.isnan(row['psa']) or row['psa'] > PSA_THRESHOLD:
 		return False
-	if np.isnan(row['pfi']) or row['pfi'] > PFI_THRESHOLD:
-		return False
+	#if np.isnan(row['pfi']) or row['pfi'] > PFI_THRESHOLD:
+	#	return False
 	if np.isnan(row['n_rot_bonds']) or row['n_rot_bonds'] > ROTBOND_THRESHOLD:
 		return False
 	if np.isnan(row['mw']) or row['mw'] > WEIGHT_THRESHOLD:
@@ -60,7 +60,12 @@ def filter(row):
 	return True
 
 if 'filter_pass' in df.columns:
-	df['filter_pass_original'] = df['filter_pass']	
+	df['filter_pass_original'] = df['filter_pass']
+
+if 'build_probability' in df.columns:
+	df['build_probability_original'] = df['build_probability']
+	df['build_probability'] = round(np.log10(np.exp(df['build_probability_original'])), 2)
+
 
 df['filter_pass'] = df.apply (lambda row: filter(row), axis=1)
 

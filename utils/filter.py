@@ -22,8 +22,14 @@ H_ACC_THRESHOLD = 10
 LOGP_THRESHOLD_UP = 5
 LOGP_THRESHOLD_LOW = 0.5
 
-input = sys.argv[1]
-output = sys.argv[2]
+parser = argparse.ArgumentParser(description='Recalculate filter_pass')
+parser.add_argument('-i','--input', help='Input file name', required=True)
+parser.add_argument('-o','--output', help='Output file name', required=True)
+
+args = parser.parse_args()
+
+input = args.input
+output = args.output
 
 df = pd.read_csv(input, sep=';') #, dtype={'n_chiral': int})
 

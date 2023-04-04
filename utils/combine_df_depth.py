@@ -24,6 +24,8 @@ with open(args.input) as infile:
 		file_list.append(line.split()[0])
 		depth_list.append(line.split()[1])
 
+print(file_list[0], depth_list[0])
+
 df = pd.read_csv(file_list[0], sep=';')
 
 df['depth'] = depth_list[0]

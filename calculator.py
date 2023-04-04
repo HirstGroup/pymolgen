@@ -104,6 +104,8 @@ if __name__ == '__main__':
 
         mw, n_rot_bonds, n_chiral, h_acc, h_don, psa, logp, n_aromatic, pfi, pIC50_pred, mpo = '', '', '', '', '', '', '', '', '', '', ''
 
+        filter_pass = False
+
         if args.build_probability is True:
             build_probability = round(np.log(float(line.strip().split()[1])), 2)
 

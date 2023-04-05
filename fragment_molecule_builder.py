@@ -97,8 +97,9 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
 
     if restart is not None:
         assert restart_file is not None
+        print('Restarting from %s ...' %restart_file)
         FragmentMolecule_list  = read_fragment_molecule_file(restart_file, fragment_database_graph)
-        print('Restarting from', restart_file)
+        print('Restarting from %s FINISHED' %restart_file)
     else:
         restart = 1
 

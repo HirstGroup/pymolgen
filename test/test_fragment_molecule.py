@@ -176,7 +176,7 @@ def test_convert_to_networkx2():
 				print(g[i][j]['atoms'], answers[counter])
 			counter += 1
 
-test_convert_to_networkx2()
+
 def test_get_hash():
 
 	f = FragmentMolecule()

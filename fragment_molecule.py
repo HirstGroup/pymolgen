@@ -35,6 +35,9 @@ class FragmentMolecule:
         out += f':{self.get_build_probability()}'
         return out
 
+    def __repr__(self):
+        return str(self)
+
     def __eq__(self, other):
         g1 = self.convert_to_networkx()
         g2 = other.convert_to_networkx()
@@ -42,6 +45,12 @@ class FragmentMolecule:
         gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
 
         return gm.is_isomorphic()
+
+    def __lt__(self, other):
+        if abs(self.get_build_probability() - other.get_build_probability()) < 1e-10: 
+            return self.__hash__() < other.__hash__()
+        else:
+            return self.get_build_probability() < other.get_build_probability()
 
     def add_fragment(self, frag_id: int, attachment_point_list, canonical_mapping=None) -> int:
         node_id = len(self._graph.fragments)

@@ -1133,3 +1133,78 @@ def test_restart():
     for i in range(len(output_mol_list)):
         assert output_mol_list[i] == restart_mol_list[i]
 
+def test_split_molecule_list():
+
+    mol_list = []
+
+    for i in range(10):
+        mol_list.append(FragmentMolecule(i))
+
+    output_mol_list = split_molecule_list(mol_list, 2)
+
+    assert str(output_mol_list) == '[[::0, ::2, ::4, ::9, ::7, ::5], [::1, ::3, ::8, ::6]]'
+
+    print(str(output_mol_list))
+
+    mol_list = []
+    mol_list.append(FragmentMolecule(1))
+
+    output_mol_list = split_molecule_list(mol_list, 2)
+
+    print(str(output_mol_list))
+
+    assert str(output_mol_list) == '[[::1], []]'
+
+    mol_list = []
+
+    for i in range(10):
+        mol_list.append(FragmentMolecule(i))
+
+    output_mol_list = split_molecule_list(mol_list, 1)
+
+    print(str(output_mol_list))   
+
+def test_parallel():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies11-20.txt')
+    bond_frequencies_np = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments11-20.sdf')
+  
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies_np)    
+
+    parent_file = '../datasets/database1000/benzene.sdf'
+    parent_fragment_file_list = ['../datasets/database1000/ch4.sdf']
+
+    remove_hydrogens = [11]
+    remove_hydrogens_parent_fragment = [4]
+
+    parent_mapping_1 = [0, 0]
+
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1,remove_hydrogens, remove_hydrogens_parent_fragment)
+
+    output_mol_list_serial = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, sort=True)
+
+    output_mol_list_parallel = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=2, parallel=8, sort=True)
+
+    print(output_mol_list_serial)
+    print(output_mol_list_parallel)
+
+    assert str(output_mol_list_serial) == str(output_mol_list_parallel)
+
+def test_sort():
+
+    mol_list = []
+
+    mol_list.append(FragmentMolecule(0.5))
+    mol_list.append(FragmentMolecule(0.3))
+    mol_list.append(FragmentMolecule(0.4))
+    mol_list.append(FragmentMolecule(0.1))
+    mol_list.append(FragmentMolecule(0.2))
+
+    mol_list.sort(reverse=True)
+
+    assert str(mol_list) == '[::0.5, ::0.4, ::0.3, ::0.2, ::0.1]'
+

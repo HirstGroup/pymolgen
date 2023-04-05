@@ -7,6 +7,8 @@ import numpy as np
 import os
 import sys
 
+from multiprocessing import Pool
+
 from pymolgen.fragment_molecule import *
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
@@ -91,7 +93,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
     return total
 
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, restart=None, restart_file=None, savesdf=False, unique=True, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, savesdf=False, sort=False, unique=True, threshold=None):
 
     if restart is not None:
         assert restart_file is not None
@@ -102,9 +104,31 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
 
     for i in range(restart, depth + 1):
 
-        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i, threshold)
+        if parallel is None:
+            # Serial
+            FragmentMolecule_list = extend_molecule_list(
+                FragmentMolecule_list, bond_frequencies,
+                fragment_database_graph, i, threshold)
+
+        else:
+            # Parallel
+            print('Parallel run with %s processes' %parallel)
+
+            args = [(l, bond_frequencies, fragment_database_graph, i, threshold) 
+                    for l in split_molecule_list(FragmentMolecule_list, parallel)]
+
+            with Pool(processes=parallel) as p:
+                extended = p.starmap(extend_molecule_list, args)
+
+            FragmentMolecule_list = []
+            for sublist in extended:
+                FragmentMolecule_list += sublist
 
         print(f'FINAL DEPTH {i} TOTAL {len(FragmentMolecule_list)}')
+
+        if sort is True:
+
+            FragmentMolecule_list.sort(reverse=True)
 
         if unique is True:
 
@@ -122,7 +146,7 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
                 for j in FragmentMolecule_list:
                     f.write(f'{str(j)}\n')
 
-            if args.savesdf is True:
+            if savesdf is True:
                 with open('%s-depth%s.inchi' %(output, i), 'w') as f, open('%s-depth%s.sdf' %(output, i), 'w') as f2:
                     for j in FragmentMolecule_list:
                         mol = convert_fragment_molecule_to_mol(j, fragment_database)
@@ -192,6 +216,43 @@ def get_unique_molecule_list(FragmentMolecule_list, debug=False, fragment_databa
 
     return sorted_list
 
+
+def split_molecule_list(molecule_list, n):
+
+    """
+    Split a molecule list in lists of equal size so that each list adds up to a similar value
+    """
+    size = len(molecule_list)
+
+    build_probability_list = np.zeros(size)
+
+    for i in range(size):
+        build_probability_list[i] = molecule_list[i].get_build_probability()
+
+    sort_index = np.argsort(build_probability_list)
+
+    output_mol_list = []
+    for i in range(n):
+        output_mol_list.append([])
+
+    remainder = size % 2
+
+    sort_index_1 = sort_index[:size // 2 + remainder]
+    sort_index_2 = sort_index[size // 2 + remainder:][::-1]
+
+    for i in range(len(sort_index_1)):
+
+        list_index = i % n
+
+        output_mol_list[list_index].append(molecule_list[sort_index_1[i]])
+
+    for i in range(len(sort_index_2)):
+
+        list_index = i % n
+
+        output_mol_list[list_index].append(molecule_list[sort_index_2[i]])
+
+    return output_mol_list
 
 def read_fragment_molecule_file(filename, fragment_database_graph):
 
@@ -507,6 +568,7 @@ if __name__ == '__main__':
     # optional arguments
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=False)
+    parser.add_argument('--parallel', type=int, help='Number of processes for parallel run',required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
@@ -557,6 +619,6 @@ if __name__ == '__main__':
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, threshold=threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, threshold=threshold)
 
 

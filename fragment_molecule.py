@@ -139,7 +139,7 @@ def convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database):
 
     graphs = [x.graph for x in frag_mol_list]
 
-    mol.graph = copy.deepcopy(networkx.disjoint_union_all(graphs))
+    mol.graph = networkx.disjoint_union_all(graphs)
 
     for bond in new_frag_bond_list:
         k = bond[2]

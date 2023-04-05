@@ -891,7 +891,8 @@ def combine_all_fragments(frag_mol_list, frag_bond_list):
 
     graphs = [x.graph for x in frag_mol_list]
 
-    mol.graph = copy.deepcopy(networkx.disjoint_union_all(graphs))
+    #mol.graph = copy.deepcopy(networkx.disjoint_union_all(graphs))
+    mol.graph = networkx.disjoint_union_all(graphs)
 
     for bond in new_frag_bond_list:
         k = bond[2]

@@ -132,7 +132,16 @@ class FragmentGraph:
 
         for i in range(len(self.fragments)):
 
-            g.add_node(i, frag_id=self.fragments[i].get_attribute('frag_id'), free_valence_points=self.free_valence_points[i])
+            if self.fragments[i].get_canonical_mapping() is None:
+                free_valence_points = self.free_valence_points[i]
+            else:
+                free_valence_points = []
+                canonical_mapping = self.fragments[i].get_canonical_mapping()
+                print(canonical_mapping)
+                for i in self.free_valence_points[i]:
+                    free_valence_points.append(canonical_mapping[i])
+
+            g.add_node(i, frag_id=self.fragments[i].get_attribute('frag_id'), free_valence_points=free_valence_points)
 
             # do not canonicalise if a fragment does not have canonical mapping, except if fragment is -1 (i.e. capped)
             if self.fragments[i].get_attribute('frag_id') != -1 and self.fragments[i].get_canonical_mapping() is None:

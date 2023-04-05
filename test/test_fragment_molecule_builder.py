@@ -673,6 +673,7 @@ def test_unique():
 
     print(hash_list)
 
+test_unique()
 
 def test_unique2():
 

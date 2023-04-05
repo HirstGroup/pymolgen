@@ -133,6 +133,8 @@ class FragmentGraph:
         for i in range(len(self.fragments)):
 
             g.add_node(i, frag_id=self.fragments[i].get_attribute('frag_id'))
+
+            # if canonical mapping missing set canonicalise to False
             if self.fragments[i].get_attribute('frag_id') != -1 and self.fragments[i].get_canonical_mapping() is None:
                 canonicalise = False
 

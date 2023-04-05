@@ -15,10 +15,9 @@ class FragmentMolecule:
 
     def __hash__(self):
 
-        # do not cap before converting to networkx since free_valence_points will be stored as attribute
-        #f = self.cap()
+        f = self.cap()
 
-        g = self._graph.convert_to_networkx()
+        g = f._graph.convert_to_networkx()
 
         return int(networkx.weisfeiler_lehman_graph_hash(g, node_attr='frag_id', edge_attr='atoms'), 16)
 

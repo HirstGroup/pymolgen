@@ -195,7 +195,7 @@ def test_get_hash():
 	f.add_bond(1, 5, 3, 4)
 
 	graph_hash = f.__hash__()
-	assert graph_hash == 189504195669352427740983612035942757893
+	assert graph_hash == 26024027161856727234825668485283908942
 
 def test_eq():
 
@@ -264,3 +264,5 @@ def test_canonical_mapping():
 	f.add_fragment(0, [0], {0:0})
 
 	assert f._graph.fragments[0].get_canonical_mapping() == {0:0}
+
+test_canonical_mapping()

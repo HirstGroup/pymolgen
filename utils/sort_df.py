@@ -14,6 +14,7 @@ print(args.input, args.output)
 
 df = pd.read_csv(args.input, sep=';')
 
+df = df.loc[df['filter_pass'] == True]
 df = df.loc[df['rules_filter'] == True]
 
 df.sort_values('mpo', inplace=True)

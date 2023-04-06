@@ -610,11 +610,11 @@ if __name__ == '__main__':
     parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=False)   
 
     # 2. build from parent file
-    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
-    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=True)
-    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
+    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=False)
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=False)
+    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=False)
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
-    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
+    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=False)
 
     # optional arguments
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)

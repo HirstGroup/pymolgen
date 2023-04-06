@@ -620,8 +620,9 @@ if __name__ == '__main__':
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=False)
     parser.add_argument('--depth', type=int, help='Depth to build up to',required=False)
-    parser.add_argument('--parallel', type=int, help='Number of processes for parallel run',required=False)
+    parser.add_argument('--not_unique', action='store_true', help='Do not obtain unique molecule set in each depth building stage', required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
+    parser.add_argument('--parallel', type=int, help='Number of processes for parallel run',required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('--recursive', action='store_true', help='Build molecules using recursive function', required=False)
@@ -683,6 +684,6 @@ if __name__ == '__main__':
                 print(i)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, sort=False, threshold=threshold)
+        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
 
 

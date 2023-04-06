@@ -1,3 +1,4 @@
+import filecmp
 import io
 import os
 import sys
@@ -1207,4 +1208,88 @@ def test_sort():
     mol_list.sort(reverse=True)
 
     assert str(mol_list) == '[::0.5, ::0.4, ::0.3, ::0.2, ::0.1]'
+
+def test_extend_molecule_recursive():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0], {0:0})
+
+    n = 0
+    for i in extend_molecule_recursive(parent, bond_frequencies, fragment_database_graph, threshold=0.0025):
+        n += 1
+        if n % 1000 == 0:
+            print(n)
+
+    print(n)
+
+
+def test_unique3():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0], {0:0})
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=25, fragment_database=fragment_database, return_all=True, threshold=0.0025, unique=False)
+
+    output_mol_list.sort()
+    print(len(output_mol_list))
+
+def test_unique3_recursive():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies_11-20.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments_11-20.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    parent = FragmentMolecule()
+
+    parent.add_fragment(0, [0], {0:0})
+
+    output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=25, fragment_database=fragment_database, return_all=True, threshold=0.0025, unique=False)
+
+    output_mol_list.sort()
+    print(len(output_mol_list))
+
+    recursive_mol_list = []
+
+    n = 0
+    for i in extend_molecule_recursive(parent, bond_frequencies, fragment_database_graph, threshold=0.0025):
+        n += 1
+        recursive_mol_list.append(i)
+        if n % 1000 == 0:
+            print(n)
+
+    recursive_mol_list.sort()
+    print(len(recursive_mol_list))
+
+    assert output_mol_list == recursive_mol_list
+
+def test_fragment_molecule_builder_recursive():
+
+    os.system('python ../fragment_molecule_builder.py -a ../datasets/database1000/fragments11-20.sdf -d ../datasets/database1000/frequencies11-20.txt -p ../datasets/database1000/benzene.sdf -x ../datasets/database1000/ch4.sdf -o outputs/test_fragment_molecule_builder_recursive.txt --parent_mapping_1 0 0 -r 11 -R 4 --recursive --threshold -2.6')
+
+    assert filecmp.cmp('outputs/test_fragment_molecule_builder_recursive.txt', 'models/test_fragment_molecule_builder_recursive.txt')   
 

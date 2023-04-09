@@ -686,4 +686,6 @@ if __name__ == '__main__':
     else:
         output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
 
+    print('Normal termination')
+
 

@@ -1295,3 +1295,6 @@ def test_fragment_molecule_builder_recursive():
     os.system('python ../fragment_molecule_builder.py -a ../datasets/database1000/fragments11-20.sdf -d ../datasets/database1000/frequencies11-20.txt -p ../datasets/database1000/benzene.sdf -x ../datasets/database1000/ch4.sdf -o outputs/test_fragment_molecule_builder_recursive.txt --parent_mapping_1 0 0 -r 11 -R 4 --recursive --threshold -2.6')
 
     assert filecmp.cmp('outputs/test_fragment_molecule_builder_recursive.txt', 'models/test_fragment_molecule_builder_recursive.txt')   
+
+    os.system('rm parent_fragment0.sdf')
+    os.system('rm parent_fragment1.sdf')

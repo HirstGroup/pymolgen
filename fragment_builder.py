@@ -548,7 +548,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             interval_time = (current_time - previous_time) / len(output_mol_list)
             if verbose: print('TIME %.2f' %interval_time)
 
-        if len(output_mol_list) > min(batch_size, n_mol - n):
+        if len(output_mol_list) >= min(batch_size, n_mol - n):
                     
             if filters:
 

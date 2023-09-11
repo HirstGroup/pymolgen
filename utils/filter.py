@@ -2,6 +2,7 @@
 
 import sys,os
 import argparse
+import numpy as np
 import pandas as pd
 
 #   CHIRAL_THRESHOLD:   Maximum number of Chiral Centers (<= 2)
@@ -22,38 +23,52 @@ H_ACC_THRESHOLD = 10
 LOGP_THRESHOLD_UP = 5
 LOGP_THRESHOLD_LOW = 0.5
 
-input = sys.argv[1]
-output = sys.argv[2]
+parser = argparse.ArgumentParser(description='Recalculate filter_pass')
+parser.add_argument('-i','--input', help='Input file name', required=True)
+parser.add_argument('-o','--output', help='Output file name', required=True)
+
+args = parser.parse_args()
+
+input = args.input
+output = args.output
+
+print(input, output)
 
 df = pd.read_csv(input, sep=';') #, dtype={'n_chiral': int})
 
 def filter(row):
-	if row['n_chiral'] > CHIRAL_THRESHOLD:
-		return 0
-	if row['psa'] > PSA_THRESHOLD:
-		return 0
-	if row['pfi'] > PFI_THRESHOLD:
-		return 0
-	if row['n_rot_bonds'] > ROTBOND_THRESHOLD:
-		return 0
-	if row['mw'] > WEIGHT_THRESHOLD:
-		return 0
-	if row['h_don'] > H_DON_THRESHOLD:
-		return 0
-	if row['h_acc'] > H_ACC_THRESHOLD:
-		return 0
-	if row['logp'] > LOGP_THRESHOLD_UP:
-		return 0
-	if row['logp'] < LOGP_THRESHOLD_LOW:
-		return 0
-	return 1
+
+	if np.isnan(row['n_chiral']) or row['n_chiral'] > CHIRAL_THRESHOLD:
+		return False
+	if np.isnan(row['psa']) or row['psa'] > PSA_THRESHOLD:
+		return False
+	#if np.isnan(row['pfi']) or row['pfi'] > PFI_THRESHOLD:
+	#	return False
+	if np.isnan(row['n_rot_bonds']) or row['n_rot_bonds'] > ROTBOND_THRESHOLD:
+		return False
+	if np.isnan(row['mw']) or row['mw'] > WEIGHT_THRESHOLD:
+		return False
+	if np.isnan(row['h_don']) or row['h_don'] > H_DON_THRESHOLD:
+		return False
+	if np.isnan(row['h_acc']) or row['h_acc'] > H_ACC_THRESHOLD:
+		return False
+	if np.isnan(row['logp']) or row['logp'] > LOGP_THRESHOLD_UP:
+		return False
+	if np.isnan(row['logp']) or row['logp'] < LOGP_THRESHOLD_LOW:
+		return False
+
+	return True
+
+if 'filter_pass' in df.columns:
+	df['filter_pass_original'] = df['filter_pass']
+
+if 'build_probability' in df.columns:
+	df['build_probability_original'] = df['build_probability']
+	df['build_probability'] = round(np.log10(np.exp(df['build_probability_original'])), 2)
+
 
 df['filter_pass'] = df.apply (lambda row: filter(row), axis=1)
 
 df.sort_values(['filter_pass','mpo'], ascending=[False, True], inplace=True)
-#df.sort_values(['n_chiral'], inplace=True)
-
-total_pass = df['filter_pass'].sum()
-print('Total_pass = ', total_pass)
 
 df.to_csv(output, sep=';', index=False)

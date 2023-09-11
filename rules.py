@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser(description='Pymolgen molecular generator from 
 parser.add_argument('-i','--input', help='Input File Name',required=True)
 parser.add_argument('-o','--output', help='Output File Name',required=True)
 parser.add_argument('-r','--rules_file', help='Rules File Name',required=True)
+parser.add_argument('--all', action='store_true', default=True, help='Run rules on all molecules, not just those that passed filters', required=False)
 
 args = parser.parse_args()
 
@@ -14,7 +15,10 @@ df = pd.read_csv(args.input, sep=';')
 
 df['index'] = df.index
 
-df2 = df.loc[df['filter_pass'] == True]
+if args.all is True:
+    df2 = df
+else:
+    df2 = df.loc[df['filter_pass'] == True]
 
 df2 = df2[['smi', 'index']]
 

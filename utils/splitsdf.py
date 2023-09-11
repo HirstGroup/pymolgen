@@ -6,7 +6,7 @@ import argparse
  
 parser = argparse.ArgumentParser(description='This script splits SDF file')
 parser.add_argument('-i','--input', help='Input file name', required=True)
-parser.add_argument('-n','--n_mol', help='Number of Molecules', required=True)
+parser.add_argument('-n','--n_mol', help='Number of Molecules per SDF file', required=True)
 parser.add_argument('-o','--output', help='Output file name', required=True)
 args = parser.parse_args()
 

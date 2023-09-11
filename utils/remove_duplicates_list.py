@@ -13,7 +13,7 @@ parser.add_argument('-o', '--output', help='Output file',required=True)
 
 args = parser.parse_args()
 
-d = set()
+d = {}
 
 for input in args.input:
 
@@ -21,14 +21,28 @@ for input in args.input:
 
     infile = open(input)
 
-    a = []
-
     for line in infile:
-        a = line.strip('\n')
-        if a not in d:
-            d.add(a)
 
+        if len(line.split()) == 1:
+
+            a = line.strip('\n')
+            d[a] = 1
+
+        elif len(line.split()) == 2:
+
+            inchi = line.split()[0]
+            probability = float(line.strip().split()[1])
+
+            if inchi in d.keys():
+                d[inchi] += probability
+            else:
+                d[inchi] = probability
+
+        else:
+            sys.error('Len line split > 2')
+
+d = dict(sorted(d.items(), key=lambda item: item[1], reverse=True))
 
 with open(args.output, 'w') as outfile:
-    for i in d:
-        outfile.write('%s\n' %i)
+    for key, val in d.items():
+        outfile.write('%s %s\n' %(key, val))

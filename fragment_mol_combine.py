@@ -488,7 +488,7 @@ def get_aromatic_carbons(rdmol):
 
     return aromatic_carbons
 
-def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, copy=None, limit=None, filter=False, first=None, inchi_filter=None, pains=False, sort=False, test=False):
+def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=None, copy=None, limit=None, filter=False, first=None, inchi_filter=None, pains=False, sort=False, test=False):
 
     if first is not None:
 
@@ -548,6 +548,54 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
         save_fragments_txt(fragment_database, fragments_txt_out)
 
         sys.exit('Fragment frequencies copied')
+
+    if core is not None:
+
+        core_frequencies = {}
+
+        inchi_list = []
+
+        for i in range(len(fragment_database_mol)):
+
+            mol = fragment_database_mol[i]
+            inchi = molecule_to_inchi(mol)
+            inchi_list.append(inchi)
+
+            if inchi in core_frequencies:
+                core_frequencies[inchi] += frag_frequencies[i]
+            else:
+                core_frequencies[inchi] = frag_frequencies[i]
+
+        print(len(core_frequencies))
+
+        core_frequencies = dict(sorted(core_frequencies.items(), key=lambda item: item[1], reverse=True))
+
+        total_freq = []
+
+        for i in range(len(fragment_database_mol)):
+            total_freq.append(core_frequencies[inchi_list[i]])
+
+        sorting = sorted(range(len(total_freq)), key=lambda k: total_freq[k], reverse=True)
+
+        with open('cores.sdf', 'w') as f:
+            for i in sorting:
+                mol = fragment_database_mol[i]
+
+                lines = molecule_to_sdf(mol)
+
+                for line in lines:
+                    f.write(line)
+                f.write('$$$$\n')
+
+        with open('cores.inchi', 'w') as f:
+            for key, val in core_frequencies.items():
+                f.write(f'{key} {val}\n')
+
+        with open('cores_freq.txt', 'w') as f:
+            for i in sorting:
+                f.write(f'{inchi_list[i]} {total_freq[i]}\n')
+
+        sys.exit('Core frequencies calculated')
 
     if filter:
 
@@ -695,11 +743,16 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser(description='Combine fragmented molecules')
+    
+    # required arguments
     parser.add_argument('-n','--n_files', help='Number of fragment files to combine',required=True, type=int)
     parser.add_argument('-i','--in_sub', help='Input subscript',required=True)
     parser.add_argument('-o','--out_sub', help='Output subscript',required=True)
+
+    # optional arguments
     parser.add_argument('-f','--first', help='First file index to consider',required=False, type=int)
     parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider',required=False, type=int)
+    parser.add_argument('--core', type=int, help='Filter by frequency of core fragments (equivalent fragments of any protonation state)', required=False)
     parser.add_argument('--copy', nargs='+', help='Fragment_a and fragment_b to copy bond frequencies', required=False)
     parser.add_argument('--filter', action='store_true', help='Filter fragment database', required=False)
     parser.add_argument('--inchi_filter', help='Inchi list to filter',required=False)
@@ -726,6 +779,6 @@ if __name__ == '__main__':
     frequencies_txt_out = 'frequencies%s.txt' %out_sub
     frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
-    loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, copy=args.copy, filter=args.filter, first=args.first, limit=args.limit, inchi_filter=args.inchi_filter, pains=args.pains, sort=args.sort, test=args.test)
+    loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=args.core, copy=args.copy, filter=args.filter, first=args.first, limit=args.limit, inchi_filter=args.inchi_filter, pains=args.pains, sort=args.sort, test=args.test)
 
     print('Normal termination')

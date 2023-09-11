@@ -1,6 +1,11 @@
 from pymolgen.molecule import Molecule, BondType
+from rdkit import Chem
 from typing import List, Tuple, TextIO
 import networkx
+
+from rdkit import RDLogger
+
+RDLogger.DisableLog('rdApp.*')
 
 def print_molecule(mol: Molecule) -> str:
 
@@ -79,7 +84,6 @@ def molecule_to_inchi(mol: Molecule) -> str:
     -------
     Inchi string of the molecule
     """
-    from rdkit import Chem
     return Chem.MolToInchi(molecule_to_rdkit(mol), options='-SNon')
 
 def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]], valences: List[int]=None) -> 'Networkx graph':
@@ -156,7 +160,6 @@ def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
 
     atoms = []
     bonds = []
-
     n = 0
     for line in lines:
         if 'V2000' in line: 
@@ -319,14 +322,14 @@ def molecule_to_atoms_bonds(molecule: Molecule) -> (List, Tuple[int, int, int]):
 
     return atoms, bonds, valences
 
-def molecule_to_sdf(molecule):
+def molecule_to_sdf(molecule, title=None):
     atoms, bonds, valences = molecule_to_atoms_bonds(molecule)
-    lines = atoms_bonds_to_sdf(atoms, bonds, valences)
+    lines = atoms_bonds_to_sdf(atoms, bonds, title=title, valences=valences)
     return lines
 
-def atoms_bonds_to_sdf(atoms, bonds, valences=None):
+def atoms_bonds_to_sdf(atoms, bonds, title='Molecule', valences=None):
     lines = []
-    lines.append('Molecule\n pymolgen\n\n')
+    lines.append('%s\n pymolgen\n\n' %title)
 
     n_atoms = len(atoms)
     n_bonds = len(bonds)
@@ -478,3 +481,19 @@ def read_asf_file(asf):
             mol = read_asf_lines(lines[i:i+2])
             smi = molecule_to_smiles(mol)
             print(smi)
+
+def save_mol_to_sdf(mol, sdffile):
+
+    with open(sdffile, 'w') as f:
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            f.write(line)
+        f.write('$$$$\n')
+
+def save_mol_list_to_sdf(mol_list, sdffile):
+
+    with open(sdffile) as f:
+        print('saving to', sdffile)
+
+    for mol in mol_list:
+        save_mol_to_sdf(mol, sdffile)

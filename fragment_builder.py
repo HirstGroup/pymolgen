@@ -361,6 +361,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     attachment_points = []
 
+    # remove hydrogens from parent and determine atoms that will have open valence
     for i in remove_hydrogens:
         parent_mol = parent_mol.remove_atom(i)
         for j in parent_mol.free_valence_list:
@@ -368,26 +369,26 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 attachment_points.append(j)
 
     parent_mw = Molecule.molecular_weight(parent_mol)
-    parent_fragment_list = []
 
-    for i in parent_fragment_file_list:
-        parent_fragment_list.append(molecule_from_sdf(i))
+    # make list of equivalent fragments to build on parent
+    parent_fragment_list = [molecule_from_sdf(x) for x in parent_fragment_file_list]
 
+    # remove hydrogens from equivalent fragments
     for i in range(len(parent_fragment_list)):
         parent_fragment_list[i] = parent_fragment_list[i].remove_atom(remove_hydrogens_parent_fragment[i])
 
-    parent_fragment_original_list = []
 
-    for i in parent_fragment_list:
-        parent_fragment_original_list.append(i)
+    # the original equivalent fragments will be mapped to those in the database to account for the different atom numberings
+    parent_fragment_original_list = [x for x in parent_fragment_list]
 
+    # make a dictionary parent_fragment_i_dict that will map each attachment point to the equivalent fragment id in the database
+    # make a list parent_fragment_i_list that will contain all equivalent fragments ids
+    parent_fragment_i_dict = {}
     parent_fragment_i_list = []
-
-    new_dict = {}
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
         print(attachment_points); print('j =', j)
-        new_dict[attachment_points[i]] = j
+        parent_fragment_i_dict[attachment_points[i]] = j
         parent_fragment_i_list.append(j)
 
         lines = molecule_to_sdf(fragment_database[j])
@@ -400,6 +401,21 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         if j is False:
             sys.exit('Parent fragment not found')
+
+    # make list of all fragments as molecule objects
+    parent_fragment_list = [fragment_database[x] for x in parent_fragment_i_list]
+
+    # map all atoms in each equivalent fragment to the atom numbers in the database
+    parent_mapping_2 = []
+    for i in range(len(parent_fragment_list)):
+        parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
+
+    # parent_mapping will map the atoms in the parent with those atom numbers in the equivalent fragments in the database
+    parent_mapping = {}
+    n = 0
+    for key, val in parent_mapping_1.items():
+        parent_mapping[key] = parent_mapping_2[n][val]
+        n += 1
 
     if restricted:
         for i in parent_fragment_i_list:
@@ -432,24 +448,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             plt.show()
 
         sys.exit('Restricted finished')
-
-    parent_fragment_i_dict = new_dict
-
-    parent_fragment_list = []
-
-    for i in parent_fragment_i_list:
-        parent_fragment_list.append(fragment_database[i])
-
-    parent_mapping_2 = []
-
-    for i in range(len(parent_fragment_list)):
-        parent_mapping_2.append(map_mols(parent_fragment_original_list[i].graph, parent_fragment_list[i].graph))
-
-    parent_mapping = {}
-    n = 0
-    for key, val in parent_mapping_1.items():
-        parent_mapping[key] = parent_mapping_2[n][val]
-        n += 1
 
     if parallel is not None:
         index = parallel[0]
@@ -491,6 +489,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     run_time = time.time() - start_time
 
     while n < n_mol and run_time < time_limit:
+
+        if n % 100 == 0:
+            print(n)
 
         output_mol_list = []
 
@@ -549,7 +550,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             if verbose: print('TIME %.2f' %interval_time)
 
         if len(output_mol_list) >= min(batch_size, n_mol - n):
-                    
+
             if filters:
 
                 filters_final_mol_return_mol_partial = partial(filters_final_mol_return_mol, pains_database)
@@ -575,7 +576,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 output_mol_list = rules_batch(output_mol_list, rules_file)                
 
             for mol in output_mol_list:
-
+                print('line579')
                 n += 1
 
                 if verbose:
@@ -758,7 +759,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
                             for i in frag_list[1:]:
                                 frag_mol_list.append(fragment_database[i])
 
-                            mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+                            mol = combine_all_fragments(frag_mol_list, frag_bond_list)
 
                             inchi = molecule_to_inchi(mol)
 
@@ -813,7 +814,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
                     for i in frag_list[1:]:
                         frag_mol_list_int.append(fragment_database[i])
 
-                    mol = combine_all_fragments(frag_mol_list_int, frag_list, frag_bond_list)
+                    mol = combine_all_fragments(frag_mol_list_int, frag_bond_list)
 
                     inchi = molecule_to_inchi(mol)
 
@@ -833,7 +834,7 @@ def build_mol_single(bond_frequencies, fragment_database, parent_mol, parent_fra
     for i in frag_list[1:]:
         frag_mol_list.append(fragment_database[i])
 
-    mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+    mol = combine_all_fragments(frag_mol_list, frag_bond_list)
 
     inchi = molecule_to_inchi(mol)
 
@@ -864,7 +865,7 @@ def write_fragments_used_file(fragments_used_file, inchi, frag_list):
             outfile.write('%s ' %i)
         outfile.write('\n')
 
-def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
+def combine_all_fragments(frag_mol_list, frag_bond_list):
 
     mol = Molecule()
 
@@ -890,7 +891,8 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
     graphs = [x.graph for x in frag_mol_list]
 
-    mol.graph = copy.deepcopy(networkx.disjoint_union_all(graphs))
+    #mol.graph = copy.deepcopy(networkx.disjoint_union_all(graphs))
+    mol.graph = networkx.disjoint_union_all(graphs)
 
     for bond in new_frag_bond_list:
         k = bond[2]

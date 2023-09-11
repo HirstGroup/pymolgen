@@ -1,11 +1,14 @@
+import networkx
+import numpy as np
 import random
 import time
-import networkx
+
+from enum import Enum
 from copy import deepcopy
 from typing import Iterator, Dict, Optional, Tuple, Set, List
-from enum import Enum
+
 from pymolgen.bond_generator import BondGenerator
-import numpy as np
+
 
 class BondType(Enum):
     SINGLE = 1
@@ -51,6 +54,8 @@ class Molecule:
         """
         self._graph: Optional[networkx.Graph] = None
         self._allow_frac_order: bool = allow_frac_order
+        self._attach_points = None
+        self._free_valence_original = None
 
     ##############
     # Properties #
@@ -97,12 +102,14 @@ class Molecule:
         List of points where this molecule fragment
         could attach to another molecule fragment.
         """
-        points = []
-        for i in self.graph:
-            v = self.free_valence(i)
-            if is_integer_order(v) and to_integer_order(v) > 0:
-                points.append(i)
-        return points
+        if self._attach_points is None:
+            points = []
+            for i in self.graph:
+                v = self.free_valence(i)
+                if is_integer_order(v) and to_integer_order(v) > 0:
+                    points.append(i)
+            self._attach_points = points
+        return self._attach_points
 
     @property
     def free_valence_list(self) -> List[int]:
@@ -120,6 +127,27 @@ class Molecule:
                 for j in range(v):
                     points.append(i)
         return points        
+
+    @property
+    def free_valence_original(self) -> List[int]:
+        """
+        Returns
+        -------
+        List of original open valences in the molecule,
+        if one atom can form two bonds it will 
+        return the atom number twice
+        This property does not change when molecules bond to others
+        """
+        if self._free_valence_original is None:
+            points = []
+            for i in self.graph:
+                v = self.free_valence(i)
+                if is_integer_order(v) and to_integer_order(v) > 0:
+                    for j in range(v):
+                        points.append(i)
+            print('molecule free valence original called')
+            self._free_valence_original = points
+        return self._free_valence_original
 
 
     ###########

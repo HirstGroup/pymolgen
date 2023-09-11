@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import sys
 
@@ -14,9 +16,10 @@ if __name__ == "__main__":
     print(cmd)
     print()
     os.system(cmd)
-    os.system("wget -O gprof2dot.py https://raw.githubusercontent.com/jrfonseca/gprof2dot/master/gprof2dot.py")
-    os.system(f"python gprof2dot.py -f pstats profile.out | dot -Tpng -o profile.png")
-    os.system("xdg-open profile.png")
+
+    pwd = os.path.dirname(os.path.realpath(__file__))
+
+    os.system(f"python {pwd}/gprof2dot.py -f pstats profile.out | dot -Tpng -o profile.png")
 
 """
 import os

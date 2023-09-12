@@ -29,6 +29,7 @@ def time_limit(seconds):
     finally:
         signal.alarm(0)
 
+
 def get_fragments_dataset(mol, carbonyl=False):
 
     if carbonyl: single_bonds = mol.get_single_bonds_not_h_not_c_not_carbonyl()
@@ -63,6 +64,7 @@ def get_fragments_dataset(mol, carbonyl=False):
 
     return new_fragments, pairs, new_single_bonds
 
+
 def print_fragments(fragments):
 
     out = ''
@@ -87,6 +89,7 @@ def split_mol(mol, bonds):
     new = [mol.graph.subgraph(c) for c in networkx.connected_components(mol.graph)]
 
     return new
+
 
 def get_pairs(bonds, fragments):
 
@@ -115,6 +118,7 @@ def is_fragment_new(fragment, fragment_database):
 
     return True
 
+
 def compound_dict(dict1, dict2):
 
     d = {}
@@ -127,6 +131,7 @@ def compound_dict(dict1, dict2):
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
+
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):
 
@@ -174,6 +179,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
     return is_new, index[0], map
 
+
 def save_fragments_sdf(fragments, outfile_name):
 
     outfile = open(outfile_name, 'w')
@@ -190,6 +196,7 @@ def save_fragments_sdf(fragments, outfile_name):
 
     outfile.close()
 
+
 def save_fragment_sdf(fragment, fragments_sdf):
 
     outfile = open(fragments_sdf, 'a')
@@ -205,6 +212,7 @@ def save_fragment_sdf(fragment, fragments_sdf):
 
     outfile.close()
 
+
 def get_atom_list(fragment):
 
     atom_list = []
@@ -216,9 +224,11 @@ def get_atom_list(fragment):
 
     return atom_list
 
+
 def to_np_matrix(fragments):
     for fragment in fragments:
         matrix = networkx.to_numpy_matrix(fragment)
+
 
 def update_bond_database(pair, bond, fragment_database, fragments, frequencies, frag_frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
 
@@ -329,6 +339,7 @@ def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, fra
 
     #if (i,j,k,l) is new make new entry into dictionary
     frequencies[(i,j,k,l)] = val
+
 
 def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False, fragment_database=None, frequencies=None, frag_frequencies=None, carbonyl=False):
 
@@ -476,12 +487,14 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
     return fragment_database, frequencies, frag_frequencies
 
+
 def relabel_fragment_database(fragment_database, frag_mapping):
 
     for i in range(len(fragment_database)):
         fragment = fragment_database[i]
         mapping = frag_mapping[i]
         networkx.relabel_nodes(fragment, mapping, copy=False)
+
 
 def get_frag_mapping_from_database(fragment_database):
 
@@ -497,6 +510,7 @@ def get_frag_mapping_from_database(fragment_database):
         frag_mapping.append(d)      
 
     return frag_mapping
+
 
 def get_frag_mapping(fragments_txt):
     """
@@ -517,6 +531,7 @@ def get_frag_mapping(fragments_txt):
 
     return frag_mapping
 
+
 def get_frag_mapping_from_graph(fragment):
 
     d = {}
@@ -530,6 +545,18 @@ def get_frag_mapping_from_graph(fragment):
 def update_bond_frequencies(bond_frequencies, frag_mapping):
     """
     Update bond frequencies for atom numbering in frag_mapping (typically numbering from 0)
+
+    Parameters
+    ----------
+    bond_frequencies : dict
+        Dictionary from bonds (i,j,k,l) to frequencies
+    frag_mapping : list of dict
+        List of dict for each fragment, mapping the atoms to the canonical atom numbers
+
+    Returns
+    -------
+    d : dict
+        Updated dictionary from bonds (i,j,k,l) to frequencies
     """
     d = {}
     for key, val in bond_frequencies.items():
@@ -543,16 +570,19 @@ def update_bond_frequencies(bond_frequencies, frag_mapping):
 
     return d
 
+
 def save_fragments_txt(fragment_database, fragments_txt):
     if fragments_txt is not None:
         with open(fragments_txt, 'w') as outfile:
             outfile.write(print_fragments(fragment_database))
+
 
 def save_frequencies_txt(frequencies, frequencies_txt):
     if frequencies_txt is not None:
         with open(frequencies_txt, 'w') as outfile:
             for key, val in frequencies.items():
                 outfile.write(f"{str(key)}: {str(val)}\n")
+
 
 def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
     if frag_frequencies_txt is not None:
@@ -561,6 +591,7 @@ def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
                 outfile.write('%s ' %frag_frequencies[i])
                 if i + 1 % 10 == 0: outfile.write('\n')
             outfile.write('\n')
+
 
 def map_mols(mol1, mol2):
 
@@ -574,6 +605,7 @@ def map_mols(mol1, mol2):
     mapping = all_mappings[0]
 
     return mapping
+
 
 def get_canonical_mapping(fragment):
     gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
@@ -591,6 +623,7 @@ def get_canonical_mapping(fragment):
                 canonical_mapping[key] = val
     
     return canonical_mapping
+
 
 def renumber_fragment(fragment):
 

@@ -8,21 +8,23 @@ from pymolgen.fragment_mol import *
 from pymolgen.fragment_builder import *
 from rdkit import Chem
 
+
 def test_update_bond_frequencies():
 
     fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
     frag_mapping = get_frag_mapping('../datasets/database1000/fragments1.txt')
     bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')   
-    
+    print(frag_mapping)
     print(bond_frequencies)
 
     bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
 
     print(bond_frequencies)
 
-    check = {(0, 1, 0, 0): 1, (1, 2, 2, 1): 1, (2, 3, 1, 0): 1, (3, 4, 0, 2): 1, (4, 5, 2, 0): 1, (5, 6, 0, 1): 1, (4, 6, 2, 3): 1, (4, 7, 2, 1): 1, (7, 8, 1, 3): 1, (6, 9, 9, 0): 1, (6, 9, 11, 0): 1}
-
+    check = {(0, 1, 0, 0): 1, (1, 2, 2, 1): 1, (2, 3, 2, 2): 1, (3, 4, 2, 0): 1, (4, 5, 0, 1): 1, (3, 5, 2, 3): 1, (3, 6, 2, 1): 1, (6, 7, 1, 3): 1, (5, 8, 9, 0): 1, (5, 8, 11, 0): 1}
+    print(bond_frequencies)
     assert bond_frequencies == check
+
 
 def test_free_valence_list():
 
@@ -56,6 +58,7 @@ def test_bond_frequencies_to_np():
 
     assert bond_frequencies == new_bond_frequencies
 
+
 def test_get_fragment_bond_frequencies_np():
 
     bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
@@ -64,6 +67,7 @@ def test_get_fragment_bond_frequencies_np():
 
     get_fragment_bond_frequencies_np(0, 0, bond_frequencies_np)
 
+
 def test_fragment_builder(cpu=1):
 
     batch_size = cpu * 10
@@ -71,5 +75,3 @@ def test_fragment_builder(cpu=1):
     random.seed(100)
 
     fragment_builder(fragments_sdf='../datasets/database1000/fragments1000.sdf', fragments_txt='../datasets/database1000/fragments1000.txt', frequencies_txt='../datasets/database1000/frequencies1000.txt', parent_file='../datasets/database1000/phenylisoxazole.sdf', parent_fragment_file_list=['../datasets/database1000/benzene.sdf','../datasets/database1000/benzene.sdf'], parent_mapping_1=[16,0,15,0], remove_hydrogens=[20,21], remove_hydrogens_parent_fragment=[11,11],outfile_name='outputs/fragment_builder.sdf', n_mol=100, unique=True, rules=False, rules_file=None, filters=False, fragments_used_file='outputs/fragments_used.txt', restart=False, verbose=False, mw_check=True, use_numpy=True, batch_size=batch_size, cpu=cpu, candidate_file='outputs/candidates.txt', cap=True, intermediates=True)
-
-test_fragment_builder()

@@ -15,6 +15,7 @@ def test_cehmbl_molecules():
             m = molecule_from_smiles(smiles_string)
             assert m is not None
 
+
 def test_implicit_hydrogen():
     m = molecule_from_smiles("C")
     assert m.atom_count == 5
@@ -112,7 +113,23 @@ def test_frac_valence():
     m3 = Molecule.randomly_glue_together(m1, m2, RandomBondGenerator())
     m3.hydrogenate()
 
+
 def test_attach_points():
     mol = molecule_from_sdf('../datasets/database1000/fragments1_1.sdf')
 
     assert mol.attach_points == [0]
+
+def test_free_valence():
+
+    free_valence_list = []
+
+    for i in range(9):
+
+        mol = molecule_from_sdf(f'../datasets/database1000/fragments1_{i}.sdf')
+
+        print(mol.free_valence_original)
+        free_valence_list.append(mol.free_valence(0))
+    print(free_valence_list)
+    assert free_valence_list == [1, 1, 0, 0, 2, 0, 0, 0, 1]
+
+test_free_valence()

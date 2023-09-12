@@ -145,7 +145,6 @@ class Molecule:
                 if is_integer_order(v) and to_integer_order(v) > 0:
                     for j in range(v):
                         points.append(i)
-            print('molecule free valence original called')
             self._free_valence_original = points
         return self._free_valence_original
 

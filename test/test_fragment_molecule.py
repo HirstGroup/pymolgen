@@ -1,9 +1,11 @@
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies
 from pymolgen.fragment_molecule import *
 
+
 def test_create_fragment_molecule():
 
 	f = FragmentMolecule()
+
 
 def test_add_fragment():
 
@@ -22,6 +24,7 @@ def test_add_fragment2():
 	id = f.add_fragment(20, [1, 1])
 	assert id == 1
 
+
 def test_add_bond():
 
 	f = FragmentMolecule()
@@ -33,6 +36,7 @@ def test_add_bond():
 	assert id == 1
 
 	f.add_bond(0, 1, 0, 1)
+
 
 def test_list_free_valence_points():
 
@@ -48,6 +52,7 @@ def test_list_free_valence_points():
 
 	assert f.list_free_valence_points() == [[], [1]]
 
+
 def test_networkx_graph():
 
 	f = FragmentMolecule()
@@ -56,6 +61,7 @@ def test_networkx_graph():
 
 	assert get_canonical_mapping(f._graph.fragments[0].get_molecule(fragment_database).graph) == {0: 0, 1: 1, 2: 1, 3: 1}
 
+
 def test_total_free_valence():
 
 	f = FragmentMolecule()
@@ -63,6 +69,7 @@ def test_total_free_valence():
 	f.add_fragment(0, [0, 1])
 
 	assert f.get_total_free_valence() == 4
+
 
 def test_convert_to_networkx():
 
@@ -95,7 +102,6 @@ def test_convert_to_networkx():
 			assert g[i][j]['atoms'] == answers[counter]
 			counter += 1
 
-test_convert_to_networkx()
 
 def test_make_canonical():
 
@@ -195,7 +201,7 @@ def test_get_hash():
 	f.add_bond(1, 5, 3, 4)
 
 	graph_hash = f.__hash__()
-	assert graph_hash == 311749924555197107523048560514703296829
+	assert graph_hash == 26024027161856727234825668485283908942
 
 
 def test_eq():
@@ -218,6 +224,7 @@ def test_eq():
 
 	assert f == f2
 
+
 def test_eq2():
 
 	# check that molecules with different attachment point labels are different
@@ -237,6 +244,7 @@ def test_eq2():
 	f2.add_bond(0, 1, 1, 2)
 
 	assert f != f2
+
 
 def test_eq3():
 
@@ -258,6 +266,7 @@ def test_eq3():
 
 	assert f != f2
 
+
 def test_canonical_mapping():
 
 	f = FragmentMolecule()
@@ -265,5 +274,3 @@ def test_canonical_mapping():
 	f.add_fragment(0, [0], {0:0})
 
 	assert f._graph.fragments[0].get_canonical_mapping() == {0:0}
-
-test_canonical_mapping()

@@ -1,4 +1,4 @@
-Molecule
+None
  pymolgen
 
   4  3  0  0  1  0  0  0  0  0999 V2000
@@ -14,7 +14,7 @@ M  END
 4 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   6  6  0  0  1  0  0  0  0  0999 V2000
@@ -35,7 +35,7 @@ M  END
 4 4 4 3 2 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   2  1  0  0  1  0  0  0  0  0999 V2000
@@ -47,7 +47,7 @@ M  END
 1 3 
 
 $$$$
-Molecule
+None
  pymolgen
 
   2  1  0  0  1  0  0  0  0  0999 V2000
@@ -59,7 +59,7 @@ M  END
 4 2 
 
 $$$$
-Molecule
+None
  pymolgen
 
   3  2  0  0  1  0  0  0  0  0999 V2000
@@ -73,7 +73,7 @@ M  END
 1 1 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   3  2  0  0  1  0  0  0  0  0999 V2000
@@ -87,7 +87,7 @@ M  END
 6 2 2 
 
 $$$$
-Molecule
+None
  pymolgen
 
  12 13  0  0  1  0  0  0  0  0999 V2000
@@ -121,7 +121,7 @@ M  END
 4 4 4 3 1 1 1 4 4 4 4 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
  10 10  0  0  1  0  0  0  0  0999 V2000
@@ -150,7 +150,7 @@ M  END
 1 4 4 4 4 4 1 1 1 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   8  8  0  0  1  0  0  0  0  0999 V2000
@@ -175,7 +175,7 @@ M  END
 1 1 1 4 4 3 3 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   1  0  0  0  1  0  0  0  0  0999 V2000
@@ -185,7 +185,7 @@ M  END
 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   2  1  0  0  1  0  0  0  0  0999 V2000
@@ -197,7 +197,7 @@ M  END
 1 2 
 
 $$$$
-Molecule
+None
  pymolgen
 
  14 15  0  0  1  0  0  0  0  0999 V2000
@@ -235,7 +235,7 @@ M  END
 4 4 3 1 4 4 4 4 4 4 4 2 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   8  8  0  0  1  0  0  0  0  0999 V2000
@@ -260,7 +260,7 @@ M  END
 4 4 4 1 1 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  10 10  0  0  1  0  0  0  0  0999 V2000
@@ -289,7 +289,7 @@ M  END
 1 1 1 1 4 4 4 4 3 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
  53 54  0  0  1  0  0  0  0  0999 V2000
@@ -405,7 +405,7 @@ M  END
 3 4 2 4 4 4 4 4 4 4 2 1 2 4 1 4 1 1 1 3 4 2 4 3 4 2 4 1 3 4 2 4 3 4 2 4 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  12 12  0  0  1  0  0  0  0  0999 V2000
@@ -438,7 +438,7 @@ M  END
 1 1 1 1 1 1 1 3 4 4 4 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   2  1  0  0  1  0  0  0  0  0999 V2000
@@ -450,7 +450,7 @@ M  END
 4 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   2  1  0  0  1  0  0  0  0  0999 V2000
@@ -462,7 +462,7 @@ M  END
 3 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   3  2  0  0  1  0  0  0  0  0999 V2000
@@ -476,7 +476,7 @@ M  END
 1 1 3 
 
 $$$$
-Molecule
+None
  pymolgen
 
  11 11  0  0  1  0  0  0  0  0999 V2000
@@ -507,7 +507,7 @@ M  END
 4 4 4 1 1 1 1 1 4 4 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
  10 10  0  0  1  0  0  0  0  0999 V2000
@@ -536,7 +536,7 @@ M  END
 4 4 4 4 4 4 1 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   5  5  0  0  1  0  0  0  0  0999 V2000
@@ -555,7 +555,7 @@ M  END
 4 3 2 4 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
  13 14  0  0  1  0  0  0  0  0999 V2000
@@ -591,7 +591,7 @@ M  END
 1 4 4 4 4 4 4 3 1 1 4 3 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   7  7  0  0  1  0  0  0  0  0999 V2000
@@ -614,7 +614,7 @@ M  END
 4 1 3 3 4 1 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
  13 13  0  0  1  0  0  0  0  0999 V2000
@@ -649,7 +649,7 @@ M  END
 1 1 1 1 1 1 3 4 2 4 4 4 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   1  0  0  0  1  0  0  0  0  0999 V2000
@@ -659,7 +659,7 @@ M  END
 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  16 17  0  0  1  0  0  0  0  0999 V2000
@@ -701,7 +701,7 @@ M  END
 1 1 1 1 1 3 4 4 4 3 3 4 4 4 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   1  0  0  0  1  0  0  0  0  0999 V2000
@@ -711,7 +711,7 @@ M  END
 2 
 
 $$$$
-Molecule
+None
  pymolgen
 
  14 15  0  0  1  0  0  0  0  0999 V2000
@@ -749,7 +749,7 @@ M  END
 4 4 4 2 4 4 4 4 4 4 4 2 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   9  9  0  0  1  0  0  0  0  0999 V2000
@@ -776,7 +776,7 @@ M  END
 4 4 4 4 1 4 4 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  19 20  0  0  1  0  0  0  0  0999 V2000
@@ -824,7 +824,7 @@ M  END
 4 4 4 4 4 4 4 3 1 1 1 1 1 1 1 1 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
   8  8  0  0  1  0  0  0  0  0999 V2000
@@ -849,7 +849,7 @@ M  END
 1 1 1 4 4 4 4 2 
 
 $$$$
-Molecule
+None
  pymolgen
 
  10 10  0  0  1  0  0  0  0  0999 V2000
@@ -878,7 +878,7 @@ M  END
 4 4 4 1 4 4 4 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  16 16  0  0  1  0  0  0  0  0999 V2000
@@ -919,7 +919,7 @@ M  END
 1 1 1 1 1 4 1 4 3 4 4 4 1 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  11 11  0  0  1  0  0  0  0  0999 V2000
@@ -950,7 +950,7 @@ M  END
 3 4 4 1 1 4 4 2 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  15 15  0  0  1  0  0  0  0  0999 V2000
@@ -989,7 +989,7 @@ M  END
 1 1 3 4 1 1 4 1 1 4 4 4 1 1 1 
 
 $$$$
-Molecule
+None
  pymolgen
 
  15 16  0  0  1  0  0  0  0  0999 V2000
@@ -1029,7 +1029,7 @@ M  END
 1 1 1 1 4 4 3 4 4 1 4 4 4 1 4 
 
 $$$$
-Molecule
+None
  pymolgen
 
   9  9  0  0  1  0  0  0  0  0999 V2000

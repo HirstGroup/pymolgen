@@ -184,6 +184,7 @@ class Molecule:
         -------
         The unbonded valence of the atom i
         """
+
         return max(self.graph.nodes[i]["valence"] - self.total_order_of_bonds(i), 0.0)
 
     def set_hybridization(self):
@@ -618,14 +619,7 @@ class Molecule:
                     nodes.add(node)
 
             frag = self.get_fragment(nodes)
-            #if cyclic:
-            #    counter += 1
-            #    lines = molecule_to_sdf(self)
-            #    with open("cyclic-mol-%s.sdf" %counter, 'w') as outfile:
-            #        for line in lines: outfile.write(line)
-            #    lines = molecule_to_sdf(frag)
-            #    with open("cyclic-frag-%s.sdf" %counter, 'w') as outfile:
-            #        for line in lines: outfile.write(line)
+
             if frag is not None:
                 return frag
 
@@ -647,9 +641,7 @@ class Molecule:
             A fragment of this molecule, with apropritate
             free valence points along cleaved bonds
         """
-        #print("counter = ", counter)
-        #from pymolgen.molecule_visualization import plot_molecule_graph
-        #from pymolgen.molecule_formats import molecule_to_sdf
+
         cyclic = False
         while True:
 
@@ -708,14 +700,7 @@ class Molecule:
                     nodes.add(node)
 
                 frag = self.get_fragment(nodes)
-            #if cyclic:
-            #    counter += 1
-            #    lines = molecule_to_sdf(self)
-            #    with open("cyclic-mol-%s.sdf" %counter, 'w') as outfile:
-            #        for line in lines: outfile.write(line)
-            #    lines = molecule_to_sdf(frag)
-            #    with open("cyclic-frag-%s.sdf" %counter, 'w') as outfile:
-            #        for line in lines: outfile.write(line)
+
             if current_frag is not None:
                 return current_frag
 

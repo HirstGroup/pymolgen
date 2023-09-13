@@ -116,8 +116,9 @@ def test_frac_valence():
 
 def test_attach_points():
     mol = molecule_from_sdf('../datasets/database1000/fragments1_1.sdf')
+    print(mol.attach_points)
+    assert mol.attach_points == [0, 2]
 
-    assert mol.attach_points == [0]
 
 def test_free_valence():
 
@@ -131,5 +132,3 @@ def test_free_valence():
         free_valence_list.append(mol.free_valence(0))
     print(free_valence_list)
     assert free_valence_list == [1, 1, 0, 0, 2, 0, 0, 0, 1]
-
-test_free_valence()

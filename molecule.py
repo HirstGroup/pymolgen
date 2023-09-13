@@ -54,7 +54,6 @@ class Molecule:
         """
         self._graph: Optional[networkx.Graph] = None
         self._allow_frac_order: bool = allow_frac_order
-        self._attach_points = None
         self._free_valence_original = None
 
     ##############
@@ -102,14 +101,12 @@ class Molecule:
         List of points where this molecule fragment
         could attach to another molecule fragment.
         """
-        if self._attach_points is None:
-            points = []
-            for i in self.graph:
-                v = self.free_valence(i)
-                if is_integer_order(v) and to_integer_order(v) > 0:
-                    points.append(i)
-            self._attach_points = points
-        return self._attach_points
+        points = []
+        for i in self.graph:
+            v = self.free_valence(i)
+            if is_integer_order(v) and to_integer_order(v) > 0:
+                points.append(i)
+        return points
 
     @property
     def free_valence_list(self) -> List[int]:

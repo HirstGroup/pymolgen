@@ -488,7 +488,7 @@ def get_aromatic_carbons(rdmol):
 
     return aromatic_carbons
 
-def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=None, copy=None, limit=None, filter=False, first=None, inchi_filter=None, pains=False, sort=False, test=False):
+def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=None, copy=None, limit=None, filter=False, filter_ids=None, first=None, inchi_filter=None, pains=False, sort=False, test=False):
 
     if first is not None:
 
@@ -622,6 +622,13 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
 
         sys.exit('Fragment database filetered')
 
+    if filter_ids is not None:
+
+        remove_filter_ids(filter_ids, fragment_database_mol, frequencies)
+
+        print('Fragment IDS filtered')
+        sys.exit(0)
+
     if limit is not None:
         print('Before limit ', len(fragment_database))
         fragment_database, frequencies, frag_frequencies, frag_mapping = update_limit(limit, fragment_database, frequencies, frag_frequencies, frag_mapping)
@@ -656,6 +663,51 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
         print(fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
 
         combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit)
+
+
+def remove_filter_ids(filter_ids, fragment_database_mol, frequencies, folder='.'):
+    """
+    Remove fragments in filter_ids from fragment database frequencies
+
+    Parameters
+    ----------
+    filter_ids : list of int
+        list of fragment ids to remove
+    fragment_database_mol : list of mol
+        list of fragments as molecule objects
+    frequencies : list of tuples
+        list of bond frequencies as tuples
+    folder : str, optional
+        name of folder to save filter_ids.sdf with removed fragments
+
+    Returns
+    -------
+    None (saves new frequency files with fragments removed)
+    """
+
+    # create filter_list of fragments to keep (those not in filter_ids)
+    filter_list = [i for i in range(len(fragment_database_mol)) if i not in filter_ids]
+
+    # save fragments being filtered
+    with open(f'{folder}/filter_ids.sdf', 'w') as outfile:
+
+        for i in filter_ids:
+
+            mol = fragment_database_mol[i]
+
+            lines = molecule_to_sdf(mol)
+
+            for line in lines:
+                outfile.write(line)
+
+            outfile.write('$$$$\n')        
+
+    frequencies = remove_bond_frequencies(frequencies, filter_list)
+
+    save_frequencies_txt(frequencies, 'filter_id_bond_frequencies.txt')
+
+    return frequencies
+
 
 def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, frag_mapping):
 
@@ -745,16 +797,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Combine fragmented molecules')
     
     # required arguments
-    parser.add_argument('-n','--n_files', help='Number of fragment files to combine',required=True, type=int)
-    parser.add_argument('-i','--in_sub', help='Input subscript',required=True)
-    parser.add_argument('-o','--out_sub', help='Output subscript',required=True)
+    parser.add_argument('-n','--n_files', help='Number of fragment files to combine', type=int, required=True)
+    parser.add_argument('-i','--in_sub', help='Input subscript', required=True)
+    parser.add_argument('-o','--out_sub', help='Output subscript', required=True)
 
     # optional arguments
-    parser.add_argument('-f','--first', help='First file index to consider',required=False, type=int)
-    parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider',required=False, type=int)
+    parser.add_argument('-f','--first', help='First file index to consider', type=int, required=False)
+    parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider', type=int, required=False)
     parser.add_argument('--core', type=int, help='Filter by frequency of core fragments (equivalent fragments of any protonation state)', required=False)
     parser.add_argument('--copy', nargs='+', help='Fragment_a and fragment_b to copy bond frequencies', required=False)
     parser.add_argument('--filter', action='store_true', help='Filter fragment database', required=False)
+    parser.add_argument('--filter_ids', nargs='+', help='Space-separated list of fragment ids to remove', type=int, required=False)
     parser.add_argument('--inchi_filter', help='Inchi list to filter',required=False)
     parser.add_argument('--pains', action='store_true', help='Filter fragments with pains', required=False)
     parser.add_argument('--sort', action='store_true', help='Sort fragment data and exit', required=False)
@@ -779,6 +832,6 @@ if __name__ == '__main__':
     frequencies_txt_out = 'frequencies%s.txt' %out_sub
     frag_frequencies_txt_out = 'frag_frequencies%s.txt' %out_sub
 
-    loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=args.core, copy=args.copy, filter=args.filter, first=args.first, limit=args.limit, inchi_filter=args.inchi_filter, pains=args.pains, sort=args.sort, test=args.test)
+    loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=args.core, copy=args.copy, filter=args.filter, filter_ids=args.filter_ids, first=args.first, limit=args.limit, inchi_filter=args.inchi_filter, pains=args.pains, sort=args.sort, test=args.test)
 
     print('Normal termination')

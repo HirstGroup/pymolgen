@@ -6,7 +6,7 @@ def test_pains():
 
 	pains_smi = []
 
-	with open('test_pains.csv') as infile:
+	with open('inputs/test_pains.csv') as infile:
 		next(infile)
 		for line in infile:
 			smi = line.split(';')[1].strip('\n')

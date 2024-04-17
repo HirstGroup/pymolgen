@@ -3,39 +3,41 @@ import sys,os
 from pymolgen.generate import SDFDatasetLarge
 from pymolgen.molecule_formats import *
 
-dataset = SDFDatasetLarge('../datasets/database1000/database1000.sdf')
+def test1():
 
-#print(dataset.start_lines[:1000])
+	dataset = SDFDatasetLarge('../datasets/database1000/database1000.sdf')
 
-smiles = []
+	#print(dataset.start_lines[:1000])
 
-outfile = open('test_database.sdf', 'w')
+	smiles = []
 
-for i in range(35):
+	outfile = open('test_database.sdf', 'w')
 
-	mol = dataset.load_molecule(i)
+	for i in range(35):
 
-	smi = molecule_to_smiles(mol)
+		mol = dataset.load_molecule(i)
 
-	smiles.append(smi)
+		smi = molecule_to_smiles(mol)
 
-	lines = molecule_to_sdf(mol)
+		smiles.append(smi)
 
-	for line in lines:
-		outfile.write(line)
-	outfile.write('$$$$\n')
+		lines = molecule_to_sdf(mol)
 
-outfile.close()
+		for line in lines:
+			outfile.write(line)
+		outfile.write('$$$$\n')
 
-os.system('obabel -xn -isdf test_database.sdf -ocan -O test_database.can -b')
+	outfile.close()
 
-with open('test_database.can') as infile1, open('../datasets/database1000/database1000.can') as infile2:
+	os.system('obabel -xn -isdf test_database.sdf -ocan -O test_database.can -b')
 
-	n = 0
-	for line1, line2 in zip(infile1, infile2):
-		print(n)
-		print(line1)
-		print(line2)
-		assert line1.strip() == line2.strip()
-		n += 1
+	with open('test_database.can') as infile1, open('../datasets/database1000/database1000.can') as infile2:
+
+		n = 0
+		for line1, line2 in zip(infile1, infile2):
+			print(n)
+			print(line1)
+			print(line2)
+			assert line1.strip() == line2.strip()
+			n += 1
 

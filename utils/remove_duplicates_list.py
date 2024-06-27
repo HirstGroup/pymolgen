@@ -1,7 +1,5 @@
-import sys,os
-import pandas as pd
-import numpy as np
 import argparse
+import sys,os
 
 from functools import partial
 

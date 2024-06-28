@@ -7,7 +7,7 @@ from pymolgen.utils.classify_meta_para import *
 
 def test1():
 
-	os.system('python ../classify_meta_para.py -i input/inchi10.inchi -o output/inchi10_classify.inchi')
+	os.system('python ../classify_meta_para.py -i input/inchi10.inchi -fi inchi -o output/inchi10_classify.inchi')
 
 	assert filecmp.cmp('output/inchi10_classify.inchi', 'input/inchi10_classify.inchi') is True
 
@@ -45,6 +45,24 @@ def test2():
 	mol_type = classify(mol)
 
 	assert mol_type == 'para'
+
+
+def test3():
+	# test csv input
+
+	df = pd.read_csv('input/calculator10.csv', sep=';')
+
+	df['mol_type'] = df.apply(classify_row, axis=1)
+
+	print(df)
+
+
+def test4():
+	# test csv input command line
+
+	os.system('python ../classify_meta_para.py -i input/calculator10.csv -fi csv -o output/calculator10_classify.csv')
+
+	assert filecmp.cmp('input/calculator10_classify.csv', 'output/calculator10_classify.csv') is True
 
 
 

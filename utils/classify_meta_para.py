@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import pandas as pd
 
 from rdkit import Chem
 
@@ -36,23 +37,52 @@ def classify(mol):
 	return mol_type
 
 
+def classify_row(row):
+	"""
+	Run classify function for pandas row
+
+	Parameters
+	----------
+	row : pandas row
+	"""
+
+	mol = Chem.inchi.MolFromInchi(row['inchi'])
+
+	mol_type = classify(mol)
+
+	return mol_type
+
+
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Classify molecules as meta, para or meta/para')
 	
-	parser.add_argument('-i','--input', help='List of molecules as inchis',required=True)
+	parser.add_argument('-i','--input', help='Input file',required=True)
+	parser.add_argument('-fi','--format_input', help='Format of input file, either inchi or csv (separated by ;)',required=True)
 	parser.add_argument('-o','--output', help='Output file',required=True)
 
 	args = parser.parse_args()
 
-	infile = open(args.input)
 	outfile = open(args.output, 'w')
 
-	for line in infile:
-		inchi = line.split()[0]
+	if args.format_input == 'inchi':
 
-		mol = Chem.inchi.MolFromInchi(inchi)
+		infile = open(args.input)
 
-		mol_type = classify(mol)
+		for line in infile:
+			inchi = line.split()[0]
 
-		outfile.write(f'{inchi} {mol_type}\n')
+			mol = Chem.inchi.MolFromInchi(inchi)
+
+			mol_type = classify(mol)
+
+			outfile.write(f'{inchi} {mol_type}\n')
+
+	elif args.format_input == 'csv':
+
+		df = pd.read_csv(args.input, sep=';')
+
+		df['mol_type'] = df.apply(classify_row, axis=1)
+
+		df.to_csv(args.output, sep=';', index=False)
+

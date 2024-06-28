@@ -17,8 +17,10 @@ df = pd.read_csv(args.input[0], sep=';')
 
 for i in args.input[1:]:
 
-	df2 = pd.read_csv(i, sep=';')
+    print(i)
 
-	df = pd.concat([df, df2])
+    df2 = pd.read_csv(i, sep=';')
+
+    df = pd.concat([df, df2])
 
 df.to_csv(args.output, sep=';', index=False)

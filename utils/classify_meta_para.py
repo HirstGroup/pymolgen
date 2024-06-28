@@ -11,78 +11,80 @@ parameta = Chem.MolFromSmarts("[cH]1c(-*)c(-*)[cH][cH]c1-c2c(-[#6])onc2-[#6]")
 
 
 def classify(mol):
-	"""
-	Classify RDKit molecule into meta, para or meta/para
+    """
+    Classify RDKit molecule into meta, para or meta/para
 
-	Parameters
-	----------
-	mol : RDKit molecule object
+    Parameters
+    ----------
+    mol : RDKit molecule object
 
-	Returns
-	-------
-	mol_type : str
-		classification of molecule into meta, para or parameta
+    Returns
+    -------
+    mol_type : str
+        classification of molecule into meta, para or parameta
 
-	"""
+    """
 
-	mol_type = 'NONE'
+    mol_type = 'NONE'
 
-	if mol.HasSubstructMatch(para):
-		mol_type = 'para'
-	elif mol.HasSubstructMatch(meta):
-		mol_type = 'meta'
-	elif mol.HasSubstructMatch(parameta):
-		mol_type = 'parameta'
+    if mol.HasSubstructMatch(para):
+        mol_type = 'para'
+    elif mol.HasSubstructMatch(meta):
+        mol_type = 'meta'
+    elif mol.HasSubstructMatch(parameta):
+        mol_type = 'parameta'
 
-	return mol_type
+    return mol_type
 
 
 def classify_row(row):
-	"""
-	Run classify function for pandas row
+    """
+    Run classify function for pandas row
 
-	Parameters
-	----------
-	row : pandas row
-	"""
+    Parameters
+    ----------
+    row : pandas row
+    """
 
-	mol = Chem.inchi.MolFromInchi(row['inchi'])
+    mol = Chem.inchi.MolFromInchi(row['inchi'])
 
-	mol_type = classify(mol)
+    mol_type = classify(mol)
 
-	return mol_type
+    return mol_type
 
 
 if __name__ == '__main__':
 
-	parser = argparse.ArgumentParser(description='Classify molecules as meta, para or meta/para')
-	
-	parser.add_argument('-i','--input', help='Input file',required=True)
-	parser.add_argument('-fi','--format_input', help='Format of input file, either inchi or csv (separated by ;)',required=True)
-	parser.add_argument('-o','--output', help='Output file',required=True)
+    parser = argparse.ArgumentParser(description='Classify molecules as meta, para or meta/para')
+    
+    parser.add_argument('-i','--input', help='Input file',required=True)
+    parser.add_argument('-fi','--format_input', help='Format of input file, either inchi or csv (separated by ;)',required=True)
+    parser.add_argument('-o','--output', help='Output file',required=True)
 
-	args = parser.parse_args()
+    args = parser.parse_args()
 
-	outfile = open(args.output, 'w')
+    outfile = open(args.output, 'w')
 
-	if args.format_input == 'inchi':
+    if args.format_input == 'inchi':
 
-		infile = open(args.input)
+        infile = open(args.input)
 
-		for line in infile:
-			inchi = line.split()[0]
+        for line in infile:
+            inchi = line.split()[0]
 
-			mol = Chem.inchi.MolFromInchi(inchi)
+            mol = Chem.inchi.MolFromInchi(inchi)
 
-			mol_type = classify(mol)
+            mol_type = classify(mol)
 
-			outfile.write(f'{inchi} {mol_type}\n')
+            outfile.write(f'{inchi} {mol_type}\n')
 
-	elif args.format_input == 'csv':
+    elif args.format_input == 'csv':
 
-		df = pd.read_csv(args.input, sep=';')
+        df = pd.read_csv(args.input, sep=';')
 
-		df['mol_type'] = df.apply(classify_row, axis=1)
+        df['mol_type'] = df.apply(classify_row, axis=1)
 
-		df.to_csv(args.output, sep=';', index=False)
+        df.to_csv(args.output, sep=';', index=False)
+
+    print('Normal termination')
 

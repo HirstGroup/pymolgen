@@ -73,10 +73,15 @@ def oeLogP_oemol(oemol):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
-    parser.add_argument('-i','--input', help='Input file of inchi',required=True)
+    parser = argparse.ArgumentParser(description='Calculate properties for molecules')
+
+    # required arguments
+    parser.add_argument('-i','--input', help='Input file with list of molecules in inchi format',required=True)
     parser.add_argument('-o','--output', help='Output file',required=True)
+
+    # optional arguments
     parser.add_argument('-bp', '--build_probability', action='store_true', default=False, help='Read build probability from input and save into output', required=False)
+    parser.add_argument('--classify', action='store_true', default=False, help='Classify molecules into meta, para and meta/para', required=False)
     parser.add_argument('--mw_threshold', type=float, help='MW threshold', default = 500.0, required=False)
 
     args = parser.parse_args()
@@ -86,6 +91,7 @@ if __name__ == '__main__':
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk', tauto=False)
     print(pIC50_pred_model.info)
     print(pIC50_pred_model.version)
+
     # Run prediction model once to initialise:
     _ = pIC50_pred_model.predict('C')[0]
 
@@ -93,16 +99,23 @@ if __name__ == '__main__':
         outfile.write('inchi;smi;mw;n_rot_bonds;n_chiral;h_acc;h_don;psa;logp;n_aromatic;pfi;pIC50_pred;mpo;filter_pass')
         if args.build_probability is True:
             outfile.write(';build_probability')
+        if args.classify is True:
+            outfile.write(';mol_type')
         outfile.write('\n')
         print('Writing to', args.output)
 
     infile = open(args.input)
+
+    if args.classify:
+        from pymolgen.utils.classify_meta_para import classify
 
     for line in infile:
 
         inchi = line.split()[0].strip('\n')
 
         mw, n_rot_bonds, n_chiral, h_acc, h_don, psa, logp, n_aromatic, pfi, pIC50_pred, mpo = '', '', '', '', '', '', '', '', '', '', ''
+        if args.classify:
+            mol_type = ''
 
         filter_pass = None
 
@@ -167,6 +180,9 @@ if __name__ == '__main__':
 
             mpo = round((-pIC50_pred)*(1/(1 + np.exp(pfi - 8))), 2)
 
+            if args.classify:
+                mol_type = classify(rdmol)
+
         except:
             print('Could not calculate properties for', inchi)
 
@@ -174,6 +190,8 @@ if __name__ == '__main__':
             out.write(f'{inchi};{smi};{mw};{n_rot_bonds};{n_chiral};{h_acc};{h_don};{psa};{logp};{n_aromatic};{pfi};{pIC50_pred};{mpo};{filter_pass}')
             if args.build_probability is True:
                 out.write(f';{build_probability}')
+            if args.classify is True:
+                out.write(f';{mol_type}')
             out.write('\n')
 
     sys.exit('Normal termination')

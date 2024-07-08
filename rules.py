@@ -3,10 +3,14 @@ import argparse
 import pandas as pd
 import subprocess
 
-parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
-parser.add_argument('-i','--input', help='Input File Name',required=True)
+parser = argparse.ArgumentParser(description="Run Lilly's Medchem rules on generated molecules")
+
+# Required arguments
+parser.add_argument('-i','--input', help='Input csv File Name, separated by semicolon',required=True)
 parser.add_argument('-o','--output', help='Output File Name',required=True)
 parser.add_argument('-r','--rules_file', help='Rules File Name',required=True)
+
+# Optional arguments
 parser.add_argument('--all', action='store_true', default=True, help='Run rules on all molecules, not just those that passed filters', required=False)
 
 args = parser.parse_args()

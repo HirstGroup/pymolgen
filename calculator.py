@@ -77,6 +77,7 @@ if __name__ == '__main__':
 
     # required arguments
     parser.add_argument('-i','--input', help='Input file with list of molecules in inchi format',required=True)
+    parser.add_argument('-l','--log', help='Log file',required=True)
     parser.add_argument('-o','--output', help='Output file',required=True)
 
     # optional arguments
@@ -87,6 +88,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     WEIGHT_THRESHOLD = args.mw_threshold
+
+    if len(set([args.input, args.output, args.log])) != 3:
+        sys.exit('Same input, output, log file names')
 
     pIC50_pred_model = Ensemble_Model_DC(home + '/PP_ML_models/pIC50.pk', tauto=False)
     print(pIC50_pred_model.info)
@@ -104,12 +108,18 @@ if __name__ == '__main__':
         outfile.write('\n')
         print('Writing to', args.output)
 
+    with open(args.log, 'w') as log:
+        print('Writing log to', args.log)
+
     infile = open(args.input)
 
     if args.classify:
         from pymolgen.utils.classify_meta_para import classify
 
     for line in infile:
+
+        if not line.strip():
+            continue
 
         inchi = line.split()[0].strip('\n')
 
@@ -184,6 +194,10 @@ if __name__ == '__main__':
                 mol_type = classify(rdmol)
 
         except:
+
+            with open(args.log, 'a') as log:
+                log.write(f'{inchi}\n')
+
             print('Could not calculate properties for', inchi)
 
         with open(args.output, 'a') as out:

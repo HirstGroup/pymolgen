@@ -10,7 +10,7 @@ import sys
 #df = pd.concat(tfr, ignore_index=True)
 
 #df = pd.read_csv('all_rules_pass_classify_10k.dat', sep=';')
-df = pd.read_csv('all_chembl_30_10k_calculator_ok.csv', sep=';')
+df = pd.read_csv('all_chembl_30_10k_calculator_ok_rules.csv', sep=';')
 
 print(df)
 
@@ -60,6 +60,11 @@ ax2.set_xlabel('H-bond acceptors')
 fig2.savefig('h_acc.pdf') #, dpi=600)
 """
 
+df = df.loc[df['filter_pass'] == True]
+df = df.loc[df['rules_filter'] == True]
+
+print(df)
+
 for prop in ['n_rot_bonds', 'n_chiral', 'h_acc', 'h_don', 'n_aromatic']:
 
 	print('PROP', prop)
@@ -76,7 +81,7 @@ for prop in ['n_rot_bonds', 'n_chiral', 'h_acc', 'h_don', 'n_aromatic']:
 	ax.set_ylabel('Frequency')
 	ax.set_xlabel(prop)
 
-	fig.savefig(f'{prop}.pdf') #, dpi=600)	
+	fig.savefig(f'{prop}_pass.pdf') #, dpi=600)	
 
 #, 'psa', 'logp', 'n_aromatic', 'pfi', 'pIC50_pred', 'mpo', 'filter_pass', 'index', 'rules_filter', 'mol_type']
 # ['inchi', 'smi', 'mw', 'n_rot_bonds', 'n_chiral', 'h_acc', 'h_don', 'psa', 'logp', 'n_aromatic', 'pfi', 'pIC50_pred', 'mpo', 'filter_pass', 'index', 'rules_filter', 'mol_type']
@@ -91,4 +96,4 @@ for prop in ['mw', 'psa', 'logp', 'pfi', 'pIC50_pred', 'mpo']:
 	ax.set_ylabel('Frequency')
 	ax.set_xlabel(prop)
 
-	fig.savefig(f'{prop}.pdf') #, dpi=600)	 
+	fig.savefig(f'{prop}_pass.pdf') #, dpi=600)	 

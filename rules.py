@@ -1,14 +1,16 @@
-import sys,os
 import argparse
+import os
 import pandas as pd
 import subprocess
+import sys
+
 
 parser = argparse.ArgumentParser(description="Run Lilly's Medchem rules on generated molecules")
 
 # Required arguments
 parser.add_argument('-i','--input', help='Input csv File Name, separated by semicolon',required=True)
 parser.add_argument('-o','--output', help='Output File Name',required=True)
-parser.add_argument('-r','--rules_file', help='Rules File Name',required=True)
+parser.add_argument('-r','--rules_file', help='Rules File Name where intermediate smiles will be stored, must have smi extension',required=True)
 
 # Optional arguments
 parser.add_argument('--all', action='store_true', default=True, help='Run rules on all molecules, not just those that passed filters', required=False)
@@ -18,6 +20,11 @@ args = parser.parse_args()
 df = pd.read_csv(args.input, sep=';')
 
 df['index'] = df.index
+
+filename, file_extension = os.path.splitext(args.rules_file)
+
+if file_extension != '.smi':
+    raise Exception('Rules_file must have smi extension to be recognized by Lilly_Medchem_Rules.rb')
 
 if args.all is True:
     df2 = df

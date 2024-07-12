@@ -10,7 +10,7 @@ meta = Chem.MolFromSmarts("[cH]1c(-*)[cH][cH][cH]c1-c2c(-[#6])onc2-[#6]")
 parameta = Chem.MolFromSmarts("[cH]1c(-*)c(-*)[cH][cH]c1-c2c(-[#6])onc2-[#6]")
 
 
-def classify(mol):
+def classify1(mol):
     """
     Classify RDKit molecule into meta, para or meta/para phenylisoxazole
 
@@ -37,6 +37,42 @@ def classify(mol):
     return mol_type
 
 
+def classify(inchi):
+    """
+    Classify inchi into meta, para or meta/para phenylisoxazole
+
+    Parameters
+    ----------
+    inchi : str
+        Inchi string
+
+    Returns
+    -------
+    mol_type : str
+        classification of molecule into meta, para or parameta phenylisoxazole, NONE or error
+
+    """
+
+    mol_type = 'NONE'
+
+    try:
+
+        mol = Chem.inchi.MolFromInchi(inchi)
+
+        if mol.HasSubstructMatch(para):
+            mol_type = 'para'
+        elif mol.HasSubstructMatch(meta):
+            mol_type = 'meta'
+        elif mol.HasSubstructMatch(parameta):
+            mol_type = 'parameta'
+
+    except:
+
+        mol_type = 'error'
+
+    return mol_type
+
+
 def classify_row(row):
     """
     Run classify function for pandas row
@@ -46,9 +82,9 @@ def classify_row(row):
     row : pandas row
     """
 
-    mol = Chem.inchi.MolFromInchi(row['inchi'])
+    #mol = Chem.inchi.MolFromInchi(row['inchi'])
 
-    mol_type = classify(mol)
+    mol_type = classify(row['inchi'])
 
     return mol_type
 
@@ -70,11 +106,10 @@ if __name__ == '__main__':
         infile = open(args.input)
 
         for line in infile:
+
             inchi = line.split()[0]
 
-            mol = Chem.inchi.MolFromInchi(inchi)
-
-            mol_type = classify(mol)
+            mol_type = classify(inchi)
 
             outfile.write(f'{inchi} {mol_type}\n')
 

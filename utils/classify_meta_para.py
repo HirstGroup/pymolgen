@@ -12,7 +12,7 @@ parameta = Chem.MolFromSmarts("[cH]1c(-*)c(-*)[cH][cH]c1-c2c(-[#6])onc2-[#6]")
 
 def classify(mol):
     """
-    Classify RDKit molecule into meta, para or meta/para
+    Classify RDKit molecule into meta, para or meta/para phenylisoxazole
 
     Parameters
     ----------
@@ -21,7 +21,7 @@ def classify(mol):
     Returns
     -------
     mol_type : str
-        classification of molecule into meta, para or parameta
+        classification of molecule into meta, para or parameta phenylisoxazole
 
     """
 
@@ -55,7 +55,7 @@ def classify_row(row):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Classify molecules as meta, para or meta/para')
+    parser = argparse.ArgumentParser(description='Classify molecules as meta, para or meta/para phenylisoxazole')
     
     parser.add_argument('-i','--input', help='Input file',required=True)
     parser.add_argument('-fi','--format_input', help='Format of input file, either inchi or csv (separated by ;)',required=True)

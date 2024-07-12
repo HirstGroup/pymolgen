@@ -1,20 +1,20 @@
+import argparse
 import os
 import sys
 
 from rdkit import Chem
 
-import argparse
 
- 
-parser = argparse.ArgumentParser(description='This script splits SDF file')
-parser.add_argument('-i','--input', help='Input file name', required=True)
+parser = argparse.ArgumentParser(description='Find substructure in input file')
+
+parser.add_argument('-i','--input', help='Input file name in smiles format', required=True)
 parser.add_argument('-p','--pattern_list', nargs='+', help='Smarts pattern list space separated, use individual quotation marks for each pattern', required=True)
 parser.add_argument('-o1','--output_true', help='Output file name of molecules that contain pattern', required=True)
 parser.add_argument('-o2','--output_false', help='Output file name of molecules that do not contain pattern', required=True)
+
 args = parser.parse_args()
 
 pattern_list = args.pattern_list
-
 
 pattern_list_objects = [Chem.MolFromSmarts(x) for x in pattern_list]
 

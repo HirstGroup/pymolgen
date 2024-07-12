@@ -2,8 +2,9 @@ import argparse
 
 from pymolgen.fragment_mol import *
 
-parser = argparse.ArgumentParser(description='Fragment molecules in database')
-parser.add_argument('-i','--input', help='Input file',required=True)
+parser = argparse.ArgumentParser(description='Fragment molecules in input file and find substructure')
+
+parser.add_argument('-i','--input', help='Input file in SDF format',required=True)
 parser.add_argument('-o','--output', help='Output file',required=True)
 parser.add_argument('-f', '--fragment', help='Fragment file')
 

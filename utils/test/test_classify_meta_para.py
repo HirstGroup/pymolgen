@@ -2,8 +2,8 @@ import filecmp
 import os
 import sys
 
-from pymolgen.utils.classify_meta_para import *
-
+sys.path.append('../../')
+from utils.classify_meta_para import *
 
 def test1():
 

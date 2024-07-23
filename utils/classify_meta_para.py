@@ -5,36 +5,9 @@ import pandas as pd
 
 from rdkit import Chem
 
-para = Chem.MolFromSmarts("[cH]1[cH]c(-*)[cH][cH]c1-c2c(-[#6])onc2-[#6]")
-meta = Chem.MolFromSmarts("[cH]1c(-*)[cH][cH][cH]c1-c2c(-[#6])onc2-[#6]")
-parameta = Chem.MolFromSmarts("[cH]1c(-*)c(-*)[cH][cH]c1-c2c(-[#6])onc2-[#6]")
-
-
-def classify1(mol):
-    """
-    Classify RDKit molecule into meta, para or meta/para phenylisoxazole
-
-    Parameters
-    ----------
-    mol : RDKit molecule object
-
-    Returns
-    -------
-    mol_type : str
-        classification of molecule into meta, para or parameta phenylisoxazole
-
-    """
-
-    mol_type = 'NONE'
-
-    if mol.HasSubstructMatch(para):
-        mol_type = 'para'
-    elif mol.HasSubstructMatch(meta):
-        mol_type = 'meta'
-    elif mol.HasSubstructMatch(parameta):
-        mol_type = 'parameta'
-
-    return mol_type
+para = Chem.MolFromSmarts("[cH]1[cH]c(-*)[cH][cH]c1-c2c(-[CH3])onc2-[CH3]")
+meta = Chem.MolFromSmarts("[cH]1c(-*)[cH][cH][cH]c1-c2c(-[CH3])onc2-[CH3]")
+parameta = Chem.MolFromSmarts("[cH]1c(-*)c(-*)[cH][cH]c1-c2c(-[CH3])onc2-[CH3]")
 
 
 def classify(inchi):

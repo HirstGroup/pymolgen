@@ -12,6 +12,7 @@ print = partial(print, flush=True)
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 
+
 def combine_fragment_databases(fragment_database, frequencies, frag_frequencies, frag_mapping, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, limit=None):
 
     fragment_database_mol2 = get_fragment_database(fragments_sdf_2)
@@ -157,6 +158,7 @@ def remove_bond_frequencies_halogen(bond_frequencies, aromatic_list, halogen_lis
 
     return d
 
+
 def list_elements(mol):
 
     elements = set()
@@ -168,6 +170,24 @@ def list_elements(mol):
 
 
 def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
+    """
+    Filter database by removing non-wanted fragments
+    Writes several sdf files with the classification of fragments
+
+    Parameters
+    ----------
+    fragment_database_mol : list of molecule objects
+        List of fragments represented as molecule objects
+    inchi_filter : str, optional
+        Inchi file with structures to remove
+    pains : bool, optional
+        If true, apply pains filters
+
+    Returns
+    -------
+    filter_list : list of molecule objects
+        List of fragment to keep, represented as molecule objects
+    """
 
     elements = set()
 
@@ -223,6 +243,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
     with open('thioether.sdf', 'w') as outfile:
         print('Writing to thioether.sdf')
 
+    # loop through all fragments, if fragment is not filtered it will be added to filter_list at the end, otherwise it will be skiped by using a continue statement
     for i in range(len(fragment_database_mol)):
 
         mol = fragment_database_mol[i]
@@ -231,10 +252,11 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
         elements.update(mol_elements)
 
+        # only keep fragments with allowed elements
         allowed_elements = {'Cl', 'Br', 'I', 'O', 'C', 'F', 'N', 'S', 'H'}
 
         allowed = True
-
+        
         for j in mol_elements:
             if j not in allowed_elements:
                 allowed = False
@@ -242,6 +264,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
         if allowed is False:
             continue
 
+        # filter by structures in inchi_list, need to first hydrogenate to do comparison
         mol_h = mol.copy()
         mol_h.hydrogenate()
 
@@ -253,6 +276,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
                 print('INCHI FILTER', inchi)
                 continue
 
+        # filter by pains
         if pains is True:
 
             oemol = oechem.OEGraphMol()
@@ -271,6 +295,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
         if rdmol is None:
             continue
 
+        # filter out rings containing more than 8 atoms
         if rdmol is not None:
             ri = rdmol.GetRingInfo()
             largest_ring_size = max((len(r) for r in ri.AtomRings()), default=0)
@@ -280,6 +305,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
                 continue
 
+        # remove cages and fused rings by analysing number of aliphatic rings and heavy atoms in fragment
         n = rdMolDescriptors.CalcNumAliphaticRings(rdmol)
 
         if n == 3:
@@ -312,6 +338,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
             continue
 
+        # remove thioether, keep sulfone, keep cyclic sulfur, remove non-cyclic sulfur
         if is_sulfur(mol):
 
             if is_thioether(mol):
@@ -336,9 +363,8 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
         save_mol_to_sdf('check.sdf', mol) 
 
-    print(elements)
-
     return filter_list
+
 
 def save_mol_to_sdf(outfile_name, mol):
 
@@ -350,6 +376,7 @@ def save_mol_to_sdf(outfile_name, mol):
 
         outfile.write('$$$$\n')    
 
+
 def is_sulfur(mol):
 
     for i in mol.graph.nodes:
@@ -358,6 +385,7 @@ def is_sulfur(mol):
 
     return False
 
+
 def has_halogen(mol):
 
     for i in mol.graph.nodes:
@@ -365,6 +393,7 @@ def has_halogen(mol):
             return True
 
     return False
+
 
 def is_cyclic_sulfur(mol):
 
@@ -379,6 +408,7 @@ def is_cyclic_sulfur(mol):
 
 
     return False
+
 
 def is_sulfone(mol):
 
@@ -403,6 +433,7 @@ def is_thioether(mol):
                     return True
 
     return False
+
 
 def copy_frequencies(fragment_database, bond_frequencies, frag_frequencies, fragment_a_i, fragment_b_sdf):
 
@@ -436,6 +467,7 @@ def copy_frequencies(fragment_database, bond_frequencies, frag_frequencies, frag
     fragment_database.append(fragment_b_mol)
 
     return fragment_database, bond_frequencies, frag_frequencies
+
 
 def exclude_aliphatic_halogen_bonds(fragment_database_mol, fragment_bond_frequencies):
 
@@ -479,6 +511,7 @@ def exclude_aliphatic_halogen_bonds(fragment_database_mol, fragment_bond_frequen
 
     return fragment_bond_frequencies
 
+
 def get_aromatic_carbons(rdmol):
 
     aromatic_carbon = Chem.MolFromSmarts("c")
@@ -488,7 +521,56 @@ def get_aromatic_carbons(rdmol):
 
     return aromatic_carbons
 
+
 def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out, core=None, copy=None, limit=None, filter=False, filter_ids=None, first=None, inchi_filter=None, pains=False, sort=False, test=False):
+    """
+    Run main loop to combine fragment databases
+
+    Parameters
+    ----------
+    n : int
+        Number of fragment files to combine
+    fragments_sdf_in : str
+        Root name of input fragment database in SDF format
+    fragments_txt_in : str
+        Root name of input fragment database in TXT format
+    frequencies_txt_in : str
+        Root name of input bond frequencies file in TXT format
+    frag_frequencies_txt_in : str
+        Root name of input fragment frequencies file in TXT format
+    fragments_sdf_out : str
+        Root name of output fragment database in SDF format
+    fragments_txt_out : str
+        Root name of output fragment database in TXT format
+    frequencies_txt_out : str
+        Root name of output bond frequencies file in TXT format
+    frag_frequencies_txt_out : str
+        Root name of output fragment frequencies file in TXT format
+    core : bool, optional
+        Filter by frequency of core fragments (equivalent fragments of any protonation state)
+    copy : pair of int, optional
+        Pair of fragment ids to copy bond frequencies from one to the other, then exits
+    limit : int, optional
+        Limit for minimum fragment frequency to consider     
+    filter : bool, optional
+        Filter fragment database, then exits
+    filter_ids : list of int, optional
+        List of fragment ids to remove, then exits
+    first : int, optional
+        First file index to consider
+    inchi_filter : str, optional
+        Inchi file with inchis to filter out
+    pains : bool, optional
+        Filter fragments with pains
+    sort : bool, optional
+        Sort fragment database according to fragment frequencies
+    test : bool, optional
+        Test run, prints how many fragments would be removed based on limit
+
+    Returns
+    -------
+    None (writes output files)
+    """
 
     if first is not None:
 
@@ -565,8 +647,6 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
                 core_frequencies[inchi] += frag_frequencies[i]
             else:
                 core_frequencies[inchi] = frag_frequencies[i]
-
-        print(len(core_frequencies))
 
         core_frequencies = dict(sorted(core_frequencies.items(), key=lambda item: item[1], reverse=True))
 
@@ -710,6 +790,36 @@ def remove_filter_ids(filter_ids, fragment_database_mol, frequencies, folder='.'
 
 
 def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, frag_mapping):
+    """
+    Remove fragments that are below frag frequency limit
+    Fragments are removed through the bond frequencies and frag_frequencies are updated accordinly, 
+    but framents stay in the database
+
+    Parameters
+    ----------
+    limit : int
+        Minimum frag frequency to keep fragments
+    fragment_database : list of molecules
+        List of molecule objects representing fragments
+    bond_frequencies : dict
+        Dictionary mapping (i,j,k,l) bond to bond frequency
+    frag_frequencies : list of int
+        List of fragment frequencies
+    frag_mapping : list of dict
+        List of dictionaries mapping original atom numbers to new atom numbers in each fragment
+
+    Returns
+    -------
+    new_fragment_database : list of molecules
+        New list of molecule objects representing fragments
+    new_bond_frequencies : dict
+        New dictionary mapping (i,j,k,l) bond to bond frequency
+    new_frag_frequencies : list of int
+        New list of fragment frequencies
+    new_frag_mapping : list of dict
+        New list of dictionaries mapping original atom numbers to new atom numbers in each fragment
+    """
+
 
     # set mapping list and loop through elements of frag_frequencies, if element < limit then set mapping to -1
     # create new fragment database with fragments that are within limit
@@ -744,7 +854,11 @@ def update_limit(limit, fragment_database, bond_frequencies, frag_frequencies, f
 
     return new_fragment_database, new_bond_frequencies, new_frag_frequencies, new_frag_mapping
 
+
 def sort_fragments(fragment_database, bond_frequencies, frag_frequencies, frag_mapping):
+    """
+    Sort fragment database according to fragment frequencies
+    """
 
     frag_frequencies_np = np.array(frag_frequencies)
     sort_index = list(np.argsort(-1*frag_frequencies_np))
@@ -781,6 +895,7 @@ def sort_fragments(fragment_database, bond_frequencies, frag_frequencies, frag_m
 
     return new_fragment_database, new_bond_frequencies, new_frag_frequencies, new_frag_mapping
 
+
 def renumber_frequencies(fragments_txt_in, frequencies_txt_in, frequencies_txt_out):
 
     frequencies = get_bond_frequencies(frequencies_txt_in)
@@ -791,10 +906,11 @@ def renumber_frequencies(fragments_txt_in, frequencies_txt_in, frequencies_txt_o
 
     save_frequencies_txt(frequencies, frequencies_txt_out)
 
+
 if __name__ == '__main__':
 
 
-    parser = argparse.ArgumentParser(description='Combine fragmented molecules')
+    parser = argparse.ArgumentParser(description='Combine fragment databases')
     
     # required arguments
     parser.add_argument('-n','--n_files', help='Number of fragment files to combine', type=int, required=True)
@@ -805,13 +921,13 @@ if __name__ == '__main__':
     parser.add_argument('-f','--first', help='First file index to consider', type=int, required=False)
     parser.add_argument('-l','--limit', help='Limit for minimum fragment frequency to consider', type=int, required=False)
     parser.add_argument('--core', type=int, help='Filter by frequency of core fragments (equivalent fragments of any protonation state)', required=False)
-    parser.add_argument('--copy', nargs='+', help='Fragment_a and fragment_b to copy bond frequencies', required=False)
-    parser.add_argument('--filter', action='store_true', help='Filter fragment database', required=False)
-    parser.add_argument('--filter_ids', nargs='+', help='Space-separated list of fragment ids to remove', type=int, required=False)
+    parser.add_argument('--copy', nargs='+', help='Fragment_a and fragment_b to copy bond frequencies from a to b, then exits', required=False)
+    parser.add_argument('--filter', action='store_true', help='Filter fragment database, then exits', required=False)
+    parser.add_argument('--filter_ids', nargs='+', help='Space-separated list of fragment ids to remove, then exits', type=int, required=False)
     parser.add_argument('--inchi_filter', help='Inchi list to filter',required=False)
     parser.add_argument('--pains', action='store_true', help='Filter fragments with pains', required=False)
     parser.add_argument('--sort', action='store_true', help='Sort fragment data and exit', required=False)
-    parser.add_argument('--test', action='store_true', help='Test run', required=False)
+    parser.add_argument('--test', action='store_true', help='Test run, prints how many fragments would be removed based on limit', required=False)
 
     args = parser.parse_args()
 

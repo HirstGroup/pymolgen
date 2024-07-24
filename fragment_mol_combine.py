@@ -119,12 +119,18 @@ def remove_bond_frequencies(bond_frequencies, fragment_list):
     return d
 
 
-def remove_bond_frequencies_halogen(bond_frequencies, aromatic_list, halogen_list):
+def remove_bond_frequencies_halogen(bond_frequencies, aromatic_list, halogen_list, verbose=False):
     """
-    Remove aliphatic bonds
+    Remove aliphatic halogen bonds
 
+    Parameters
+    ----------
+    bond_frequencies : dict
+        Dictionary mapping (i,j,k,l) bond to bond frequency
     aromatic_list: list of aromatic fragments
     halogen_list: list of halogen fragments
+    verbose : bool, optional
+        If true, print verbose output
     """
 
     aromatic_list = set(aromatic_list)
@@ -142,17 +148,17 @@ def remove_bond_frequencies_halogen(bond_frequencies, aromatic_list, halogen_lis
 
         if i in halogen_list:
             if j not in aromatic_list:
-                if val > 1000: print('HALOGEN OUT', i, j, k, l, val)
+                if verbose and val > 1000: print('HALOGEN OUT', i, j, k, l, val)
                 continue
             else:
-                if val > 1000: print('HALOGEN IN', i, j, k, l, val)
+                if verbose and val > 1000: print('HALOGEN IN', i, j, k, l, val)
 
         if j in halogen_list:
             if i not in aromatic_list:
-                if val > 1000: print('HALOGEN OUT', i, j, k, l, val)
+                if verbose and val > 1000: print('HALOGEN OUT', i, j, k, l, val)
                 continue
             else:
-                if val > 1000: print('HALOGEN IN', i, j, k, l, val)
+                if verbose and val > 1000: print('HALOGEN IN', i, j, k, l, val)
 
             d[(i,j,k,l)] = val
 
@@ -194,34 +200,34 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
     filter_list = []
 
     with open('filter.sdf', 'w') as outfile:
-        print('Writing to filter.sdf')
+        print('Writing fragments filtered out to filter.sdf')
 
     with open('aliphatic3.sdf', 'w') as outfile:
-        print('Writing to aliphatic3.sdf')
+        print('Writing fragments containing 3 aliphatic rings to aliphatic3.sdf')
 
     with open('aliphatic4.sdf', 'w') as outfile:
-        print('Writing to aliphatic4.sdf')
+        print('Writing fragments containing 4 aliphatic rings to aliphatic4.sdf')
 
     with open('cycles.sdf', 'w') as outfile:
-        print('Writing to cycles.sdf')
+        print('Writing large cycles to cycles.sdf')
 
     with open('cages3.sdf', 'w') as outfile:
-        print('Writing to cages3.sdf')
+        print('Writing fragments containing cages and 3 aliphatic rings to cages3.sdf')
 
     with open('cages4.sdf', 'w') as outfile:
-        print('Writing to cages4.sdf')
+        print('Writing fragments containing cages and 4 aliphatic rings to cages4.sdf')
 
     with open('sulfone.sdf', 'w') as outfile:
-        print('Writing to sulfone.sdf')
+        print('Writing fragments containing sulfones to sulfone.sdf')
 
     with open('sulfur_out.sdf', 'w') as outfile:
-        print('Writing to sulfone.sdf')
+        print('Writing fragments containing sulfur that were removed to sulfone.sdf')
 
     with open('sulfur_cyclic.sdf', 'w') as outfile:
-        print('Writing to sulfur_cyclic.sdf')
+        print('Writing fragments containing cyclic sulfur to sulfur_cyclic.sdf')
 
     with open('check.sdf', 'w') as outfile:
-        print('Writing to check.sdf')
+        print('Writing fragments that will be kept after filter to check.sdf')
 
     if inchi_filter is not None:
         inchi_list = set()
@@ -238,10 +244,10 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
         pains_database = gen_pains_database()
 
         with open('pains.sdf', 'w') as outfile:
-            print('Writing to pains.sdf')
+            print('Writing fragments that do not pass pains test to pains.sdf')
 
     with open('thioether.sdf', 'w') as outfile:
-        print('Writing to thioether.sdf')
+        print('Writing fragments containing thioether to thioether.sdf')
 
     # loop through all fragments, if fragment is not filtered it will be added to filter_list at the end, otherwise it will be skiped by using a continue statement
     for i in range(len(fragment_database_mol)):
@@ -305,7 +311,7 @@ def filter_database(fragment_database_mol, inchi_filter=None, pains=False):
 
                 continue
 
-        # remove cages and fused rings by analysing number of aliphatic rings and heavy atoms in fragment
+        # remove cages and rings by analysing number of aliphatic rings and heavy atoms in fragment
         n = rdMolDescriptors.CalcNumAliphaticRings(rdmol)
 
         if n == 3:
@@ -470,12 +476,28 @@ def copy_frequencies(fragment_database, bond_frequencies, frag_frequencies, frag
 
 
 def exclude_aliphatic_halogen_bonds(fragment_database_mol, fragment_bond_frequencies):
+    """
+    Exclude aliphatic halogen bonds from database
+
+    Parameters
+    ----------
+    fragment_database_mol : list of molecule objects
+        List of fragments represented as molecule objects
+    fragment_bond_frequencies : dict
+        Dictionary mapping (i,j,k,l) bond to bond frequency
+
+
+    Returns
+    -------
+    fragment_bond_frequencies : dict
+        Dictionary mapping (i,j,k,l) bond to bond frequency with removed aliphatic halogen bonds    
+    """
 
     with open('aromatic.sdf', 'w') as outfile:
-        print('Writing to aromatic.sdf')
+        print('Writing fragments containing aromatic rings to aromatic.sdf')
 
     with open('halogen.sdf', 'w') as outfile:
-        print('Writing to halogen.sdf')
+        print('Writing fragments containing halogens to halogen.sdf')
 
     halogen_list = []
 
@@ -682,6 +704,7 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
         filter_list = filter_database(fragment_database_mol, inchi_filter, pains)
 
         with open('filter_in.sdf', 'w') as outfile:
+            print('Writing fragments to keep to filter_in.sdf')
 
             for i in filter_list:
 
@@ -698,6 +721,7 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
 
         frequencies = exclude_aliphatic_halogen_bonds(fragment_database_mol, frequencies)
 
+        print('Writing new bond frequencies to filter_bond_frequencies.txt')
         save_frequencies_txt(frequencies, 'filter_bond_frequencies.txt')       
 
         sys.exit('Fragment database filetered')

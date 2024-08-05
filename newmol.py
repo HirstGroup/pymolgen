@@ -20,8 +20,6 @@ from openeye import oechem
 from pymolgen.properties_pymolgen import oeMolProp, num_atomatic_rings, num_chiral_centres, \
             num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond, pains_filter, gen_pains_database
 
-from auto_docker import PAINS_filter
-
 from functools import partial
 print = partial(print, flush=True)
 

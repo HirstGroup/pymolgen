@@ -9,7 +9,7 @@ import networkx
 import numpy as np
 
 from functools import partial
-
+from inspect import currentframe, getframeinfo
 from multiprocessing import Pool
 from networkx.algorithms import isomorphism
 
@@ -387,7 +387,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     parent_fragment_i_list = []
     for i in range(len(parent_fragment_list)):
         j = find_fragment(parent_fragment_list[i], fragment_database)
-        print(attachment_points); print('j =', j)
         parent_fragment_i_dict[attachment_points[i]] = j
         parent_fragment_i_list.append(j)
 
@@ -490,9 +489,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     while n < n_mol and run_time < time_limit:
 
-        if n % 100 == 0:
-            print(n)
-
         output_mol_list = []
 
         if parallel is not None:
@@ -576,7 +572,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 output_mol_list = rules_batch(output_mol_list, rules_file)                
 
             for mol in output_mol_list:
-                print('line579')
                 n += 1
 
                 if verbose:

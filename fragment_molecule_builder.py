@@ -149,7 +149,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
 
 def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, return_all=False, savesdf=False, sort=False, unique=True, threshold=None):
     """
-    Extend list of FragmentMolecules by adding a further fragment to each molecule.
+    Extend list of FragmentMolecules by adding a further fragment to each molecule up to a certain depth.
     """
 
     if return_all is True:

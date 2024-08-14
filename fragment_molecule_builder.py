@@ -19,7 +19,11 @@ print = partial(print, flush=True)
 
 sys.setrecursionlimit(10000)
 
+
 def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=False, threshold=None):
+    """
+    Extend a list of molecules by adding one further fragment to each molecule
+    """
 
     output_mol_list = []
 
@@ -68,7 +72,13 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
     return output_mol_list
 
-def extend_molecule_recursive(f, bond_frequencies, fragment_database_graph, threshold):
+
+def extend_molecule_recursive(fragment_molecule, bond_frequencies, fragment_database_graph, threshold):
+    """
+    Extend single FragmentMolecule recursively up to a specified threshold of build_probability
+    """
+
+    f = fragment_molecule
 
     yield f
 
@@ -107,7 +117,11 @@ def extend_molecule_recursive(f, bond_frequencies, fragment_database_graph, thre
                     for new_mol in extend_molecule_recursive(f2, bond_frequencies, fragment_database_graph, threshold=threshold):
                         yield new_mol
 
+
 def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=None):
+    """
+    Extend list of FragmentMolecules but only count number of possible molecules without generating them
+    """
 
     total = 0
 
@@ -134,6 +148,9 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
 
 
 def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, return_all=False, savesdf=False, sort=False, unique=True, threshold=None):
+    """
+    Extend list of FragmentMolecules by adding a further fragment to each molecule.
+    """
 
     if return_all is True:
         return_all_list = copy.deepcopy(FragmentMolecule_list)
@@ -146,13 +163,14 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
     else:
         restart = 1
 
+    if depth is None:
+        depth = 100
+
     for i in range(restart, depth + 1):
 
         if parallel is None:
             # Serial
-            FragmentMolecule_list = extend_molecule_list(
-                FragmentMolecule_list, bond_frequencies,
-                fragment_database_graph, i, threshold)
+            FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i, threshold)
             if return_all is True:
                 return_all_list.extend(FragmentMolecule_list)
 
@@ -160,8 +178,7 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
             # Parallel
             print('Parallel run with %s processes' %parallel)
 
-            args = [(l, bond_frequencies, fragment_database_graph, i, threshold) 
-                    for l in split_molecule_list(FragmentMolecule_list, parallel)]
+            args = [(l, bond_frequencies, fragment_database_graph, i, threshold) for l in split_molecule_list(FragmentMolecule_list, parallel)]
 
             with Pool(processes=parallel) as p:
                 extended = p.starmap(extend_molecule_list, args)
@@ -222,6 +239,9 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
 
 
 def get_unique_molecule_list(FragmentMolecule_list, debug=False, fragment_database=None, sort_list=True):
+    """
+    Remove duplicates from a FragmentMolecule list
+    """
 
     unique_dict = {}
 
@@ -272,7 +292,7 @@ def get_unique_molecule_list(FragmentMolecule_list, debug=False, fragment_databa
 def split_molecule_list(molecule_list, n):
 
     """
-    Split a molecule list in lists of equal size so that each list adds up to a similar value
+    Split a molecule list in lists of equal size so that each list adds up to a similar value of build probabilities
     """
     size = len(molecule_list)
 
@@ -306,7 +326,11 @@ def split_molecule_list(molecule_list, n):
 
     return output_mol_list
 
+
 def read_fragment_molecule_file(filename, fragment_database_graph):
+    """
+    Read a fragment molecule file, used when restarting run
+    """
 
     mol_list = []
 
@@ -335,8 +359,10 @@ def read_fragment_molecule_file(filename, fragment_database_graph):
     return mol_list
 
 
-
 def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
+    """
+    Extend a FramgentMolecule list up to a certain depth
+    """
 
     if threshold is not None:
         sys.error('Cannot count with threshold')
@@ -353,7 +379,11 @@ def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fr
 
     return total
 
+
 def save_mol_to_sdf(mol, sdffile):
+    """
+    Save molecule to SDF format
+    """
 
     with open(sdffile, 'a') as f:
         lines = molecule_to_sdf(mol)
@@ -361,7 +391,11 @@ def save_mol_to_sdf(mol, sdffile):
             f.write(line)
         f.write('$$$$\n')
 
+
 def save_mol_list_to_sdf(mol_list, sdffile):
+    """
+    Save list of molecules to SDF format
+    """
 
     with open(sdffile, 'w') as f:
         print('saving to', sdffile)
@@ -369,7 +403,11 @@ def save_mol_list_to_sdf(mol_list, sdffile):
     for mol in mol_list:
         save_mol_to_sdf(mol, sdffile)
 
+
 def read_fragment_database_graph(filename):
+    """
+    Read a fragment molecule file in internal FragmentMolecule format
+    """
 
     print('Reading fragment database graph ...')
 
@@ -407,7 +445,11 @@ def read_fragment_database_graph(filename):
 
     return f
 
+
 def write_fragment_database_graph(fragment_database, filename):
+    """
+    Write a fragment molecule file in internal FragmentMolecule format
+    """
 
     print('Writing fragment database graph ...')
 
@@ -421,7 +463,11 @@ def write_fragment_database_graph(fragment_database, filename):
 
     print('Writing fragment database graph FINISHED')
 
+
 def prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, parent_file, parent_fragment_file_list, parent_mapping_1, remove_hydrogens, remove_hydrogens_parent_fragment):
+    """
+    Prepare parent structure for run
+    """
 
     assert bond_frequencies is not None
     assert fragment_database is not None
@@ -511,7 +557,13 @@ def prepare_parent(bond_frequencies, fragment_database, fragment_database_graph,
 
     return parent, bond_frequencies, fragment_database, fragment_database_graph
 
+
 def convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies, sort_dict=True):
+    """
+    Convert bond frequencies to dictionary for fast access,
+    i.e. fragment id and atom number will be keys
+    and available bonds will be values in dictionary
+    """
 
     print('Converting bond frequencies to dictionary ...')
 
@@ -568,6 +620,11 @@ def convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies, sort
 
 
 def read_bond_frequencies_dict(infile):
+    """
+    Read bond frequencies from file in dictionary format, 
+    i.e. fragment id and atom number will be keys
+    and available bonds will be values in dictionary
+    """
 
     print('Reading bond frequencies dict ...')
 
@@ -585,7 +642,13 @@ def read_bond_frequencies_dict(infile):
 
     return bond_frequencies_dict
 
+
 def write_bond_frequencies_dict(bond_frequencies_dict, outfile):
+    """
+    Write bond frequencies from file in dictionary format, 
+    i.e. fragment id and atom number will be keys
+    and available bonds will be values in dictionary
+    """
 
     print('Writing bond frequencies dict to %s ...' %outfile)
 
@@ -625,7 +688,7 @@ if __name__ == '__main__':
     parser.add_argument('--parallel', type=int, help='Number of processes for parallel run',required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
-    parser.add_argument('--recursive', action='store_true', help='Build molecules using recursive function', required=False)
+    parser.add_argument('--recursive', action='store_true', help='Build molecules using recursive function, if False extend_molecule_list_depth function will be used instead', required=False)
     parser.add_argument('--restart', type=int, help='Restart from depth', required=False)
     parser.add_argument('--restart_file', help='Restart filename containing molecules built up to restart depth', required=False)
     parser.add_argument('--savesdf', action='store_true', default=False, help='Save generated molecules as SDF file', required=False)
@@ -684,7 +747,7 @@ if __name__ == '__main__':
                 print(i)
 
     else:
-        output_mol_list = extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
+        extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
 
     print('Normal termination')
 

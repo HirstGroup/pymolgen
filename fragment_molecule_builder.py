@@ -365,7 +365,7 @@ def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fr
     """
 
     if threshold is not None:
-        sys.error('Cannot count with threshold')
+        sys.exit('ERROR: Cannot count with threshold')
 
     for i in range(depth - 1):
 

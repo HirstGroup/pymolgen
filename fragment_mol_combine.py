@@ -138,29 +138,38 @@ def remove_bond_frequencies_halogen(bond_frequencies, aromatic_list, halogen_lis
 
     d = {}
 
-    for key, val in bond_frequencies.items():
+    with open('halogen-in.txt', 'w') as hinfile, open('halogen-out.txt', 'w') as houtfile: 
 
-        i = key[0]
-        j = key[1]
+        print('Writing removed halogen bonds to halogen-out.txt')
+        print('Writing kept halogen bonds to halogen-in.txt')
 
-        k = key[2]
-        l = key[3]
+        for key, val in bond_frequencies.items():
 
-        if i in halogen_list:
-            if j not in aromatic_list:
-                if verbose and val > 1000: print('HALOGEN OUT', i, j, k, l, val)
-                continue
-            else:
-                if verbose and val > 1000: print('HALOGEN IN', i, j, k, l, val)
+            i = key[0]
+            j = key[1]
 
-        if j in halogen_list:
-            if i not in aromatic_list:
-                if verbose and val > 1000: print('HALOGEN OUT', i, j, k, l, val)
-                continue
-            else:
-                if verbose and val > 1000: print('HALOGEN IN', i, j, k, l, val)
+            k = key[2]
+            l = key[3]
 
-            d[(i,j,k,l)] = val
+            if i in halogen_list:
+                if j not in aromatic_list:
+                    houtfile.write(f'{i} {j} {k} {l} {val}\n')
+                    if verbose and val > 1000: print('HALOGEN OUT', i, j, k, l, val)
+                    continue
+                else:
+                    hinfile.write(f'{i} {j} {k} {l} {val}\n')
+                    if verbose and val > 1000: print('HALOGEN IN', i, j, k, l, val)
+
+            if j in halogen_list:
+                if i not in aromatic_list:
+                    houtfile.write(f'{i} {j} {k} {l} {val}\n')
+                    if verbose and val > 1000: print('HALOGEN OUT', i, j, k, l, val)
+                    continue
+                else:
+                    hinfile.write(f'{i} {j} {k} {l} {val}\n')
+                    if verbose and val > 1000: print('HALOGEN IN', i, j, k, l, val)
+
+                d[(i,j,k,l)] = val
 
     return d
 
@@ -529,7 +538,7 @@ def exclude_aliphatic_halogen_bonds(fragment_database_mol, fragment_bond_frequen
             aromatic_list.append(i)
             save_mol_to_sdf('aromatic.sdf', mol)
 
-    remove_bond_frequencies_halogen(fragment_bond_frequencies, aromatic_list, halogen_list)
+    fragment_bond_frequencies = remove_bond_frequencies_halogen(fragment_bond_frequencies, aromatic_list, halogen_list)
 
     return fragment_bond_frequencies
 
@@ -718,8 +727,6 @@ def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequen
                 outfile.write('$$$$\n')               
 
         frequencies = remove_bond_frequencies(frequencies, filter_list)
-
-        frequencies = exclude_aliphatic_halogen_bonds(fragment_database_mol, frequencies)
 
         print('Writing new bond frequencies to filter_bond_frequencies.txt')
         save_frequencies_txt(frequencies, 'filter_bond_frequencies.txt')       

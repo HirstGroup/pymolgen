@@ -17,6 +17,9 @@ for input in args.input:
 
     print(input)
 
+    if input == args.output:
+        sys.exit('ERROR: Same input and output')
+
     infile = open(input)
 
     for line in infile:

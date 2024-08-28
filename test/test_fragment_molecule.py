@@ -201,7 +201,7 @@ def test_get_hash():
     f.add_bond(1, 5, 3, 4)
 
     graph_hash = f.__hash__()
-    assert graph_hash == 311749924555197107523048560514703296829
+    assert graph_hash == 26024027161856727234825668485283908942
 
 
 def test_eq():
@@ -297,3 +297,19 @@ def test_generate_fragment_molecule_from_string():
     print(inchi)
 
     assert inchi == 'InChI=1S/C2H6/c1-2/h1-2H3'
+
+    string_representation = '0::1.0'
+
+    fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+    print(fragment_molecule)
+
+    assert str(fragment_molecule) == '0::1.0'
+
+    mol = convert_fragment_molecule_to_mol(fragment_molecule, fragment_database)
+    
+    inchi = molecule_to_inchi(mol)
+
+    print(inchi)
+
+    assert inchi == 'InChI=1S/CH4/h1H4'

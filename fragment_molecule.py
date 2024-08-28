@@ -190,6 +190,9 @@ def generate_fragment_molecule_from_string(string_representation, fragment_datab
 
     for bond in bonds_string.split(';'):
 
+        if bond == '':
+            continue
+
         bonds.append(ast.literal_eval(bond))
 
     build_probability = float(build_probability_string)

@@ -9,6 +9,7 @@ from pymolgen.molecule import Molecule
 from functools import partial
 print = partial(print, flush=True)
 
+
 class FragmentGraphNode:
 
     def __init__(self, attachment_points: List[int]):
@@ -43,6 +44,7 @@ class FragmentGraphNode:
 
     def get_canonical_mapping(self):
         return self._canonical_mapping
+
 
 class FragmentGraph:
 
@@ -124,7 +126,6 @@ class FragmentGraph:
     def add_node_attribute(self, node_id, atribute_name, atribute_value):
         self.fragments[node_id].set_attribute(atribute_name, atribute_value)
 
-
     def convert_to_networkx(self):
         g = networkx.Graph()
 
@@ -175,6 +176,20 @@ class FragmentGraph:
 
 
 def convert_fragment_graph_to_mol(FragmentGraph, fragment_database):
+    """
+    Convert molecule in FragmentGraph format to Molecule format
+
+    Parameters
+    ----------
+    FragmentGraph : FragmentGraph object
+    fragment_database : list of Molecule objects
+        Fragment database as list of Molecule objects
+
+    Returns
+    -------
+    mol : FragmentMolecule object
+        Molecule as FragmentMolecule object
+    """
 
     mol = Molecule()
 
@@ -214,7 +229,20 @@ def convert_fragment_graph_to_mol(FragmentGraph, fragment_database):
 
     return mol
 
+
 def convert_fragment_database_to_graph(fragment_database):
+    """
+    Convert fragment database in Molecule format to FragmentGraph format
+
+    Parameters
+    ----------
+    fragment_database : list of Molecule objects
+
+    Returns
+    -------
+    f : FragmentGraph object
+        Fragments in FragmentGraph format, i.e. disconnected FragmentGraphNodes objects
+    """
 
     print('Converting fragment database to graph ...')
 

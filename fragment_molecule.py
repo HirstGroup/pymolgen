@@ -1,5 +1,6 @@
 import argparse
 import networkx
+import ast
 
 from networkx.algorithms import isomorphism
 
@@ -108,7 +109,22 @@ class FragmentMolecule:
 
         return f._graph.convert_to_networkx()
 
+
 def convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database):
+    """
+    Convert molecule in FragmentMolecule format to Molecule format
+
+    Parameters
+    ----------
+    FragmentMolecule : FragmentMolecule object
+    fragment_database : list of Molecule objects
+        Fragment database as list of Molecule objects
+
+    Returns
+    -------
+    mol : Molecule object
+        Molecule as Molecule object
+    """
 
     mol = Molecule()
 
@@ -147,3 +163,46 @@ def convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database):
         mol.graph.add_edge(k, l, order=1)        
 
     return mol
+
+
+def generate_fragment_molecule_from_string(string_representation, fragment_database_graph):
+    """
+    Generate a fragment molecule from a string representation
+
+    Parameters
+    ----------
+    string_representation : str
+        String representation for molecule,
+        from str FragmentMolecule method
+    fragment_database_graph : FragmentGraph object
+        Fragment database in FragmentGraph format, i.e. disconnected FragmentGraphNodes objects
+
+    Returns
+    -------
+    fragment_molecule : FragmentMolecule object
+    """
+
+    fragments_string, bonds_string, build_probability_string = string_representation.split(':')
+
+    fragments = [int(i) for i in fragments_string.split('-')]
+    
+    bonds = []
+
+    for bond in bonds_string.split(';'):
+
+        bonds.append(ast.literal_eval(bond))
+
+    build_probability = float(build_probability_string)
+
+    fragment_molecule = FragmentMolecule(build_probability)
+
+    for fragment in fragments:
+
+        fragment_molecule.add_fragment(frag_id=fragment, attachment_point_list=fragment_database_graph.fragments[fragment].attachment_points, canonical_mapping=fragment_database_graph.fragments[fragment].get_canonical_mapping())
+
+    for bond in bonds:
+
+        fragment_molecule.add_bond(bond[0], bond[1], bond[2], bond[3])
+
+    return fragment_molecule
+

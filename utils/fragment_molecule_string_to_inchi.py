@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
             string_representation = line.strip()
 
-            build_probability = string_representation.split(';')[2]
+            build_probability = string_representation.split(':')[2]
 
             fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 

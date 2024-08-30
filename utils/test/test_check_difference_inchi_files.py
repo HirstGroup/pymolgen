@@ -44,4 +44,3 @@ def test3():
 	with open('output/test_check_difference_inchi_files2.inchi') as f:
 
 		assert len(f.readlines()) == 10
-

@@ -13,15 +13,21 @@ parser.add_argument('-o2', '--output2', help='First output file with inchis from
 
 args = parser.parse_args()
 
+if len(set([args.input1, args.output1, args.output2])) != 3:
+    raise Exception('Same input and/or output files')
+
+if len(set([args.input2, args.output1, args.output2])) != 3:
+    raise Exception('Same input and/or output files')
+
 infile1 = open(args.input1)
 
 lines1 = infile1.readlines()
 
+set1 = set([i.strip().split()[0] for i in lines1])
+
 infile2 = open(args.input2)
 
 lines2 = infile2.readlines()
-
-set1 = set([i.strip().split()[0] for i in lines1])
 
 set2 = set([i.strip().split()[0] for i in lines2])
 

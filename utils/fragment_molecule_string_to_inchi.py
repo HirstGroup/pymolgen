@@ -20,7 +20,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.input == args.output:
-    	raise Exception('Same input and output')
+        raise Exception('Same input and output')
 
     fragment_database = get_fragment_database(args.fragments_sdf)
 
@@ -49,18 +49,18 @@ if __name__ == '__main__':
 
     with open(args.input) as infile, open(args.output, 'w') as outfile:
 
-    	for line in infile:
+        for line in infile:
 
-    		string_representation = line.strip()
+            string_representation = line.strip()
 
             build_probability = string_representation.split(';')[2]
 
-    		fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+            fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
-    		mol = convert_fragment_molecule_to_mol(fragment_molecule, fragment_database)
+            mol = convert_fragment_molecule_to_mol(fragment_molecule, fragment_database)
 
-    		inchi = molecule_to_inchi(mol)
+            inchi = molecule_to_inchi(mol)
 
-    		outfile.write(f'{inchi} {build_probability}\n')
+            outfile.write(f'{inchi} {build_probability}\n')
 
 

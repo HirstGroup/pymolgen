@@ -53,12 +53,14 @@ if __name__ == '__main__':
 
     		string_representation = line.strip()
 
+            build_probability = string_representation.split(';')[2]
+
     		fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
     		mol = convert_fragment_molecule_to_mol(fragment_molecule, fragment_database)
 
     		inchi = molecule_to_inchi(mol)
 
-    		outfile.write(f'{inchi}\n')
+    		outfile.write(f'{inchi} {build_probability}\n')
 
 

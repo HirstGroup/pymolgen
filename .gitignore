@@ -6,3 +6,4 @@ test/test_logfile.txt
 test/outputs/
 test/profile.out
 test/profile.png
+utils/test/output/

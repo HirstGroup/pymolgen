@@ -31,6 +31,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
     for f in FragmentMolecule_list:
         free_valence_list = f.list_free_valence_points()
         total_free_valence = f.get_total_free_valence()
+        f_build_probability = f.get_build_probability()
 
         # loop through fragments in molecule
         for x in range(len(free_valence_list)):
@@ -48,11 +49,11 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
                     attachment_probability = bond_freq / ( total_freq * total_free_valence)
 
-                    new_build_probability = attachment_probability * f.get_build_probability()
+                    new_build_probability = attachment_probability * f_build_probability
 
                     if threshold is not None and new_build_probability < threshold:
                         # do not build molecule if its build probability is below the threshold
-                        continue
+                        break
 
                     j = bond[0]
                     l = bond[1]
@@ -147,7 +148,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
     return total
 
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, return_all=False, savesdf=False, sort=False, unique=True, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, return_all=False, saveinchi=False, savesdf=False, sort=False, unique=True, threshold=None):
     """
     Extend list of FragmentMolecules by adding a further fragment to each molecule up to a certain depth.
     """
@@ -212,25 +213,23 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
                 for j in FragmentMolecule_list:
                     f.write(f'{str(j)}\n')
 
-            if savesdf is True:
-                with open('%s-depth%s.inchi' %(output, i), 'w') as f, open('%s-depth%s.sdf' %(output, i), 'w') as f2:
+            if saveinchi is True:
+                with open('%s-depth%s.inchi' %(output, i), 'w') as f:
                     for j in FragmentMolecule_list:
                         mol = convert_fragment_molecule_to_mol(j, fragment_database)
                         inchi = molecule_to_inchi(mol)
                         f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
+
+            if savesdf is True:
+                with open('%s-depth%s.sdf' %(output, i), 'w') as f2:
+                    for j in FragmentMolecule_list:
+                        mol = convert_fragment_molecule_to_mol(j, fragment_database)
 
                         lines = molecule_to_sdf(mol)
 
                         for line in lines:
                             f2.write(line)
                         f2.write('$$$$\n')
-
-            else:
-                with open('%s-depth%s.inchi' %(output, i), 'w') as f:
-                    for j in FragmentMolecule_list:
-                        mol = convert_fragment_molecule_to_mol(j, fragment_database)
-                        inchi = molecule_to_inchi(mol)
-                        f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
 
     if return_all is True:
         return return_all_list
@@ -691,6 +690,7 @@ if __name__ == '__main__':
     parser.add_argument('--recursive', action='store_true', help='Build molecules using recursive function, if False extend_molecule_list_depth function will be used instead', required=False)
     parser.add_argument('--restart', type=int, help='Restart from depth', required=False)
     parser.add_argument('--restart_file', help='Restart filename containing molecules built up to restart depth', required=False)
+    parser.add_argument('--saveinchi', action='store_true', default=False, help='Save generated molecules as InChi file', required=False)
     parser.add_argument('--savesdf', action='store_true', default=False, help='Save generated molecules as SDF file', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
@@ -747,7 +747,7 @@ if __name__ == '__main__':
                 print(i)
 
     else:
-        extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
+        extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, saveinchi=args.saveinchi, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
 
     print('Normal termination')
 

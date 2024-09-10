@@ -1,4 +1,5 @@
 import argparse
+import heapq
 import numpy as np
 
 def split_molecule_list(molecule_list, n):
@@ -39,6 +40,31 @@ def split_molecule_list(molecule_list, n):
     return output_mol_list
 
 
+def divide_into_n_lists(strings, n):
+    # Parse the strings and extract the C values
+    items = [(s, int(s.split(':')[-1])) for s in strings]
+    
+    # Sort items based on the C value in descending order
+    items.sort(key=lambda x: x[1], reverse=True)
+    
+    # Create a list of n empty lists and initialize their sums
+    partitions = [[] for _ in range(n)]
+    sums = [0] * n  # To keep track of the sums of the partitions
+
+    # Use a min heap to keep track of which partition has the smallest sum
+    heap = [(0, i) for i in range(n)]  # Each element is a tuple (sum, partition_index)
+    heapq.heapify(heap)
+
+    # Distribute the strings based on their C value
+    for string, c_value in items:
+        smallest_sum, partition_index = heapq.heappop(heap)  # Get the partition with the smallest sum
+        partitions[partition_index].append(string)           # Add the string to this partition
+        new_sum = smallest_sum + c_value                     # Update the sum of this partition
+        heapq.heappush(heap, (new_sum, partition_index))     # Push the updated partition back into the heap
+
+    return partitions
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Split a molecule list file in FragmentMolecule format in files of equal total build probability')
@@ -58,7 +84,7 @@ if __name__ == '__main__':
 
             fragment_molecule_list.append(line.strip())
 
-    fragment_molecule_list_list = split_molecule_list(fragment_molecule_list, args.n_files)
+    fragment_molecule_list_list = divide_into_n_lists(fragment_molecule_list, args.n_files)
 
     for n, fragment_molecule_list in enumerate(fragment_molecule_list_list):
 

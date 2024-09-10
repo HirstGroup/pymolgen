@@ -956,6 +956,8 @@ def fragment_builder(fragments_sdf, fragments_txt, frequencies_txt, parent_file,
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
+
+    # required arguments
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
     parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
@@ -964,6 +966,7 @@ if __name__ == '__main__':
     parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
 
+    # optional arguments
     parser.add_argument('--batch_size', type=int, help='Batch size for rules', default=1, required=False)
     parser.add_argument('--candidate_file', help='Candidate file to save all molecules generated as inchi', required=False)
     parser.add_argument('--cap', action='store_true', help='Cap intermediate molecules if new fragment goes over mass budget', required=False)

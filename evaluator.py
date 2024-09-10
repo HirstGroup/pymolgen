@@ -53,6 +53,8 @@ def oeLogP_oemol(oemol):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
+
+    # required arguments
     parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
     parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
@@ -61,6 +63,8 @@ if __name__ == '__main__':
     parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=True)
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
     parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
+
+    # optional arguments
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)

@@ -42,7 +42,7 @@ def split_molecule_list(molecule_list, n):
 
 def divide_into_n_lists(strings, n):
     # Parse the strings and extract the C values
-    items = [(s, int(s.split(':')[-1])) for s in strings]
+    items = [(s, float(s.split(':')[-1])) for s in strings]
     
     # Sort items based on the C value in descending order
     items.sort(key=lambda x: x[1], reverse=True)

@@ -4,7 +4,6 @@ import sys
 
 
 def test():
-	# test doesn't work for build_probabilities but works for everything else
 
 	os.system('python ../calculator.py -i inputs/test_calculator.inchi -o outputs/test_calculator.txt -l outputs/test_calculator.log -bp')
 
@@ -17,5 +16,3 @@ def test2():
 
 	assert filecmp.cmp('outputs/test_calculator_classify.txt', 'models/test_calculator_classify.txt')
 	assert filecmp.cmp('outputs/test_calculator_classify.log', 'models/test_calculator_classify.log')
-
-test2()

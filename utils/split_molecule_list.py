@@ -65,6 +65,17 @@ def divide_into_n_lists(strings, n):
     return partitions
 
 
+def sum_probabilities(fragment_molecule_list):
+
+    total = 0
+
+    for mol in fragment_molecule_list:
+        bp = float(mol.split(':')[2])
+        total += bp
+
+    return total
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Split a molecule list file in FragmentMolecule format in files of equal total build probability')
@@ -88,9 +99,15 @@ if __name__ == '__main__':
 
     for n, fragment_molecule_list in enumerate(fragment_molecule_list_list):
 
-        with open(f'{args.output}_{n}.txt', 'w') as outfile:
+        name = f'{args.output}_{n}.txt'
+
+        with open(name, 'w') as outfile:
 
             for fragment_molecule in fragment_molecule_list:
 
                 outfile.write(f'{fragment_molecule}\n')
+
+        total_bp = sum_probabilities(fragment_molecule_list)
+
+        print(name, total_bp)
 

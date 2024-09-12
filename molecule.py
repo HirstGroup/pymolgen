@@ -158,6 +158,7 @@ class Molecule:
         """
         return deepcopy(self)
 
+
     def set_valence_from_bonds(self):
         """
         Sets the valence of each atom according
@@ -166,6 +167,7 @@ class Molecule:
         for n in self.graph.nodes:
             self.graph.nodes[n]["valence"] = self.total_order_of_bonds(n)
 
+
     def total_order_of_bonds(self, i: int) -> float:
         """
         Returns
@@ -173,6 +175,7 @@ class Molecule:
         The total order of bonds connected to atom i
         """
         return sum(self.graph[i][j]["order"] for j in self.graph[i])
+
 
     def free_valence(self, i: int) -> float:
         """
@@ -183,6 +186,7 @@ class Molecule:
 
         return max(self.graph.nodes[i]["valence"] - self.total_order_of_bonds(i), 0.0)
 
+
     def set_hybridization(self):
         """
         Sets the hybridization of each atom according
@@ -192,6 +196,7 @@ class Molecule:
         for n in self.graph.nodes:
             self.graph.nodes[n]["hybridization"] = self.free_valence(n) + len(self.graph[n])
 
+
     def molecular_weight(self) -> float:
         d = mass_dict()
         mw = 0
@@ -199,6 +204,7 @@ class Molecule:
             element = self.graph.nodes[i]["element"]
             mw += d[element]
         return mw
+
 
     def get_fragment(self, nodes: Set[int], allow_breaking_aromatic=False) -> 'Molecule':
         """
@@ -220,6 +226,7 @@ class Molecule:
         frag.graph = networkx.Graph(self.graph.subgraph(nodes))
         return frag
 
+
     def is_cyclic(self, i: int) -> bool:
         """
         Returns true if the node at the given index is cyclic.
@@ -236,6 +243,7 @@ class Molecule:
             if i in basis:
                 return True
         return False
+
 
     def is_unsaturated(self, i: int) -> bool:
         """
@@ -254,6 +262,7 @@ class Molecule:
                 return True
         return False
 
+
     def is_hydrogen(self, i: int) -> bool:
         """
         Returns true if the node at the given index is a hydrogen
@@ -269,6 +278,7 @@ class Molecule:
 
         return self.graph.nodes[i]["element"] == "H"
 
+
     def is_heteroatom(self, i: int) -> bool:
         """
         Returns true if the node at the given index is a heteroatom
@@ -283,6 +293,7 @@ class Molecule:
         """
 
         return self.graph.nodes[i]["element"] != "H" and self.graph.nodes[i]["element"] != "C"
+
 
     def is_carbonyl_analogue(self, i: int) -> bool:
         """
@@ -308,6 +319,7 @@ class Molecule:
 
         return False
 
+
     def is_fluorine(self) -> bool:
         """
         Returns true if molecule is a fluorine
@@ -318,6 +330,23 @@ class Molecule:
         """
 
         return self.graph.nodes[0]["element"] == "F"
+
+
+    def is_fluorine_atom(self, i: int) -> bool:
+        """
+        Returns true if the node at the given index is a fluorine
+        Parameters
+        ----------
+        i
+            The index of the node
+
+        Returns
+        -------
+        True if the node is a fluorine
+        """
+
+        return self.graph.nodes[i]["element"] == "F"
+
 
     def is_halogen(self) -> bool:
         """
@@ -331,6 +360,7 @@ class Molecule:
         if self.graph.nodes[0]["element"] in ['F', 'Cl', 'Br', 'I']:
             return True
         return False
+
 
     def get_hydrogen_neighbours(self, i: int) -> List[int]:
         """
@@ -355,7 +385,16 @@ class Molecule:
 
 
     def get_single_bonds_not_h_not_c(self, carbonyl=False, fluorine=False):
+        """
+        Get single bonds not with hydrogen and not in cycles
 
+        Parameters
+        ----------
+        carbonyl : bool
+            If True, do not break bonds between carbonyl and heteroatom
+        fluorine : bool
+            If True, do not break bonds in CF3 group
+        """
         cycles = networkx.cycle_basis(self.graph)
 
         for i in cycles:
@@ -365,7 +404,11 @@ class Molecule:
         single_bonds = []
 
         for i in self.graph.nodes:
-            if self.is_hydrogen(i): continue
+            if self.is_hydrogen(i): 
+                continue
+
+            if self.is_fluorine_atom(i):
+                continue
 
             if self.is_cyclic(i):
                 i_cycles = []
@@ -381,20 +424,31 @@ class Molecule:
                         if [a,b] not in single_bonds: 
                             single_bonds.append([a,b])
             else:
+
+                single_bonds_fluorine = []
+                single_bonds_notfluorine = []
+
                 for j in self.graph[i]:
                     if carbonyl is True:
                         if self.is_heteroatom(i) and self.is_carbonyl_analogue(j):
                             continue
                         if self.is_heteroatom(j) and self.is_carbonyl_analogue(i):
                             continue
-                    if fluorine is True:
-                        if self.is_fluorine(i) or self.is_fluorine(j):
-                            continue
                     if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j):
                         a = min(i,j)
                         b = max(i,j)
-                        if [a,b] not in single_bonds: 
-                            single_bonds.append([a,b])
+                        if self.is_fluorine_atom(j) and [a,b] not in single_bonds_fluorine and [a,b] not in single_bonds:
+                            single_bonds_fluorine.append([a,b])
+                        elif [a,b] not in single_bonds_notfluorine and [a,b] not in single_bonds: 
+                            single_bonds_notfluorine.append([a,b])
+
+                single_bonds.extend(single_bonds_notfluorine)
+
+                if fluorine:
+                    if len(single_bonds_fluorine) != 3:
+                        single_bonds.extend(single_bonds_fluorine)
+                else:
+                    single_bonds.extend(single_bonds_fluorine)
 
         return single_bonds
 
@@ -447,6 +501,7 @@ class Molecule:
 
         return fragments
 
+
     def get_neighbour_bond_not_single(self, i, fragment):
         #print('fn = ', fragment)
         #print('line288 i =', i, 'neighbours =', self.graph[i])
@@ -458,6 +513,7 @@ class Molecule:
                     fragment.append(j)
                     print('added', j, fragment)
                 self.get_neighbour_bond_not_single(j, fragment)
+
 
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
@@ -506,6 +562,7 @@ class Molecule:
             frag = self.get_fragment(nodes)
             if frag is not None:
                 return frag
+
 
     def random_fragment_keep_cycle(self, min_size: int = 1, max_size: int = None, counter=0) -> 'Molecule':
         """
@@ -585,6 +642,7 @@ class Molecule:
 
             if frag is not None:
                 return frag
+
 
     def random_fragment_keep_cycle_max_mass(self, min_mass: float = 1.0, max_mass: float = None, counter = 0) -> 'Molecule':
         """
@@ -687,6 +745,7 @@ class Molecule:
 
         assert len(set(self.graph.nodes).intersection(set(other.graph.nodes))) == 0
 
+
     def remove_random_atom(self, element: str = None) -> 'Molecule':
         """
         Remove a random leaf atom (only bonded to one other atom) from the molecule.
@@ -710,11 +769,13 @@ class Molecule:
         keep_nodes = set(self.graph.nodes) - {to_remove}
         return self.get_fragment(keep_nodes)
 
+
     def remove_atom(self, index: int) -> 'Molecule':
         """
         Removes the atom with the given index, and returns the new molecule.
         """
         return self.get_fragment(set(self.graph.nodes) - {index})
+
 
     def saturate_single_aromatic_fragment(self) -> bool:
 
@@ -729,6 +790,7 @@ class Molecule:
                         return True
 
         return False
+
 
     def hydrogenate(self, saturate_aromatic_fragments: bool = True) -> int:
         """
@@ -759,6 +821,7 @@ class Molecule:
                 self.graph.add_edge(i, new_index, order=1.0)
 
         return added
+
 
     @staticmethod
     def randomly_glue_together(
@@ -818,6 +881,7 @@ class Molecule:
         mol.graph.add_edge(a_point, b_point, order=new_order)
 
         return mol
+
 
     @staticmethod
     def glue_together_attachmentpoint(
@@ -882,6 +946,7 @@ class Molecule:
         mol.graph.add_edge(a_point, b_point, order=new_order)
 
         return mol
+
 
 def mass_dict():
     d = {

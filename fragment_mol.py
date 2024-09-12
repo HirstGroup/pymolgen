@@ -40,7 +40,7 @@ def get_fragments_dataset(mol, carbonyl=False, fluorine=False):
     carbonyl : bool
         If True, do split carbonyl to heteroatom bonds
     fluorine : bool
-        If True, do not split bonds to fluorine
+        If True, do not break bonds in CF3 group
 
     Returns
     -------

@@ -27,7 +27,7 @@ with open(args.input) as infile, open(args.output, 'w') as outfile:
 
 		mol = molecule_from_smiles(smi)
 
-		fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True)
+		fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
 
 		print(len(fragments))
 

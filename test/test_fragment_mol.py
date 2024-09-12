@@ -157,6 +157,70 @@ def test_get_fragments_carbonyl():
     assert n_equal == 15
 
 
+def test_get_fragments_fluorine():
+
+    mol = molecule_from_sdf('inputs/fluorine.sdf')
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True)
+
+    print(single_bonds)
+
+    assert single_bonds == [[0, 4], [1, 11], [2, 12], [3, 13], [4, 5], [5, 6], [6, 17], [9, 11], [9, 14], [11, 19], [15, 18], [16, 17], [17, 20], [19, 21], [19, 22], [19, 23], [20, 24], [20, 25], [20, 26]]
+
+    for bond in single_bonds:
+        print(bond[0]+1, bond[1]+1)
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True, fluorine=True)
+
+    print(single_bonds)
+
+    for bond in single_bonds:
+        print(bond[0]+1, bond[1]+1)
+
+    fluorine = [[19,22], [19,21], [19,23], [20,24], [21,25], [20,26]]
+
+    for bond in fluorine:
+        assert bond not in single_bonds 
+
+
+def test_get_fragments_fluorine2():
+
+    mol = molecule_from_sdf('inputs/fluorine2.sdf')
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True)
+
+    assert single_bonds == [[0, 4], [1, 10], [2, 11], [3, 17], [4, 5], [5, 6], [6, 15], [12, 16], [13, 15], [14, 17], [15, 18], [17, 19], [17, 20], [18, 21], [18, 22], [18, 23], [19, 24], [19, 25], [19, 26]]
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True, fluorine=True)
+
+    print(single_bonds)
+
+    for bond in single_bonds:
+        print(bond[0]+1, bond[1]+1)
+
+    assert single_bonds == [[0, 4], [1, 10], [2, 11], [3, 17], [4, 5], [5, 6], [6, 15], [12, 16], [13, 15], [14, 17], [15, 18], [17, 19], [17, 20]]
+
+
+def test_get_fragments_fluorine3():
+
+    mol = molecule_from_sdf('inputs/fluorine3.sdf')
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True)
+
+    assert single_bonds == [[0, 1], [0, 2], [1, 3], [1, 4], [1, 5]]
+
+    mol = molecule_from_sdf('inputs/fluorine3.sdf')
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True, fluorine=True)
+
+    print(single_bonds)
+
+    for bond in single_bonds:
+        print(bond[0]+1, bond[1]+1)
+
+    assert single_bonds == [[0, 1], [0, 2]]
+
+
 def test_get_fragments_mol1():
 
     mol = molecule_from_sdf('mol-1.sdf')

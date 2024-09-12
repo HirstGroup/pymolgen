@@ -353,7 +353,8 @@ class Molecule:
 
         return hydrogen_list
 
-    def get_single_bonds_not_h_not_c(self):
+
+    def get_single_bonds_not_h_not_c(self, carbonyl=False, fluorine=False):
 
         cycles = networkx.cycle_basis(self.graph)
 
@@ -381,53 +382,19 @@ class Molecule:
                             single_bonds.append([a,b])
             else:
                 for j in self.graph[i]:
+                    if carbonyl is True:
+                        if self.is_heteroatom(i) and self.is_carbonyl_analogue(j):
+                            continue
+                        if self.is_heteroatom(j) and self.is_carbonyl_analogue(i):
+                            continue
+                    if fluorine is True:
+                        if self.is_fluorine(i) or self.is_fluorine(j):
+                            continue
                     if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j):
-                        a = min(i,j)
-                        b = max(i,j)
-                        if [a,b] not in single_bonds: 
-                            single_bonds.append([a,b])                
-
-
-        return single_bonds
-
-    def get_single_bonds_not_h_not_c_not_carbonyl(self):
-
-        cycles = networkx.cycle_basis(self.graph)
-
-        for i in cycles:
-            if len(i) > 25:
-                return False
-
-        single_bonds = []
-
-        for i in self.graph.nodes:
-            if self.is_hydrogen(i): continue
-
-            if self.is_cyclic(i):
-                i_cycles = []
-
-                for cycle in cycles:
-                    if i in cycle:
-                        i_cycles.extend(cycle)
-
-                for j in self.graph[i]:
-                    if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j) and j not in i_cycles:
                         a = min(i,j)
                         b = max(i,j)
                         if [a,b] not in single_bonds: 
                             single_bonds.append([a,b])
-            else:
-                for j in self.graph[i]:
-                    if self.is_heteroatom(i) and self.is_carbonyl_analogue(j):
-                        continue
-                    if self.is_heteroatom(j) and self.is_carbonyl_analogue(i):
-                        continue
-                    if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j):
-                        a = min(i,j)
-                        b = max(i,j)
-                        if [a,b] not in single_bonds: 
-                            single_bonds.append([a,b])                
-
 
         return single_bonds
 

@@ -30,10 +30,28 @@ def time_limit(seconds):
         signal.alarm(0)
 
 
-def get_fragments_dataset(mol, carbonyl=False):
+def get_fragments_dataset(mol, carbonyl=False, fluorine=False):
+    """
+    Split molecule into fragments and return bonding information between fragments
 
-    if carbonyl: single_bonds = mol.get_single_bonds_not_h_not_c_not_carbonyl()
-    else: single_bonds = mol.get_single_bonds_not_h_not_c()
+    Parameters
+    ----------
+    mol : molecule class
+    carbonyl : bool
+        If True, do split carbonyl to heteroatom bonds
+    fluorine : bool
+        If True, do not split bonds to fluorine
+
+    Returns
+    -------
+    new_fragments : list of molecule objects
+    pairs : list of lists of two ints
+        pairs of fragments ids bonded together
+    new_single_bonds : (i,j,k,l) tuple of ints 
+        bonds connecting split molecule
+    """
+
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=carbonyl, fluorine=fluorine)
     
     if single_bonds is False:
         return False, False, False
@@ -92,6 +110,9 @@ def split_mol(mol, bonds):
 
 
 def get_pairs(bonds, fragments):
+    """
+    Get fragment pairs for each bond, i.e. fragment numbers for each fragment atom
+    """
 
     pairs = []
 

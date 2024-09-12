@@ -91,6 +91,7 @@ def test_get_fragments():
     mol = molecule_from_sdf('mol-1.sdf')
 
     single_bonds = mol.get_single_bonds_not_h_not_c()
+    print('single_bonds', single_bonds)
 
     new = split_mol(mol, single_bonds)
 
@@ -115,11 +116,12 @@ def test_get_fragments():
 
     assert n_equal == 16
 
+
 def test_get_fragments_carbonyl():
 
     mol = molecule_from_sdf('mol-1.sdf')
 
-    single_bonds = mol.get_single_bonds_not_h_not_c_not_carbonyl()
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=True)
 
     assert single_bonds == [[0, 1], [3, 4], [5, 7], [7, 8], [8, 11], [13, 14], [14, 15], [19, 20], [28, 29], [31, 32]]
 
@@ -129,7 +131,7 @@ def test_get_fragments_carbonyl():
 
     mol2 = molecule_from_sdf('mol-1-can.sdf')
 
-    bonds2 = mol2.get_single_bonds_not_h_not_c_not_carbonyl()
+    bonds2 = mol2.get_single_bonds_not_h_not_c(carbonyl=True)
 
     assert bonds2 == [[3, 7], [7, 11], [9, 47], [19, 23], [21, 24], [22, 26], [23, 27], [27, 31], [34, 36], [42, 43]]
 
@@ -153,6 +155,7 @@ def test_get_fragments_carbonyl():
     print(n_equal)
 
     assert n_equal == 15
+
 
 def test_get_fragments_mol1():
 
@@ -211,6 +214,7 @@ def test_make_fragment_database():
 
     fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', 'outputs/fragments.sdf', 'outputs/fragments.txt', 'outputs/frequencies.txt', 'outputs/frag_frequencies.txt')
 
+
 def test_mol_bond_frequencies():
 
     fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', max_n=1)
@@ -220,6 +224,7 @@ def test_mol_bond_frequencies():
     print(frag_frequencies)
 
     assert frag_frequencies == [1, 1, 1, 1, 2, 1, 1, 1, 1, 2]
+
 
 def test_mol_bond_frequencies2():
 
@@ -246,6 +251,7 @@ def test_mol_bond_frequencies2():
 """
     assert check == print_fragments(fragment_database)
 
+
 def test_canonical_mapping():
 
     mol = molecule_from_sdf('mol-1.sdf')
@@ -262,6 +268,7 @@ def test_canonical_mapping():
 
     assert all_canonical_mappings == [{0: 0, 1: 1, 2: 1, 3: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, {0: 0, 1: 1}, {0: 0, 1: 1}, {0: 0, 2: 2, 1: 0}, {0: 0, 1: 1, 2: 1}, {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 7: 7, 8: 8, 5: 5, 9: 9, 10: 10, 6: 6, 11: 11}, {0: 0, 2: 2, 1: 0}, {0: 0, 2: 2, 1: 1, 3: 3, 4: 2, 5: 1, 7: 7, 8: 0, 9: 9, 6: 6}, {0: 0, 4: 4, 3: 3, 5: 5, 6: 6, 1: 1, 7: 7, 2: 2}, {0: 0}, {0: 0}]
 
+
 def test_compound_dict():
 
     d1 = {0:1, 2:3, 4:5}
@@ -271,6 +278,7 @@ def test_compound_dict():
     d1 = compound_dict(d1, d2)
 
     assert d1 == {0: 7, 2: 9, 4: 11}
+
 
 def test_mol_bond_frequencies3():
 
@@ -295,6 +303,7 @@ def test_mol_bond_frequencies3():
     print(frequencies)
 
     assert frequencies == check2
+
 
 def test_mol_bond_frequencies_11_20_1():
 
@@ -339,6 +348,7 @@ def test_mol_bond_frequencies_11_20_1():
     check = [2, 2, 1, 2, 3, 1, 1]
 
     assert frag_frequencies == check
+
 
 def test_mol_bond_frequencies_11_20_2():
 
@@ -388,6 +398,7 @@ def test_mol_bond_frequencies_11_20_2():
 '''
 
     assert print_fragments(fragment_database) == check
+
 
 def test_mol_bond_frequencies_11_20_3():
 
@@ -441,6 +452,7 @@ def test_mol_bond_frequencies_11_20_3():
 
     assert print_fragments(fragment_database) == check
 
+
 def test_mol_bond_frequencies_11_20_1_carbonyl():
 
     fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database11-20.sdf', max_n=1, carbonyl=True)
@@ -468,6 +480,7 @@ def test_mol_bond_frequencies_11_20_1_carbonyl():
     print(frequencies)
 
     assert frequencies == {(0, 1, 0, 0): 2, (1, 2, 0, 2): 1, (2, 3, 4, 0): 1, (3, 4, 0, 1): 2, (4, 4, 1, 1): 2, (3, 5, 0, 0): 1, (5, 6, 4, 0): 1, (1, 5, 0, 11): 1}
+
 
 def test_mol_bond_frequencies_11_20_2_carbonyl():
 
@@ -503,6 +516,7 @@ def test_mol_bond_frequencies_11_20_2_carbonyl():
 
     assert frequencies == {(0, 1, 0, 0): 2, (1, 2, 0, 2): 1, (2, 3, 4, 0): 1, (3, 4, 0, 1): 2, (4, 4, 1, 1): 3, (3, 5, 0, 0): 1, (5, 6, 4, 0): 1, (1, 5, 0, 11): 1, (0, 7, 0, 0): 1, (4, 7, 1, 0): 1, (7, 10, 0, 4): 1, (4, 8, 1, 0): 1, (8, 9, 5, 1): 1, (8, 9, 7, 1): 1, (10, 11, 4, 0): 1, (11, 12, 2, 0): 1, (4, 12, 1, 0): 2, (12, 14, 0, 3): 2, (4, 13, 1, 1): 1, (12, 13, 0, 1): 1, (4, 14, 1, 3): 1}
 
+
 def test_split_mol():
 
     mol = molecule_from_sdf('mol-1.sdf')
@@ -524,6 +538,7 @@ def test_split_mol():
     check = ['C', 'H', 'H', 'H', 'C', 'C', 'C', 'N', 'O', 'H', 'H', 'N', 'C', 'O', 'H', 'H', 'C', 'S', 'O', 'O', 'C', 'C', 'C', 'N', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'C', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'C', 'N', 'N', 'C', 'F', 'F']
 
     assert elements == check
+
 
 def test_valence_make_fragment_database():
 
@@ -548,6 +563,7 @@ def test_valence_make_fragment_database():
     check = ['C', 'H', 'H', 'H', 'C', 'C', 'C', 'N', 'O', 'H', 'H', 'N', 'C', 'O', 'H', 'H', 'C', 'S', 'O', 'O', 'C', 'C', 'C', 'N', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'C', 'N', 'N', 'C', 'F']
 
     assert elements == check
+
 
 def test_timeout():
     

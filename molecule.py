@@ -56,6 +56,12 @@ class Molecule:
         self._allow_frac_order: bool = allow_frac_order
         self._free_valence_original = None
 
+    def __len__(self) -> int:
+        """
+        Return length of molecule, i.e. number of atoms
+        """
+        return len(self.graph)
+
     ##############
     # Properties #
     ##############

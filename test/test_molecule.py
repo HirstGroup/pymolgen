@@ -141,3 +141,14 @@ def test_free_valence():
         free_valence_list.append(mol.free_valence(0))
     print(free_valence_list)
     assert free_valence_list == [1, 1, 0, 0, 2, 0, 0, 0, 1]
+
+
+def test_len():
+
+    m1 = molecule_from_smiles("[H]")
+
+    assert len(m1) == 1
+
+    m = molecule_from_smiles('C')
+
+    assert len(m) == 5

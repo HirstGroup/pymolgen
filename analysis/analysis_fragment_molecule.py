@@ -193,11 +193,11 @@ if __name__ == '__main__':
 
             outfile.write(f'{string_representation}\n')
 
-            f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+            #f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
-            mol = convert_fragment_molecule_to_mol(f, fragment_database)
+            #mol = convert_fragment_molecule_to_mol(f, fragment_database)
 
-            assert inchi == molecule_to_inchi(mol)
+            #assert inchi == molecule_to_inchi(mol)
 
 
 

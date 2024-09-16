@@ -18,7 +18,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
     Parameters
     ----------
-    fragment : Molecule object
+    fragment : Networkx object
     fragment_database : list of Molecule objects
 
     Returns
@@ -31,7 +31,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
     index = []
 
-    map = get_canonical_mapping(fragment)
+    #map = get_canonical_mapping(fragment)
 
     fragment_len = len(fragment)
 
@@ -47,28 +47,28 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
         if atom_list_all is not None:
             atom_list_all_i = atom_list_all[i]
         else:
-            atom_list_all_i = get_atom_list(fragment_database[i])
+            atom_list_all_i = get_atom_list(fragment_database[i].graph)
 
         if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
 
-            gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element)
+            gm = isomorphism.GraphMatcher(fragment, fragment_database[i].graph, node_match=node_compare_element)
 
             if gm.is_isomorphic():
                 index.append(i)
                 newmap = gm.mapping
 
-                map = get_canonical_mapping(fragment_database[i])
+                #map = get_canonical_mapping(fragment_database[i].graph)
 
-                map = compound_dict(newmap, map)
+                #map = compound_dict(newmap, map)
 
     if len(index) > 1:
         print(index)
         raise Exception('fragment in fragment_database more than once')
 
-    return index[0], map
+    return index[0], newmap
 
 
-def analyse_molecule(inchi, fragment_database):
+def analyse_molecule(inchi, fragment_database, fragment_database_graph):
 
     rdmol = Chem.MolFromInchi(inchi)
 
@@ -78,13 +78,42 @@ def analyse_molecule(inchi, fragment_database):
 
     mol = molecule_from_smiles(smi)
 
+    f = FragmentMolecule()
+
     fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
+
+    print('fragments', fragments)
+    print('pairs', pairs)
+    print('bonds', bonds)
+
+    index_list = []
+    mapping_list = []
 
     for fragment in fragments:
 
-        get_fragment_index(fragment, fragment_database)        
+        index, mapping = get_fragment_index(fragment, fragment_database)
 
+        print(index, mapping)
 
+        index_list.append(index)
+        mapping_list.append(mapping)
+
+        f.add_fragment(index, fragment_database[index].free_valence_list)
+
+    assert len(pairs) == len(bonds)
+
+    for pair, bond in zip(pairs, bonds):
+
+        i = pair[0]
+        j = pair[1]
+        k = mapping_list[i][bond[0]]
+        l = mapping_list[j][bond[1]]
+
+        f.add_bond(i, j, k, l)
+
+        print(f)
+
+    return str(f)
 
 
 if __name__ == '__main__':
@@ -137,7 +166,17 @@ if __name__ == '__main__':
 
             inchi = line.strip().split()[0]
 
-            analyse_molecule(inchi, fragment_database)
+            print(inchi)
+
+            string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph)
+
+            outfile.write(f'{string_representation}\n')
+
+            f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+            mol = convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database)
+
+            assert inchi == molecule_to_inchi(mol)
 
 
 

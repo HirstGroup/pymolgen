@@ -68,7 +68,11 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
     return index[0], newmap
 
 
-def analyse_molecule(inchi, fragment_database, fragment_database_graph):
+def analyse_molecule(inchi, fragment_database, fragment_database_graph, parent_mol=None):
+    """
+    Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
+    If a parent_mol is given, then the constituent fragments for the parent strucrue present in the final molecule will be converted into a single parent fragment.
+    """
 
     rdmol = Chem.MolFromInchi(inchi)
 
@@ -114,6 +118,23 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph):
         print(f)
 
     return str(f)
+
+
+
+def convert_parent(fragment_molecule, parent_mol):
+
+    g1 = fragment_molecule.convert_to_networkx()
+    g2 = parent_mol.convert_to_networkx()
+
+    gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
+
+    if gm.subgraph_is_isomorphic():
+        matching = gm.mapping
+        print(matching)
+
+    else:
+        raise Exception('Parent fragment not present in molecule')
+
 
 
 if __name__ == '__main__':
@@ -168,13 +189,13 @@ if __name__ == '__main__':
 
             print(inchi)
 
-            string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph)
+            string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph, parent_mol)
 
             outfile.write(f'{string_representation}\n')
 
             f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
-            mol = convert_fragment_molecule_to_mol(FragmentMolecule, fragment_database)
+            mol = convert_fragment_molecule_to_mol(f, fragment_database)
 
             assert inchi == molecule_to_inchi(mol)
 

@@ -54,6 +54,8 @@ def molecule_from_smiles(smiles: str) -> Molecule:
 
     mol = Molecule()
     mol.graph = graph
+    mol.set_hybridization()
+
     return mol
 
 

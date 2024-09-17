@@ -440,6 +440,9 @@ def read_fragment_database_graph(filename):
         f.fragments[i].set_attribute('frag_id', i)
         f.fragments[i].manual_canonical_mapping(canonical_mapping_list[i])
 
+    if len(f) == 0:
+        raise Exception('ERROR: no fragments read from file', filename)
+
     print('Reading fragment database graph FINISHED')
 
     return f
@@ -636,6 +639,9 @@ def read_bond_frequencies_dict(infile):
             val = ast.literal_eval('{' + line.strip('\n').split(': {')[1])
 
             bond_frequencies_dict[key] = val
+
+    if len(bond_frequencies_dict) == 0:
+        raise Exception('ERROR: no bonds read from file', infile)
 
     print('Reading bond frequencies dict FINISHED')            
 

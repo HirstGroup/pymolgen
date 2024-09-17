@@ -1,7 +1,10 @@
 import argparse
+import builtins
+import inspect
 
 import pandas as pd
 
+from functools import partial
 from networkx.algorithms import isomorphism
 from rdkit import Chem
 
@@ -10,6 +13,21 @@ from pymolgen.molecule_formats import molecule_from_smiles
 from pymolgen.fragment_mol import get_fragments_dataset, get_canonical_mapping, get_atom_list, compound_dict, node_compare_element
 from pymolgen.fragment_molecule import *
 from pymolgen.fragment_molecule_builder import *
+
+
+# Define the custom print function
+def print_with_line(*args, **kwargs):
+    # Get the current frame and extract the line number from the caller
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back  # Get the frame of the caller
+    line_number = caller_frame.f_lineno  # Extract the line number
+    
+    # Call the original print function with the line number prepended
+    builtins.print(f"[Line {line_number}]", *args, **kwargs)
+
+
+# Override the built-in print function using partial
+print = partial(print_with_line)
 
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):
@@ -86,18 +104,12 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, parent_m
 
     fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
 
-    print('fragments', fragments)
-    print('pairs', pairs)
-    print('bonds', bonds)
-
     index_list = []
     mapping_list = []
 
     for fragment in fragments:
 
         index, mapping = get_fragment_index(fragment, fragment_database)
-
-        print(index, mapping)
 
         index_list.append(index)
         mapping_list.append(mapping)
@@ -114,8 +126,6 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, parent_m
         l = mapping_list[j][bond[1]]
 
         f.add_bond(i, j, k, l)
-
-        print(f)
 
     return str(f)
 
@@ -187,17 +197,15 @@ if __name__ == '__main__':
 
             inchi = line.strip().split()[0]
 
-            print(inchi)
-
             string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph, parent_mol)
 
             outfile.write(f'{string_representation}\n')
 
-            #f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+            f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
-            #mol = convert_fragment_molecule_to_mol(f, fragment_database)
+            mol = convert_fragment_molecule_to_mol(f, fragment_database)
 
-            #assert inchi == molecule_to_inchi(mol)
+            assert inchi == molecule_to_inchi(mol)
 
 
 

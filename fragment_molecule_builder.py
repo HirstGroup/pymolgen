@@ -184,7 +184,7 @@ def extend_molecule_list_count(FragmentMolecule_list, bond_frequencies, fragment
     return total
 
 
-def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, return_all=False, saveinchi=False, savesdf=False, sort=False, unique=True, threshold=None):
+def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, fragment_database=None, output=None, parallel=None, restart=None, restart_file=None, return_all=False, saveinchi=False, savesdf=False, sort=False, unique=True, threshold=None, version=1):
     """
     Extend list of FragmentMolecules by adding a further fragment to each molecule up to a certain depth.
     """
@@ -207,7 +207,7 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
 
         if parallel is None:
             # Serial
-            FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i, threshold)
+            FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i, threshold, version)
             if return_all is True:
                 return_all_list.extend(FragmentMolecule_list)
 
@@ -394,7 +394,7 @@ def read_fragment_molecule_file(filename, fragment_database_graph):
     return mol_list
 
 
-def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None):
+def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth, threshold=None, version=1):
     """
     Extend a FramgentMolecule list up to a certain depth
     """
@@ -404,7 +404,7 @@ def extend_molecule_list_depth_count(FragmentMolecule_list, bond_frequencies, fr
 
     for i in range(depth - 1):
 
-        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1, threshold)
+        FragmentMolecule_list = extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, i + 1)
 
         print(f'FINAL DEPTH {i+1} TOTAL {len(FragmentMolecule_list)}')
 
@@ -705,28 +705,28 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
 
     # required arguments
-    parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
+    parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments', required=True)
 
     # either 1. build from database fragment or 2. build from parent file must be used
     
     # 1. build from database fragment
-    parser.add_argument('--atom', type=int, help='Atom to build on parent',required=False)
+    parser.add_argument('--atom', type=int, help='Atom to build on parent', required=False)
     parser.add_argument('--parent_id', type=int, help='Parent id in the fragment database',required=False)   
 
     # 2. build from parent file
-    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=False)
-    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format',required=False)
-    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format',required=False)
-    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
-    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=False)
+    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format', required=False)
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format', required=False)
+    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format', required=False)
+    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0', required=False)
+    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0', required=False)
 
     # optional arguments
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
-    parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=False)
-    parser.add_argument('--depth', type=int, help='Depth to build up to',required=False)
+    parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file', required=False)
+    parser.add_argument('--depth', type=int, help='Depth to build up to', required=False)
     parser.add_argument('--not_unique', action='store_true', help='Do not obtain unique molecule set in each depth building stage', required=False)
     parser.add_argument('-o','--output', help='Output inchi file name', required=False)
-    parser.add_argument('--parallel', type=int, help='Number of processes for parallel run',required=False)
+    parser.add_argument('--parallel', type=int, help='Number of processes for parallel run', required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('--recursive', action='store_true', help='Build molecules using recursive function, if False extend_molecule_list_depth function will be used instead', required=False)
@@ -735,6 +735,7 @@ if __name__ == '__main__':
     parser.add_argument('--saveinchi', action='store_true', default=False, help='Save generated molecules as InChi file', required=False)
     parser.add_argument('--savesdf', action='store_true', default=False, help='Save generated molecules as SDF file', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
+    parser.add_argument('--version', help='Version for build probability factor, version 1 gives different build probabilities according to the order of fragment addition, version 2 gives same build probabilities for any order', default=1, type=int, required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
 
@@ -775,9 +776,12 @@ if __name__ == '__main__':
         threshold = None
 
     if args.count:
-        extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold)
+        extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold, args.version)
 
     elif args.recursive is True:
+
+        if args.version != 1:
+            raise Exception(f'Cannot run recursive with version {version}')
 
         if args.output is not None:
             outfile = open(args.output, 'w')
@@ -789,7 +793,7 @@ if __name__ == '__main__':
                 print(i)
 
     else:
-        extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, saveinchi=args.saveinchi, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique)
+        extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, saveinchi=args.saveinchi, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique, version=args.version)
 
     print('Normal termination')
 

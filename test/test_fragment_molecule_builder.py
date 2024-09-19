@@ -93,6 +93,63 @@ def test_extend_molecule_list_2():
         assert str(x) == answers[idx]
 
 
+def test_extend_molecule_list_version2():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    amide = FragmentMolecule()
+
+    amide.add_fragment(2, [1, 2])
+
+    output_mol_list = extend_molecule_list([amide], bond_frequencies, fragment_database_graph, version=2)
+    
+    answers = ['2-1:(0, 1, 1, 2):0.5', '2-3:(0, 1, 2, 2):0.5']
+    for idx, x in enumerate(output_mol_list):
+        assert str(x) == answers[idx]
+    print(output_mol_list)
+
+
+def test_extend_molecule_list_version2():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    amide = FragmentMolecule()
+
+    amide.add_fragment(2, [1, 2])
+
+    output_mol_list = extend_molecule_list([amide], bond_frequencies, fragment_database_graph, version=2)
+
+    answers = ['2-1:(0, 1, 1, 2):0.5', '2-3:(0, 1, 2, 2):0.5']
+    for idx, x in enumerate(output_mol_list):
+        assert str(x) == answers[idx]
+    print(output_mol_list)
+
+    output_mol_list = extend_molecule_list(output_mol_list, bond_frequencies, fragment_database_graph, version=2)
+
+    print(output_mol_list)
+
+    output_mol_list = extend_molecule_list(output_mol_list, bond_frequencies, fragment_database_graph, version=2)
+
+    print(output_mol_list)
+
+    answers = ['2-1-3-0:(0, 1, 1, 2);(0, 2, 2, 2);(1, 3, 0, 0):0.08333333333333333','2-1-3-2:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 2):0.08333333333333333','2-1-3-4:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 0):0.08333333333333333','2-1-3-5:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 3):0.08333333333333333','2-1-3-6:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 1):0.08333333333333333','2-1-0-3:(0, 1, 1, 2);(1, 2, 0, 0);(0, 3, 2, 2):0.08333333333333333','2-3-1-2:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 2):0.08333333333333333','2-3-1-4:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 0):0.08333333333333333','2-3-1-5:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 3):0.08333333333333333','2-3-1-6:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 1):0.08333333333333333','2-3-1-0:(0, 1, 2, 2);(0, 2, 1, 2);(2, 3, 0, 0):0.08333333333333333','2-3-2-1:(0, 1, 2, 2);(1, 2, 2, 2);(0, 3, 1, 2):0.08333333333333333','2-3-2-1:(0, 1, 2, 2);(1, 2, 2, 2);(2, 3, 1, 2):0.08333333333333333','2-3-4-1:(0, 1, 2, 2);(1, 2, 2, 0);(0, 3, 1, 2):0.08333333333333333','2-3-4-3:(0, 1, 2, 2);(1, 2, 2, 0);(2, 3, 0, 2):0.08333333333333333','2-3-4-5:(0, 1, 2, 2);(1, 2, 2, 0);(2, 3, 0, 1):0.08333333333333333','2-3-5-1:(0, 1, 2, 2);(1, 2, 2, 3);(0, 3, 1, 2):0.08333333333333333','2-3-5-4:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 1, 0):0.027777777777777776','2-3-5-8:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 9, 0):0.027777777777777776','2-3-5-8:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 11, 0):0.027777777777777776','2-3-6-1:(0, 1, 2, 2);(1, 2, 2, 1);(0, 3, 1, 2):0.08333333333333333','2-3-6-3:(0, 1, 2, 2);(1, 2, 2, 1);(2, 3, 5, 2):0.08333333333333333','2-3-6-7:(0, 1, 2, 2);(1, 2, 2, 1);(2, 3, 5, 3):0.08333333333333333']
+
+    for idx, x in enumerate(output_mol_list):
+        assert str(x) == answers[idx]
+
+
 def test_extend_molecule_list_all():
 
     bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')

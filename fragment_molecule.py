@@ -11,8 +11,9 @@ from pymolgen.molecule_formats import *
 
 class FragmentMolecule:
 
-    def __init__(self, build_probability=None):
+    def __init__(self, build_probability=None, bp_factor=1.0):
         self._graph = FragmentGraph(build_probability)
+        self.bp_factor = bp_factor
 
     def __hash__(self):
 

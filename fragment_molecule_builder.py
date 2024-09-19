@@ -20,9 +20,34 @@ print = partial(print, flush=True)
 sys.setrecursionlimit(10000)
 
 
-def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=False, threshold=None):
+def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_database_graph, depth=False, threshold=None, version=1):
     """
     Extend a list of molecules by adding one further fragment to each molecule
+
+    Parameters
+    ----------
+    FragmentMolecule_list : list of FragmentMolecule objects
+    bond_frequencies : dict of (int,int) to (int,int):float dict
+        Bond frequencies in dict format
+    fragment_database_graph : FragmentMolecule object
+        Fragment database in FragmentMolecule format
+    depth : int, optional
+        If set, current depth for generation
+    threshold : float, optional
+        Build probability threshold for generation
+    version : int
+        Version for build probability calculation.
+        Version 1: calculates build probability factor for new fragment addition as 1/total_free_valence,
+        this gives rise to different build probabilities for same molecule if built in different order,
+        since adding a fragment with many available attachment points early will have greater effect
+        than adding it later on.
+        Version 2: calculates build probability factor for new fragment addition as 1/number of fragments * 
+        1/number of attachment points for chosen fragment. This gives same build probability for same molecule
+        regardless of order of fragment addition.
+
+    Returns
+    -------
+    output_mol_list : list of FragmentMolecule objects
     """
 
     output_mol_list = []
@@ -32,6 +57,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
         free_valence_list = f.list_free_valence_points()
         total_free_valence = f.get_total_free_valence()
         f_build_probability = f.get_build_probability()
+        n_fragments = len(f.list_frag_id())
 
         # loop through fragments in molecule
         for x in range(len(free_valence_list)):
@@ -47,7 +73,14 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
 
                 for bond, bond_freq in fragment_bonds.items():
 
-                    attachment_probability = bond_freq / ( total_freq * total_free_valence)
+                    if version == 1:
+                        factor = total_freq * total_free_valence
+                    elif version == 2:
+                        factor = len(f.list_free_valence_points()[x]) * n_fragments
+                    else:
+                        raise Exception(f'Version {version} not implemented')
+                    print('factor', factor)
+                    attachment_probability = bond_freq / factor
 
                     new_build_probability = attachment_probability * f_build_probability
 
@@ -59,6 +92,7 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
                     l = bond[1]
 
                     f2 = copy.deepcopy(f)
+                    f2.bp_factor = f.bp_factor * factor
 
                     node_id = f2.add_fragment(j, fragment_database_graph.fragments[j].attachment_points, fragment_database_graph.fragments[j].get_canonical_mapping())
                     f2.add_bond(x, node_id, atom, l, attachment_probability)
@@ -70,6 +104,8 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
                             print(f'DEPTH {depth} TOTAL {total}')
 
                     output_mol_list.append(f2)
+
+                    print(f2, f2.bp_factor)
 
     return output_mol_list
 

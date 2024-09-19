@@ -1,6 +1,7 @@
 import argparse
 import builtins
 import inspect
+import networkx
 
 import pandas as pd
 
@@ -28,6 +29,174 @@ def print_with_line(*args, **kwargs):
 
 # Override the built-in print function using partial
 print = partial(print_with_line)
+
+
+def analyse_molecule(inchi, fragment_database, fragment_database_graph):
+    """
+    Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
+    If a parent_mol is given, then the constituent fragments for the parent strucrue present in the final molecule will be converted into a single parent fragment.
+    """
+
+    rdmol = Chem.MolFromInchi(inchi)
+
+    smi = Chem.MolToSmiles(rdmol)
+
+    smi = canonicalise_tautomer(smi)
+
+    mol = molecule_from_smiles(smi)
+
+    f = FragmentMolecule()
+
+    fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
+
+    index_list = []
+    mapping_list = []
+
+    for fragment in fragments:
+
+        index, mapping = get_fragment_index(fragment, fragment_database)
+
+        index_list.append(index)
+        mapping_list.append(mapping)
+
+        f.add_fragment(index, fragment_database[index].free_valence_list)
+
+    assert len(pairs) == len(bonds)
+
+    for pair, bond in zip(pairs, bonds):
+
+        i = pair[0]
+        j = pair[1]
+        k = mapping_list[i][bond[0]]
+        l = mapping_list[j][bond[1]]
+
+        f.add_bond(i, j, k, l)
+
+    calculate_build_probability(bond_frequencies, fragment_database_graph, fragment_molecule, root)
+
+    return str(f)
+
+
+def calculate_build_probability(bond_frequencies, fragment_database_graph, fragment_molecule, root):
+
+    build_probability = 1.0
+
+    root_index = fragment_molecule.list_frag_id().index(root)
+
+    ordered_bonds = get_ordered_bonds(fragment_molecule, root_index)
+
+    bonds = fragment_molecule._graph.bonds
+
+    bond_dict = make_bond_dict(bonds)
+
+    for bond in ordered_bonds:
+
+        i, j = bond
+
+        k, l = bond_dict[bond]
+
+        i_id = fragment_molecule.list_frag_id()[i]
+        j_id = fragment_molecule.list_frag_id()[j]
+
+        k_can = fragment_database_graph.fragments[i_id].get_canonical_mapping()[k]
+        l_can = fragment_database_graph.fragments[j_id].get_canonical_mapping()[l]
+
+        freq = bond_frequencies[(i_id,k_can)][(j_id,l_can)]
+
+        fragment_bonds = bond_frequencies[(i_id, k_can)]
+
+        total_freq = sum(fragment_bonds.values())
+
+        bond_freq = freq/total_freq
+
+        build_probability *= bond_freq
+
+    print(fragment_molecule._graph._fragments)
+
+    list_free_valence_points = fragment_molecule.list_free_valence_points()
+
+    # calculate multiplication factor for build_probability to take number of attachment points into account
+
+    factor = 1
+
+    for fragment_index, fragment in fragment_molecule._graph._fragments.items():
+        print(fragment_index, fragment.attachment_points)
+
+        n_attachment_points = len(fragment.attachment_points)
+        n_attachment_points_free = len(list_free_valence_points[fragment_index])
+        n_neighbours = n_attachment_points - n_attachment_points_free
+
+        print(fragment_index, n_neighbours)
+
+        if fragment_index == root_index:
+            n_max = n_attachment_points
+        else:
+            n_max = n_attachment_points - 1
+
+        n_min = n_attachment_points_free
+
+        for i in range(n_max, n_min, -1):
+            print(i)
+            factor *= 1/i
+
+    print('factor', factor)
+
+    print(fragment_molecule.list_free_valence_points())
+
+    build_probability *= factor
+
+    return build_probability
+
+
+def get_ordered_bonds(fragment_molecule, root):
+
+    networkx_graph = fragment_molecule._graph.convert_to_networkx()
+
+    visited = set()
+
+    bfs_nodes = list(networkx.bfs_tree(networkx_graph, root))
+
+    bonds = []
+
+    for node in bfs_nodes:
+
+        visited.add(node)
+
+        for neighbor in networkx_graph.neighbors(node):
+            if neighbor not in visited:
+                bonds.append((node, neighbor))
+
+    return bonds
+
+
+def make_bond_dict(bonds):
+
+    bond_dict = {}
+
+    for bond in bonds:
+
+        i,j,k,l = bond
+
+        assert (i,j) not in bond_dict
+
+        bond_dict[(i,j)] = (k,l)
+
+    return bond_dict
+
+
+def convert_parent(fragment_molecule, parent_mol):
+
+    g1 = fragment_molecule.convert_to_networkx()
+    g2 = parent_mol.convert_to_networkx()
+
+    gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
+
+    if gm.subgraph_is_isomorphic():
+        matching = gm.mapping
+        print(matching)
+
+    else:
+        raise Exception('Parent fragment not present in molecule')
 
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):
@@ -84,67 +253,6 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
         raise Exception('fragment in fragment_database more than once')
 
     return index[0], newmap
-
-
-def analyse_molecule(inchi, fragment_database, fragment_database_graph, parent_mol=None):
-    """
-    Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
-    If a parent_mol is given, then the constituent fragments for the parent strucrue present in the final molecule will be converted into a single parent fragment.
-    """
-
-    rdmol = Chem.MolFromInchi(inchi)
-
-    smi = Chem.MolToSmiles(rdmol)
-
-    smi = canonicalise_tautomer(smi)
-
-    mol = molecule_from_smiles(smi)
-
-    f = FragmentMolecule()
-
-    fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
-
-    index_list = []
-    mapping_list = []
-
-    for fragment in fragments:
-
-        index, mapping = get_fragment_index(fragment, fragment_database)
-
-        index_list.append(index)
-        mapping_list.append(mapping)
-
-        f.add_fragment(index, fragment_database[index].free_valence_list)
-
-    assert len(pairs) == len(bonds)
-
-    for pair, bond in zip(pairs, bonds):
-
-        i = pair[0]
-        j = pair[1]
-        k = mapping_list[i][bond[0]]
-        l = mapping_list[j][bond[1]]
-
-        f.add_bond(i, j, k, l)
-
-    return str(f)
-
-
-
-def convert_parent(fragment_molecule, parent_mol):
-
-    g1 = fragment_molecule.convert_to_networkx()
-    g2 = parent_mol.convert_to_networkx()
-
-    gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
-
-    if gm.subgraph_is_isomorphic():
-        matching = gm.mapping
-        print(matching)
-
-    else:
-        raise Exception('Parent fragment not present in molecule')
-
 
 
 if __name__ == '__main__':
@@ -206,6 +314,8 @@ if __name__ == '__main__':
             mol = convert_fragment_molecule_to_mol(f, fragment_database)
 
             assert inchi == molecule_to_inchi(mol)
+
+
 
 
 

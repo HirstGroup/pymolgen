@@ -210,7 +210,7 @@ def calculate_build_probability_version2(bond_frequencies, fragment_database_gra
 
     print(original_attachment_points)
 
-    current_attachment_points = [i for i in original_attachment_points]
+    n_attachment_points = original_attachment_points[root_index]
 
     n_fragments = 1
 
@@ -234,13 +234,13 @@ def calculate_build_probability_version2(bond_frequencies, fragment_database_gra
         print(bond_freq)
 
         if version == 1:
-            factor = sum(current_attachment_points)
+            factor = n_attachment_points
         elif version == 2:
             factor = current_attachment_points[i] * n_fragments
         else:
             raise Exception(f'Version {version} not implemented')
 
-        current_attachment_points[i] -= 1
+        n_attachment_points += original_attachment_points[j] - 2
 
         n_fragments += 1
 

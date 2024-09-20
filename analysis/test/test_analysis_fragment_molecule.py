@@ -417,6 +417,8 @@ def test_calculate_build_probability_version2_2():
 
             print('RESULT', n+1, string_representation, fragment_molecule._graph.build_probability, build_probability)
 
+            assert (fragment_molecule._graph.build_probability - build_probability) ** 2 < 0.00001
+
             if n == 10:
                 break
 

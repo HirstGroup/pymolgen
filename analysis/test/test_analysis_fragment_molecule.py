@@ -183,7 +183,6 @@ def test_calculate_build_probability3():
 
             #assert (fragment_molecule._graph.build_probability - build_probability) ** 2 < 0.00001
 
-test_calculate_build_probability3()
 
 def test_bfs():
 
@@ -242,3 +241,180 @@ def test_get_ordered_bonds():
 
     assert bonds == [(0, 1), (1, 2), (1, 5), (2, 3), (3, 4)]
 
+
+def test_traverse_least_neighbors():
+
+    import networkx as nx
+
+    # Create an undirected graph with further branching at some nodes
+    G = nx.Graph()
+
+    # Add edges to form a complex branching structure
+    edges = [
+        (0, 1), (0, 2),
+        (1, 3), (1, 4),
+        (2, 5), (2, 6),
+        (3, 7), (3, 8),
+        (8, 9)
+    ]
+    G.add_edges_from(edges)
+
+    # Root node for traversal
+    root = 0
+
+    # Custom traversal from the root, choosing the neighbor with the fewest further neighbors
+    def traverse_least_neighbors(graph, root):
+        visited = []  # To keep track of visited nodes
+        to_visit = [root]  # Start with the root node
+        
+        while to_visit:
+            # Pop the current node (DFS-style: process one node before continuing others)
+            node = to_visit.pop()
+            
+            if node not in visited:
+                print(f"Visited Node: {node}")
+                visited.append(node)
+                
+                # Get unvisited neighbors of the current node
+                unvisited_neighbors = [n for n in graph.neighbors(node) if n not in visited]
+                
+                # Sort neighbors by the number of their further neighbors (degree)
+                sorted_neighbors = sorted(unvisited_neighbors, key=lambda n: graph.degree(n))
+                
+                # Add sorted neighbors to the to_visit list in reverse order
+                # So the smallest degree neighbor is processed first
+                to_visit.extend(sorted_neighbors[::-1])
+
+        return visited
+
+    # Run the traversal
+    visited = traverse_least_neighbors(G, root)
+    print(visited)
+
+
+def test_traverse_least_neighbors2():
+    import networkx as nx
+
+    # Create an undirected graph with further branching at some nodes
+    G = nx.Graph()
+
+    # Add edges to form a complex branching structure
+    edges = [
+        (0, 1), (0, 2),
+        (1, 3), (1, 4),
+        (2, 5), (2, 6),
+        (3, 7), (3, 8),
+        (8, 9)
+    ]
+    G.add_edges_from(edges)
+
+    # Root node for traversal
+    root = 0
+
+    # Custom traversal from the root, choosing the neighbor with the fewest further neighbors
+    def traverse_least_neighbors(graph, root):
+        visited = set()  # To keep track of visited nodes
+        to_visit = [(root, None)]  # Store tuples of (current node, parent node)
+        
+        bonds = []
+
+        while to_visit:
+            # Pop the current node (DFS-style: process one node before continuing others)
+            node, parent = to_visit.pop()
+            
+            if node not in visited:
+                if parent is not None:
+                    print(f"Visited Node: {node} (bonded to {parent})")
+                    bonds.append((parent, node))
+                else:
+                    print(f"Visited Node: {node} (root)")
+
+                visited.add(node)
+                
+                # Get unvisited neighbors of the current node
+                unvisited_neighbors = [n for n in graph.neighbors(node) if n not in visited]
+                
+                # Sort neighbors by the number of their further neighbors (degree)
+                sorted_neighbors = sorted(unvisited_neighbors, key=lambda n: graph.degree(n))
+                
+                # Add sorted neighbors to the to_visit list in reverse order,
+                # passing the current node as the parent
+                to_visit.extend([(n, node) for n in sorted_neighbors[::-1]])
+
+        return bonds
+
+    # Run the traversal
+    bonds = traverse_least_neighbors(G, root)
+    print(bonds)
+
+    assert bonds == [(0, 1), (1, 4), (1, 3), (3, 7), (3, 8), (8, 9), (0, 2), (2, 5), (2, 6)]
+
+
+def test_traverse_least_neighbors():
+
+    f = FragmentMolecule()
+
+    f.add_fragment(0, [0])
+    f.add_fragment(10, [1,2,3])
+    f.add_fragment(20, [5, 6])
+    f.add_fragment(40, [7, 8])
+    f.add_fragment(30, [9])
+    f.add_fragment(50, [4])
+
+    f.add_bond(0, 1, 0, 1)
+    f.add_bond(1, 2, 2, 5)
+    f.add_bond(2, 3, 6, 7)
+    f.add_bond(3, 4, 8, 9)
+    f.add_bond(1, 5, 3, 4)    
+
+    bonds = traverse_least_neighbors(fragment_molecule=f, root=0)
+
+    print(bonds)
+
+    assert bonds == [(0, 1), (1, 5), (1, 2), (2, 3), (3, 4)]
+
+
+def test_calculate_build_probability_version2():
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = get_bond_frequencies('../../datasets/database1000/frequencies10.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    string_representation = '2-3:(0,1,1,2):1.0'
+
+    print(string_representation)
+
+    fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+    build_probability = calculate_build_probability_version2(bond_frequencies, fragment_database_graph, fragment_molecule, root=2, version=1)
+
+    print(build_probability, fragment_molecule.get_build_probability())
+
+
+def test_calculate_build_probability_version2_2():
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = get_bond_frequencies('../../datasets/database1000/frequencies10.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    with open('input/builder-depth3.txt') as infile:
+
+        for n, line in enumerate(infile):
+
+            string_representation = line.strip()
+
+            fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+            build_probability = calculate_build_probability_version2(bond_frequencies, fragment_database_graph, fragment_molecule, root=0, version=1)
+
+            print('RESULT', n+1, string_representation, fragment_molecule._graph.build_probability, build_probability)
+
+test_calculate_build_probability_version2_2()

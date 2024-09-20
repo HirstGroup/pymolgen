@@ -148,6 +148,115 @@ def calculate_build_probability(bond_frequencies, fragment_database_graph, fragm
     return build_probability
 
 
+def traverse_least_neighbors(fragment_molecule, root):
+    """
+    Custom traversal from the root, choosing the neighbor with the fewest further neighbors
+    """
+
+    graph = fragment_molecule._graph.convert_to_networkx()
+
+    visited = set()  # To keep track of visited nodes
+    to_visit = [(root, None)]  # Store tuples of (current node, parent node)
+    
+    bonds = []
+
+    while to_visit:
+        # Pop the current node (DFS-style: process one node before continuing others)
+        node, parent = to_visit.pop()
+        
+        if node not in visited:
+            if parent is not None:
+                print(f"Visited Node: {node} (bonded to {parent})")
+                bonds.append((parent, node))
+            else:
+                print(f"Visited Node: {node} (root)")
+
+            visited.add(node)
+            
+            # Get unvisited neighbors of the current node
+            unvisited_neighbors = [n for n in graph.neighbors(node) if n not in visited]
+            
+            # Sort neighbors by the number of their further neighbors (degree)
+            sorted_neighbors = sorted(unvisited_neighbors, key=lambda n: graph.degree(n))
+            
+            # Add sorted neighbors to the to_visit list in reverse order,
+            # passing the current node as the parent
+            to_visit.extend([(n, node) for n in sorted_neighbors[::-1]])
+
+    return bonds
+
+
+def calculate_build_probability_version2(bond_frequencies, fragment_database_graph, fragment_molecule, root, version=1):
+
+    build_probability = 1.0
+
+    root_index = fragment_molecule.list_frag_id().index(root)
+
+    ordered_bonds = traverse_least_neighbors(fragment_molecule, root_index)
+
+    bonds = fragment_molecule._graph.bonds
+
+    bond_dict = make_bond_dict(bonds)
+
+    print(bond_dict)
+
+    print(ordered_bonds)
+
+    original_attachment_points = []
+
+    for fragment_id, fragment in fragment_molecule._graph.fragments.items():
+        print(fragment.attachment_points)
+        original_attachment_points.append(len(fragment.attachment_points))
+
+    print(original_attachment_points)
+
+    current_attachment_points = [i for i in original_attachment_points]
+
+    n_fragments = 1
+
+    for bond in ordered_bonds:
+
+        i, j = bond
+        k, l = bond_dict[bond]
+        print(i,j,k,l)
+
+        i_frag_id = fragment_molecule.list_frag_id()[i]
+        j_frag_id = fragment_molecule.list_frag_id()[j]
+
+        print(i_frag_id, j_frag_id)
+
+        k_can = fragment_database_graph.fragments[i_frag_id].get_canonical_mapping()[k]
+        l_can = fragment_database_graph.fragments[j_frag_id].get_canonical_mapping()[l]
+
+        print(k_can, l_can)
+
+        bond_freq = bond_frequencies[(i_frag_id, k_can)][(j_frag_id, l_can)]
+        print(bond_freq)
+
+        if version == 1:
+            factor = sum(current_attachment_points)
+        elif version == 2:
+            factor = current_attachment_points[i] * n_fragments
+        else:
+            raise Exception(f'Version {version} not implemented')
+
+        current_attachment_points[i] -= 1
+
+        n_fragments += 1
+
+        fragment_bonds = bond_frequencies[(i_frag_id, k_can)]
+
+        total_freq = sum(fragment_bonds.values())        
+
+        attachment_probability = bond_freq / (total_freq * factor)
+
+        build_probability *= attachment_probability
+
+    print(build_probability)
+
+    return build_probability
+
+
 def get_ordered_bonds(fragment_molecule, root):
 
     networkx_graph = fragment_molecule._graph.convert_to_networkx()

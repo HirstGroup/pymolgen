@@ -74,13 +74,13 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
                 for bond, bond_freq in fragment_bonds.items():
 
                     if version == 1:
-                        factor = total_freq * total_free_valence
+                        factor = total_free_valence
                     elif version == 2:
                         factor = len(f.list_free_valence_points()[x]) * n_fragments
                     else:
                         raise Exception(f'Version {version} not implemented')
-                    print('factor', factor)
-                    attachment_probability = bond_freq / factor
+                    
+                    attachment_probability = bond_freq / (total_freq * factor)
 
                     new_build_probability = attachment_probability * f_build_probability
 
@@ -104,8 +104,6 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
                             print(f'DEPTH {depth} TOTAL {total}')
 
                     output_mol_list.append(f2)
-
-                    print(f2, f2.bp_factor)
 
     return output_mol_list
 

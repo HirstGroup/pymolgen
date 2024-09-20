@@ -405,7 +405,7 @@ def test_calculate_build_probability_version2_2():
     bond_frequencies = bond_frequencies_to_np(bond_frequencies)
     bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
 
-    with open('input/builder-depth3.txt') as infile:
+    with open('input/builder_bis-depth3.txt') as infile:
 
         for n, line in enumerate(infile):
 
@@ -416,5 +416,8 @@ def test_calculate_build_probability_version2_2():
             build_probability = calculate_build_probability_version2(bond_frequencies, fragment_database_graph, fragment_molecule, root=0, version=1)
 
             print('RESULT', n+1, string_representation, fragment_molecule._graph.build_probability, build_probability)
+
+            if n == 10:
+                break
 
 test_calculate_build_probability_version2_2()

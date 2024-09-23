@@ -24,7 +24,7 @@ def test3():
     subprocess.run('python ../analysis_fragment_molecule.py -i input/inchi10.inchi -o output/inchi10_analysis_version1.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt --root 95 --version 1', check=True, shell=True)
 
     #assert filecmp.cmp('input/inchi10_analysis.txt', 'output/inchi10_analysis.txt') is True
-test3()
+
 
 def test_get_fragment_index():
 
@@ -139,7 +139,7 @@ def test_analyse_molecule_5():
     assert string_representation == '0-29-0:(0, 1, 0, 0);(1, 2, 0, 0):0.0375'
 
 
-def test_convert_parent():
+def test_get_parent_fragments():
 
     fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
     fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
@@ -159,8 +159,174 @@ def test_convert_parent():
     f.add_bond(1, 2, 0, 0)
     print(f)    
 
-    convert_parent(f, parent)
+    matching = get_parent_fragments(f, parent)
 
+    assert matching == {0: 0, 1: 1}
+
+
+def test_get_parent_fragments_2():
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    string_representation = '0-3:(0, 1, 0, 2):1.0'
+
+    parent = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+    string_representation = analyse_molecule('InChI=1S/C3H8/c1-3-2/h3H2,1-2H3', fragment_database, fragment_database_graph)
+
+    f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+    print(string_representation)
+
+    matching = get_parent_fragments(f, parent)
+
+    assert matching == {0: 0, 1: 1}
+
+
+def test_get_parent_fragments_3():
+    # check that mapping between parent and analysed molecule works for para phenylisoxazoles
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent_mol = molecule_from_sdf('input/phenylisoxazole.sdf')
+
+    attachment_points = []
+
+    # remove hydrogens from parent and determine atoms that will have open valence
+    for i in [21]:
+        parent_mol = parent_mol.remove_atom(i)
+        for j in parent_mol.free_valence_list:
+            if j not in attachment_points:
+                attachment_points.append(j)
+
+    # include parent in fragment_database and fragment_database_graph
+    parent_id = len(fragment_database)
+    fragment_database.add_mol(parent_mol)
+    fragment_database_graph.add_fragment(parent_id, attachment_points)
+    fragment_database_graph.fragments[parent_id].set_attribute('frag_id', parent_id)
+    fragment_database_graph.fragments[parent_id].set_canonical_mapping(fragment_database)
+
+    parent_analysis = analyse_molecule(parent_mol, fragment_database, fragment_database_graph, mol_input=True)
+
+    print(parent_analysis)
+
+    parent = generate_fragment_molecule_from_string(parent_analysis, fragment_database_graph)
+
+    para = [5,8]
+
+    check = [{2: 0, 3: 1, 4: 2, 1: 3}, {3: 0, 4: 1, 5: 2, 2: 3}]
+
+    with open('input/inchi10.inchi') as infile:
+
+        lines = infile.readlines()
+
+    lines = [lines[i] for i in para]
+
+    for n, line in enumerate(lines):
+
+        inchi = line.strip().split()[0]
+
+        string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph)
+
+        fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+        print(fragment_molecule)
+
+        matching = get_parent_fragments(fragment_molecule, parent)
+
+        assert matching == check[n]
+
+
+def test_get_parent_fragments_4():
+    # check that mapping between parent and analysed molecule works for meta/para phenylisoxazoles
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent_mol = molecule_from_sdf('input/phenylisoxazole.sdf')
+
+    attachment_points = []
+
+    # remove hydrogens from parent and determine atoms that will have open valence
+    for i in [20,21]:
+        parent_mol = parent_mol.remove_atom(i)
+        for j in parent_mol.free_valence_list:
+            if j not in attachment_points:
+                attachment_points.append(j)
+
+    # include parent in fragment_database and fragment_database_graph
+    parent_id = len(fragment_database)
+    fragment_database.add_mol(parent_mol)
+    fragment_database_graph.add_fragment(parent_id, attachment_points)
+    fragment_database_graph.fragments[parent_id].set_attribute('frag_id', parent_id)
+    fragment_database_graph.fragments[parent_id].set_canonical_mapping(fragment_database)
+
+    parent_analysis = analyse_molecule(parent_mol, fragment_database, fragment_database_graph, mol_input=True)
+
+    print(parent_analysis)
+
+    parent = generate_fragment_molecule_from_string(parent_analysis, fragment_database_graph)
+
+    metapara = [6,7]
+
+    check = [{2: 0, 3: 1, 4: 2, 1: 3}, {3: 0, 4: 1, 5: 2, 2: 3}]
+
+    with open('input/inchi10.inchi') as infile:
+
+        lines = infile.readlines()
+
+    lines = [lines[i] for i in metapara]
+
+    for n, line in enumerate(lines):
+
+        inchi = line.strip().split()[0]
+
+        string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph)
+
+        fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+        print(fragment_molecule)
+
+        matching = get_parent_fragments(fragment_molecule, parent)
+
+        assert matching == check[n]
+
+
+def test_analyse_molecule_protected():
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    parent_mol = molecule_from_sdf('input/phenylisoxazole.sdf')
+
+    attachment_points = []
+
+    # remove hydrogens from parent and determine atoms that will have open valence
+    for i in [20,21]:
+        parent_mol = parent_mol.remove_atom(i)
+        for j in parent_mol.free_valence_list:
+            if j not in attachment_points:
+                attachment_points.append(j)
+
+    # include parent in fragment_database and fragment_database_graph
+    parent_id = len(fragment_database)
+    fragment_database.add_mol(parent_mol)
+    fragment_database_graph.add_fragment(parent_id, attachment_points)
+    fragment_database_graph.fragments[parent_id].set_attribute('frag_id', parent_id)
+    fragment_database_graph.fragments[parent_id].set_canonical_mapping(fragment_database)
+
+    parent_analysis = analyse_molecule(parent_mol, fragment_database, fragment_database_graph, mol_input=True)
+
+    print(parent_analysis)
+
+    parent = generate_fragment_molecule_from_string(parent_analysis, fragment_database_graph)
+
+    inchi = 'InChI=1S/C13H15NO/c1-8-5-6-12(7-9(8)2)13-10(3)14-15-11(13)4/h5-7H,1-4H3'
+    
+    analyse_molecule_protected(inchi, fragment_database, fragment_database_graph, parent, bond_frequencies=None, mol_input=False, root=None, version=None)
+test_analyse_molecule_protected()
 
 def test_calculate_build_probability():
 

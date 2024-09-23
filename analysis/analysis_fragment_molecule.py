@@ -33,20 +33,22 @@ def print_with_line(*args, **kwargs):
 print = partial(print_with_line)
 
 
-def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies=None, root=None, version=None):
+def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies=None, mol_input=False, root=None, version=None):
     """
     Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
 
     Parameters
     ----------
-    inchi : str
-        Inchi string to analyse
+    inchi : str or Molecule
+        Inchi string or Molecule to analyse
     fragment_database : list of Molecule objects
         Fragment database in Molecule format
     fragment_database_graph : FragmentMolecule object
         Fragment database in FragmentMolecule format
     bond_frequencies : dict of (i,k) into dict of (j,l):frequencies
         Bond frequencies in dictionary format    
+    mol_input : bool, optional
+        If True, input will be in Molecule format
     root : int, optional
         Index number of root fragment in database.
         Root fragment means the fragment from which the rest of the molecule is built.
@@ -58,13 +60,19 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_fre
     -------
     """
 
-    rdmol = Chem.MolFromInchi(inchi)
+    if mol_input is False:
 
-    smi = Chem.MolToSmiles(rdmol)
+        rdmol = Chem.MolFromInchi(inchi)
 
-    smi = canonicalise_tautomer(smi)
+        smi = Chem.MolToSmiles(rdmol)
 
-    mol = molecule_from_smiles(smi)
+        smi = canonicalise_tautomer(smi)
+
+        mol = molecule_from_smiles(smi)
+
+    else:
+
+        mol = inchi
 
     f = FragmentMolecule()
 
@@ -97,6 +105,58 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_fre
         f._graph._build_probability = calculate_build_probability_version2(bond_frequencies, fragment_database_graph, f, root, version)
 
     return str(f)
+
+
+def analyse_molecule_protected(inchi, fragment_database, fragment_database_graph, parent, bond_frequencies=None, mol_input=False, root=None, version=None):
+    """
+    Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
+
+    Parameters
+    ----------
+    inchi : str or Molecule
+        Inchi string or Molecule to analyse
+    fragment_database : list of Molecule objects
+        Fragment database in Molecule format
+    fragment_database_graph : FragmentMolecule object
+        Fragment database in FragmentMolecule format
+    bond_frequencies : dict of (i,k) into dict of (j,l):frequencies
+        Bond frequencies in dictionary format
+    parent : FragmentMolecule object
+        Parent molecule in FragmentMolecule format
+    mol_input : bool, optional
+        If True, input will be in Molecule format
+    root : int, optional
+        Index number of root fragment in database.
+        Root fragment means the fragment from which the rest of the molecule is built.
+        (Fragments are obtained according to fragmentation rules, so could be different to parent fragment)
+    version : int, optional
+        Version for calculation of build probability factor
+
+    Returns
+    -------
+    """
+
+    if mol_input is False:
+
+        rdmol = Chem.MolFromInchi(inchi)
+
+        smi = Chem.MolToSmiles(rdmol)
+
+        smi = canonicalise_tautomer(smi)
+
+        mol = molecule_from_smiles(smi)
+
+    else:
+
+        mol = inchi
+
+    string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph)
+
+    fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+
+    parent_mapping = get_parent_fragments(fragment_molecule, parent)
+
+    print(parent_mapping)
 
 
 def calculate_build_probability(bond_frequencies, fragment_database_graph, fragment_molecule, root):
@@ -404,19 +464,35 @@ def make_bond_dict(bonds):
     return bond_dict
 
 
-def convert_parent(fragment_molecule, parent_mol):
+def get_parent_fragments(fragment_molecule, parent_mol):
+    """
+    Return mapping between fragment_molecule and parent_mol for matching fragments.
 
-    g1 = fragment_molecule.convert_to_networkx()
-    g2 = parent_mol.convert_to_networkx()
+    Parameters
+    ----------
+    fragment_molecule : FragmentMolecule object
+        Molecule as FragmentMolecule object
+    parent_mol : FragmentMolecule object
+        Parent molecule in FragmentMolecule object
+
+    Returns
+    -------
+    matching : dict of int:int
+        Dictionary for fragments in fragment_molecule present in parent molecule
+    """
+
+    g1 = fragment_molecule._graph.convert_to_networkx()
+    g2 = parent_mol._graph.convert_to_networkx()
 
     gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
 
     if gm.subgraph_is_isomorphic():
         matching = gm.mapping
-        print(matching)
 
     else:
         raise Exception('Parent fragment not present in molecule')
+
+    return matching
 
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):

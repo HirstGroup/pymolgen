@@ -107,7 +107,7 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_fre
     return str(f)
 
 
-def analyse_molecule_protected(inchi, fragment_database, fragment_database_graph, parent, bond_frequencies=None, mol_input=False, root=None, version=None):
+def analyse_molecule_protected(inchi, fragment_database, fragment_database_graph, parent_mol, parent_fragment_molecule_string, bond_frequencies=None, mol_input=False, root=None, version=None):
     """
     Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
 
@@ -121,8 +121,8 @@ def analyse_molecule_protected(inchi, fragment_database, fragment_database_graph
         Fragment database in FragmentMolecule format
     bond_frequencies : dict of (i,k) into dict of (j,l):frequencies
         Bond frequencies in dictionary format
-    parent : FragmentMolecule object
-        Parent molecule in FragmentMolecule format
+    parent : Molecule object
+        Parent molecule in Molecule format
     mol_input : bool, optional
         If True, input will be in Molecule format
     root : int, optional
@@ -150,13 +150,83 @@ def analyse_molecule_protected(inchi, fragment_database, fragment_database_graph
 
         mol = inchi
 
+    # convert molecule to analyse and parent molecule to FragmentMolecule objects
     string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph)
-
     fragment_molecule = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+    parent_fragment_molecule = generate_fragment_molecule_from_string(parent_fragment_molecule_string, fragment_database_graph)
 
-    parent_mapping = get_parent_fragments(fragment_molecule, parent)
+    print(parent_fragment_molecule_string)
+    print(fragment_molecule)
+
+    # mapping of fragments in molecule to fragments in parent molecule (as FragmentMolecule objects)
+    parent_mapping = get_parent_fragments(fragment_molecule, parent_fragment_molecule)
 
     print(parent_mapping)
+
+    # index of parent in fragment database and mapping of atoms in parent molecule to those in database (Molecule objects)
+    parent_index, parent_index_mapping = get_fragment_index(parent_mol._graph, fragment_database)
+
+    # create FragmentMolecule for input molecule, that will have parent as a single fragment
+    f = FragmentMolecule()
+    f.add_fragment(parent_index, fragment_database[parent_index].free_valence_list)
+
+    # get fragments, pairs and bonds, remember output fragments are networkx objects
+    fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
+
+    # list of fragment indeces that correspond to fragment database
+    index_list = [parent_index]
+
+    # list of mapping of fragment atoms to those in fragment database (as Molecule objects)
+    mapping_list = [parent_index_mapping]
+
+    # keep track of renumbering of fragment indeces when converting equivalent parent fragments to original single parent fragment
+    index_mapping = dict()
+
+    # map all fragments in parent_mapping to original single parent fragment
+    for key, val in parent_mapping.items():
+        index_mapping[key] = 0
+
+    # add further fragments (apart from parent) to FragmentMolecule
+    for n, fragment in enumerate(fragments):
+
+        # do not add fragments that belong to parent
+        if n in parent_mapping:
+            continue
+
+        index, mapping = get_fragment_index(fragment, fragment_database)
+
+        index_mapping[n] = len(index_list)
+
+        index_list.append(index)
+        mapping_list.append(mapping)
+
+        f.add_fragment(index, fragment_database[index].free_valence_list)
+
+
+    assert len(pairs) == len(bonds)
+
+    print(index_mapping)
+    print(mapping_list)
+
+    # make bonds between fragments
+    for pair, bond in zip(pairs, bonds):
+
+        # skip bonds between constituent fragments in parent
+        if pair[0] in parent_mapping and pair[1] in parent_mapping:
+            continue
+
+        i = index_mapping[pair[0]]
+        j = index_mapping[pair[1]]
+        print(mapping_list[i], mapping_list[j])
+        k = mapping_list[i][bond[0]]
+        l = mapping_list[j][bond[1]]
+        print(pair, bond, i,j,k,l)
+        f.add_bond(i, j, k, l)
+
+    if root is not None:
+        f._graph._build_probability = calculate_build_probability_version2(bond_frequencies, fragment_database_graph, f, root, version)
+
+    return str(f)    
 
 
 def calculate_build_probability(bond_frequencies, fragment_database_graph, fragment_molecule, root):

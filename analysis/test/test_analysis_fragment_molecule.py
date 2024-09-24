@@ -8,7 +8,7 @@ def test1():
     # main test for 1 inchi
 
     subprocess.run('python ../analysis_fragment_molecule.py -i input/inchi1.inchi -o output/inchi1_analysis.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt', check=True, shell=True)
-
+test1()
 
 def test2():
     # main test for 10 inchis
@@ -317,16 +317,17 @@ def test_analyse_molecule_protected():
     fragment_database_graph.fragments[parent_id].set_attribute('frag_id', parent_id)
     fragment_database_graph.fragments[parent_id].set_canonical_mapping(fragment_database)
 
-    parent_analysis = analyse_molecule(parent_mol, fragment_database, fragment_database_graph, mol_input=True)
+    parent_fragment_molecule_string = analyse_molecule(parent_mol, fragment_database, fragment_database_graph, mol_input=True)
 
-    print(parent_analysis)
+    print(parent_fragment_molecule_string)
 
-    parent = generate_fragment_molecule_from_string(parent_analysis, fragment_database_graph)
+    #parent = generate_fragment_molecule_from_string(parent_analysis, fragment_database_graph)
 
     inchi = 'InChI=1S/C13H15NO/c1-8-5-6-12(7-9(8)2)13-10(3)14-15-11(13)4/h5-7H,1-4H3'
-    
-    analyse_molecule_protected(inchi, fragment_database, fragment_database_graph, parent, bond_frequencies=None, mol_input=False, root=None, version=None)
-test_analyse_molecule_protected()
+    print(parent_mol)
+    print(parent_mol._graph.edges())
+    analyse_molecule_protected(inchi, fragment_database, fragment_database_graph, parent_mol, parent_fragment_molecule_string, bond_frequencies=None, mol_input=False, root=None, version=None)
+
 
 def test_calculate_build_probability():
 

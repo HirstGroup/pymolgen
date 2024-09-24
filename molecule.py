@@ -390,7 +390,7 @@ class Molecule:
         return hydrogen_list
 
 
-    def get_single_bonds_not_h_not_c(self, carbonyl=False, fluorine=False):
+    def get_single_bonds_not_h_not_c(self, carbonyl=False, fluorine=False, protected=None):
         """
         Get single bonds not with hydrogen and not in cycles
 
@@ -400,6 +400,8 @@ class Molecule:
             If True, do not break bonds between carbonyl and heteroatom
         fluorine : bool
             If True, do not break bonds in CF3 group
+        protected : list of [int, int]
+            List of bonds that will not be broken
         """
         cycles = networkx.cycle_basis(self.graph)
 
@@ -408,6 +410,11 @@ class Molecule:
                 return False
 
         single_bonds = []
+
+        if protected is not None:
+            protected = [[min(i,j), max(i,j)] for i,j in protected]
+        else:
+            protected = []
 
         for i in self.graph.nodes:
             if self.is_hydrogen(i): 
@@ -427,7 +434,7 @@ class Molecule:
                     if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j) and j not in i_cycles:
                         a = min(i,j)
                         b = max(i,j)
-                        if [a,b] not in single_bonds: 
+                        if [a,b] not in single_bonds and [a,b] not in protected: 
                             single_bonds.append([a,b])
             else:
 
@@ -443,9 +450,9 @@ class Molecule:
                     if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j):
                         a = min(i,j)
                         b = max(i,j)
-                        if self.is_fluorine_atom(j) and [a,b] not in single_bonds_fluorine and [a,b] not in single_bonds:
+                        if self.is_fluorine_atom(j) and [a,b] not in single_bonds_fluorine and [a,b] not in single_bonds and [a,b] not in protected:
                             single_bonds_fluorine.append([a,b])
-                        elif [a,b] not in single_bonds_notfluorine and [a,b] not in single_bonds: 
+                        elif [a,b] not in single_bonds_notfluorine and [a,b] not in single_bonds and [a,b] not in protected: 
                             single_bonds_notfluorine.append([a,b])
 
                 single_bonds.extend(single_bonds_notfluorine)

@@ -24,7 +24,7 @@ def test3():
     subprocess.run('python ../analysis_fragment_molecule.py -i input/inchi10.inchi -o output/inchi10_analysis_version1.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt --root 95 --version 1', check=True, shell=True)
 
     #assert filecmp.cmp('input/inchi10_analysis.txt', 'output/inchi10_analysis.txt') is True
-test3()
+
 
 def test_get_fragment_index():
 
@@ -138,6 +138,25 @@ def test_analyse_molecule_5():
 
     assert string_representation == '0-29-0:(0, 1, 0, 0);(1, 2, 0, 0):0.0375'
 
+
+def test_analyse_molecule_6():
+    # test analyse_molecule for COC with protected
+
+    fragment_database = get_fragment_database('../../datasets/database1000/fragments10.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+    bond_frequencies = get_bond_frequencies('../../datasets/database1000/frequencies10.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    mol = molecule_from_smiles('COC')
+    inchi = molecule_to_inchi(mol)
+
+    string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies, protected=[[0,1]], root=0, version=2)
+
+    print(string_representation)
+
+    #assert string_representation == '0-29-0:(0, 1, 0, 0);(1, 2, 0, 0):0.0375'
+test_analyse_molecule_6()
 
 def test_convert_parent():
 

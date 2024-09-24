@@ -152,3 +152,39 @@ def test_len():
     m = molecule_from_smiles('C')
 
     assert len(m) == 5
+
+
+def test_get_single_bonds_not_h_not_c_1():
+    # basic test for ethane
+
+    m = molecule_from_smiles('CC')
+
+    single_bonds = m.get_single_bonds_not_h_not_c(carbonyl=False, fluorine=False, protected=None)
+
+    print(single_bonds)
+
+    assert single_bonds == [[0, 1]]
+
+
+def test_get_single_bonds_not_h_not_c_2():
+    # test with protected for ethane
+
+    m = molecule_from_smiles('CC')
+
+    single_bonds = m.get_single_bonds_not_h_not_c(carbonyl=False, fluorine=False, protected=[(0,1)])
+
+    print(single_bonds)
+
+    assert single_bonds == []
+
+
+def test_get_single_bonds_not_h_not_c_3():
+    # test with protected for propane
+
+    m = molecule_from_smiles('CCC')
+
+    single_bonds = m.get_single_bonds_not_h_not_c(carbonyl=False, fluorine=False, protected=[[0,1]])
+
+    print(single_bonds)
+
+    assert single_bonds == [[1,2]]

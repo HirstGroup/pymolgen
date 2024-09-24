@@ -689,3 +689,28 @@ def test_timeout():
 
     assert frag_frequencies == check
 
+
+def test_get_fragments_dataset_1():
+    # test for propane and default arguments
+
+    mol = molecule_from_smiles('CCC')
+
+    fragments, pairs, single_bonds = get_fragments_dataset(mol, carbonyl=False, fluorine=False, protected=None)
+
+    print(pairs, single_bonds)
+
+    assert pairs == [[0, 1], [1, 2]]
+    assert single_bonds == [[0, 0], [0, 2]]
+
+
+def test_get_fragments_dataset_2():
+    # test for propane protecting first bond
+
+    mol = molecule_from_smiles('CCC')
+
+    fragments, pairs, single_bonds = get_fragments_dataset(mol, carbonyl=False, fluorine=False, protected=[[0,1]])
+
+    print(pairs, single_bonds)
+
+    assert pairs == [[0,1]]
+    assert single_bonds == [[1, 2]]

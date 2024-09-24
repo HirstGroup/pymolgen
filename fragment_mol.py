@@ -30,13 +30,13 @@ def time_limit(seconds):
         signal.alarm(0)
 
 
-def get_fragments_dataset(mol, carbonyl=False, fluorine=False):
+def get_fragments_dataset(mol, carbonyl=False, fluorine=False, protected=None):
     """
     Split molecule into fragments and return bonding information between fragments
 
     Parameters
     ----------
-    mol : molecule class
+    mol : Molecule object
     carbonyl : bool
         If True, do split carbonyl to heteroatom bonds
     fluorine : bool
@@ -47,11 +47,11 @@ def get_fragments_dataset(mol, carbonyl=False, fluorine=False):
     new_fragments : list of molecule objects
     pairs : list of lists of two ints
         pairs of fragments ids bonded together
-    new_single_bonds : (i,j,k,l) tuple of ints 
+    new_single_bonds : (k,l) tuple of ints 
         bonds connecting split molecule
     """
 
-    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=carbonyl, fluorine=fluorine)
+    single_bonds = mol.get_single_bonds_not_h_not_c(carbonyl=carbonyl, fluorine=fluorine, protected=protected)
     
     if single_bonds is False:
         return False, False, False
@@ -554,6 +554,19 @@ def get_frag_mapping(fragments_txt):
 
 
 def get_frag_mapping_from_graph(fragment):
+    """
+    Map atom indeces from fragment atoms to start from zero
+
+    Parameters
+    ----------
+    fragment : networkx object
+        Fragment in molecule
+
+    Returns
+    -------
+    d : dict of int->int
+        Dictionary mapping the original atom number to numbers starting from zero
+    """
 
     d = {}
 

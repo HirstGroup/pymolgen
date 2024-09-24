@@ -33,7 +33,7 @@ def print_with_line(*args, **kwargs):
 print = partial(print_with_line)
 
 
-def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies=None, root=None, version=None):
+def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies=None, protected=None, root=None, version=None):
     """
     Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
 
@@ -68,7 +68,7 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_fre
 
     f = FragmentMolecule()
 
-    fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True)
+    fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True, protected=protected)
 
     index_list = []
     mapping_list = []
@@ -515,7 +515,7 @@ if __name__ == '__main__':
 
     parent_mol = molecule_from_sdf(args.parent_file)
 
-    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, args.parent_file, args.parent_fragment_file_list, args.parent_mapping_1, args.remove_hydrogens, args.remove_hydrogens_parent_fragment)
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, args.parent_file, args.parent_fragment_file_list, args.parent_mapping_1, args.remove_hydrogechrns, args.remove_hydrogens_parent_fragment)
 
     with open(args.input) as infile, open(args.output, 'w') as outfile:
 

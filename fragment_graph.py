@@ -154,8 +154,6 @@ class FragmentGraph:
                     k = self.fragments[i].get_canonical_mapping()[k]
                 if right_id != -1 and self.fragments[j].attachment_points.count(l) == 1:
                     l = self.fragments[j].get_canonical_mapping()[l]
-            else:
-                print('Canonicalise is False')
 
             if left_id < right_id:
                 atoms_attr = f'{left_id}:{k}, {right_id}:{l}'

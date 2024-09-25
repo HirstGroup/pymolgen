@@ -33,7 +33,20 @@ def print_with_line(*args, **kwargs):
 print = partial(print_with_line)
 
 
-def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies=None, protected=None, root=None, version=None):
+def map_protected(protected, parent_mapping):
+    """
+    Map protected list of bonds from original parent structure to atoms in new molecule according to parent_mapping
+    """
+
+    new_protected = []
+
+    for a, b in protected:
+        new_protected.append([parent_mapping[a], parent_mapping[b]])
+
+    return new_protected
+
+
+def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies=None, parent_mol=None, protected=None, root=None, version=None):
     """
     Analyse a molecule in inchi format in terms of its fragment molecule structure (as a graph).
 
@@ -68,6 +81,12 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_fre
 
     f = FragmentMolecule()
 
+    if protected is not None:
+
+        parent_mapping = get_substructure_networkxgraph(mol._graph, parent_mol._graph)
+
+        protected = map_protected(protected, parent_mapping)
+    
     fragments, pairs, bonds = get_fragments_dataset(mol, carbonyl=True, fluorine=True, protected=protected)
 
     index_list = []
@@ -94,7 +113,8 @@ def analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_fre
         f.add_bond(i, j, k, l)
 
     if root is not None:
-        f._graph._build_probability = calculate_build_probability_version2(bond_frequencies, fragment_database_graph, f, root, version)
+
+        f._graph._build_probability = calculate_build_probability_version2(bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, fragment_molecule=f, root=root, version=version)
 
     return str(f)
 
@@ -152,8 +172,6 @@ def calculate_build_probability(bond_frequencies, fragment_database_graph, fragm
 
         build_probability *= bond_freq
 
-    print(fragment_molecule._graph._fragments)
-
     list_free_valence_points = fragment_molecule.list_free_valence_points()
 
     # calculate multiplication factor for build_probability to take number of attachment points into account
@@ -161,13 +179,9 @@ def calculate_build_probability(bond_frequencies, fragment_database_graph, fragm
     factor = 1
 
     for fragment_index, fragment in fragment_molecule._graph._fragments.items():
-        print(fragment_index, fragment.attachment_points)
-
         n_attachment_points = len(fragment.attachment_points)
         n_attachment_points_free = len(list_free_valence_points[fragment_index])
         n_neighbours = n_attachment_points - n_attachment_points_free
-
-        print(fragment_index, n_neighbours)
 
         if fragment_index == root_index:
             n_max = n_attachment_points
@@ -177,12 +191,7 @@ def calculate_build_probability(bond_frequencies, fragment_database_graph, fragm
         n_min = n_attachment_points_free
 
         for i in range(n_max, n_min, -1):
-            print(i)
             factor *= 1/i
-
-    print('factor', factor)
-
-    print(fragment_molecule.list_free_valence_points())
 
     build_probability *= factor
 
@@ -217,10 +226,7 @@ def traverse_least_neighbors(fragment_molecule, root):
         
         if node not in visited:
             if parent is not None:
-                print(f"Visited Node: {node} (bonded to {parent})")
                 bonds.append((parent, node))
-            else:
-                print(f"Visited Node: {node} (root)")
 
             visited.add(node)
             
@@ -272,8 +278,6 @@ def calculate_build_probability_version2(bond_frequencies, fragment_database_gra
     
     build_probability = 1.0
 
-    print(fragment_molecule)
-    print(fragment_molecule.list_frag_id())
     root_index = fragment_molecule.list_frag_id().index(root)
 
     ordered_bonds = traverse_least_neighbors(fragment_molecule, root_index)
@@ -281,14 +285,10 @@ def calculate_build_probability_version2(bond_frequencies, fragment_database_gra
     bonds = fragment_molecule._graph.bonds
 
     bond_dict = make_bond_dict(bonds)
-
     original_attachment_points = []
 
     for fragment_id, fragment in fragment_molecule._graph.fragments.items():
-        print(fragment.attachment_points)
         original_attachment_points.append(len(fragment.attachment_points))
-
-    print(original_attachment_points)
 
     current_attachment_points = [0 for i in original_attachment_points]
 
@@ -301,23 +301,16 @@ def calculate_build_probability_version2(bond_frequencies, fragment_database_gra
     for bond in ordered_bonds:
 
         i, j = bond
-        k, l = bond_dict[bond]
-        print(i,j,k,l)
+        k, l = bond_dict[(i,j)]
 
         i_frag_id = fragment_molecule.list_frag_id()[i]
         j_frag_id = fragment_molecule.list_frag_id()[j]
 
-        print(i_frag_id, j_frag_id)
-
         k_can = fragment_database_graph.fragments[i_frag_id].get_canonical_mapping()[k]
         l_can = fragment_database_graph.fragments[j_frag_id].get_canonical_mapping()[l]
 
-        print(k_can, l_can)
-
         bond_freq_all = bond_frequencies[(i_frag_id, k_can)]
-        print(bond_freq_all)
         bond_freq = bond_freq_all[(j_frag_id, l_can)]
-        print(bond_freq)
 
         if version == 1:
             factor = sum(current_attachment_points)
@@ -338,8 +331,6 @@ def calculate_build_probability_version2(bond_frequencies, fragment_database_gra
         attachment_probability = bond_freq / (total_freq * factor)
 
         build_probability *= attachment_probability
-
-    print(build_probability)
 
     return build_probability
 
@@ -388,7 +379,7 @@ def make_bond_dict(bonds):
 
     Returns
     -------
-    bond_dict : dict of (i,k) -> (k,l)
+    bond_dict : dict of (i,j) -> (k,l)
     """
 
     bond_dict = {}
@@ -397,26 +388,28 @@ def make_bond_dict(bonds):
 
         i,j,k,l = bond
 
-        assert (i,j) not in bond_dict
-
         bond_dict[(i,j)] = (k,l)
+        bond_dict[(j,i)] = (l,k)
 
     return bond_dict
 
 
-def convert_parent(fragment_molecule, parent_mol):
+def get_substructure_networkxgraph(g1, g2):
+    """
+    Check if g2 is substructure of g1 and return mapping, raise error otherwise.
+    Mapping will be dictionary where keys are atoms in smaller graph g2 mapping to larger graph g1
+    """
 
-    g1 = fragment_molecule.convert_to_networkx()
-    g2 = parent_mol.convert_to_networkx()
-
-    gm = isomorphism.GraphMatcher(g1, g2, node_match=lambda n1,n2:n1['frag_id']==n2['frag_id'], edge_match= lambda e1,e2: e1['atoms'] == e2['atoms'])
+    gm = isomorphism.GraphMatcher(g1, g2, node_match=node_compare_element)
 
     if gm.subgraph_is_isomorphic():
-        matching = gm.mapping
-        print(matching)
+        mapping = gm.mapping
+        mapping = {v: k for k, v in mapping.items()}
 
     else:
         raise Exception('Parent fragment not present in molecule')
+
+    return mapping
 
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):
@@ -467,7 +460,6 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
                 #map = compound_dict(newmap, map)
 
     if len(index) > 1:
-        print(index)
         raise Exception('fragment in fragment_database more than once')
 
     return index[0], newmap
@@ -485,10 +477,13 @@ if __name__ == '__main__':
     parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0', required=True)
 
     # optional arguments
+    parser.add_argument('-x','--parent_fragment_file_list', nargs='+', help='Parent Fragment Structure File list space-separated to search fragment database in SDF format', required=False)
+    parser.add_argument('--parent_mapping_1', nargs='+', type=int, help='Parent Fragment i dict list space-separated to search fragment database in SDF format', required=False)
+    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0', required=False)
+
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file', required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
-    parser.add_argument('--root', type=int, help='Index for root fragment, this variable also triggers build probability calculation', required=False)
     parser.add_argument('--version', default=1, type=int, help='Version for build probability factor, version 1 gives different build probabilities according to the order of fragment addition, version 2 gives same build probabilities for any order', required=False)
 
     args = parser.parse_args()
@@ -510,12 +505,16 @@ if __name__ == '__main__':
     else:
         bond_frequencies = read_bond_frequencies_dict(args.read_bond_frequencies_dict)
 
-    if args.root is None:
-        bond_frequencies = None
-
     parent_mol = molecule_from_sdf(args.parent_file)
 
-    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies, fragment_database, fragment_database_graph, args.parent_file, args.parent_fragment_file_list, args.parent_mapping_1, args.remove_hydrogechrns, args.remove_hydrogens_parent_fragment)
+    parent, bond_frequencies, fragment_database, fragment_database_graph = prepare_parent(bond_frequencies=bond_frequencies, fragment_database=fragment_database, fragment_database_graph=fragment_database_graph, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, remove_hydrogens=args.remove_hydrogens, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment)
+
+    for i in args.remove_hydrogens:
+        parent_mol = parent_mol.remove_atom(i)    
+
+    protected = parent_mol.get_single_bonds_not_h_not_c(carbonyl=True, fluorine=True, protected=None)
+
+    root = len(fragment_database) - 1
 
     with open(args.input) as infile, open(args.output, 'w') as outfile:
 
@@ -523,23 +522,12 @@ if __name__ == '__main__':
 
             inchi = line.strip().split()[0]
 
-            string_representation = analyse_molecule(inchi, fragment_database, fragment_database_graph, bond_frequencies, args.root, args.version)
+            string_representation = analyse_molecule(inchi=inchi, fragment_database=fragment_database, fragment_database_graph=fragment_database_graph, bond_frequencies=bond_frequencies, parent_mol=parent_mol, protected=protected, root=root, version=args.version)
 
-            outfile.write(f'{string_representation}\n')
+            outfile.write(f'{inchi} {string_representation}\n')
 
             f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
             mol = convert_fragment_molecule_to_mol(f, fragment_database)
 
             assert inchi == molecule_to_inchi(mol)
-
-
-
-
-
-
-
-
-
-
-

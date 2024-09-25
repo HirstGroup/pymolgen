@@ -47,7 +47,7 @@ def get_fragments_dataset(mol, carbonyl=False, fluorine=False, protected=None):
     new_fragments : list of molecule objects
     pairs : list of lists of two ints
         pairs of fragments ids bonded together
-    new_single_bonds : (k,l) tuple of ints 
+    new_single_bonds : list of lists of two ints
         bonds connecting split molecule
     """
 

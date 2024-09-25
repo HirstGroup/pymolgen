@@ -4,10 +4,19 @@ import subprocess
 from pymolgen.analysis.analysis_fragment_molecule import *
 
 
+def save_mol_to_sdf(mol, sdffile):
+
+    with open(sdffile, 'w') as f:
+        lines = molecule_to_sdf(mol)
+        for line in lines:
+            f.write(line)
+        f.write('$$$$\n')
+
+
 def test1():
     # main test for 1 inchi
 
-    subprocess.run('python ../analysis_fragment_molecule.py -i input/inchi1.inchi -o output/inchi1_analysis.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt', check=True, shell=True)
+    subprocess.run('python ../analysis_fragment_molecule.py -i input/inchi10_metapara.inchi -o output/inchi10_metapara_analysis.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt -x input/benzene.sdf input/benzene.sdf --parent_mapping_1 15 0 16 0 -R 6 6', check=True, shell=True)
 
 
 def test2():
@@ -24,6 +33,12 @@ def test3():
     subprocess.run('python ../analysis_fragment_molecule.py -i input/inchi10.inchi -o output/inchi10_analysis_version1.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt --root 95 --version 1', check=True, shell=True)
 
     #assert filecmp.cmp('input/inchi10_analysis.txt', 'output/inchi10_analysis.txt') is True
+
+
+def test4():
+    # main test for 10 molecules build with fragment_molecule_builder
+
+    subprocess.run('python ../analysis_fragment_molecule.py -i input/phenylisoxazole-20-21-systematic-bp10-depth1_0_1-depth4_10_metapara.inchi -o output/phenylisoxazole-20-21-systematic-bp10-depth1_0_1-depth4_10.inchi_metapara_analysis.txt -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p input/phenylisoxazole.sdf -r 20 21 -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt -x input/benzene.sdf input/benzene.sdf --parent_mapping_1 15 0 16 0 -R 6 6', check=True, shell=True)    
 
 
 def test_get_fragment_index():
@@ -156,7 +171,7 @@ def test_analyse_molecule_6():
     print(string_representation)
 
     #assert string_representation == '0-29-0:(0, 1, 0, 0);(1, 2, 0, 0):0.0375'
-test_analyse_molecule_6()
+#test_analyse_molecule_6()
 
 def test_convert_parent():
 
@@ -486,3 +501,83 @@ def test_calculate_build_probability_version2_2():
             print('RESULT', n+1, string_representation, fragment_molecule._graph.build_probability, build_probability)
 
             assert (fragment_molecule._graph.build_probability - build_probability) ** 2 < 0.00001
+
+
+def test_get_substructure_networkxgraph():
+
+    mol = molecule_from_sdf('input/phenylisoxazole.sdf')
+
+    mapping = get_substructure_networkxgraph(mol._graph, mol._graph)
+
+    assert mapping == {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 13: 13, 14: 18, 15: 17, 16: 16, 17: 15, 18: 14, 19: 23, 20: 22, 21: 21, 22: 20, 23: 19}
+
+
+def test_get_substructure_networkxgraph_2():
+
+    mol1 = molecule_from_sdf('input/phenylisoxazole.sdf')
+
+    mol2 = molecule_from_sdf('input/benzene.sdf')
+
+    mol2 = mol2.remove_atom(6)
+
+    mapping = get_substructure_networkxgraph(mol1._graph, mol2._graph)
+
+    check = {13: 0, 18: 1, 17: 2, 16: 3, 15: 4, 14: 5, 23: 7, 22: 8, 21: 9, 20: 10, 19: 11}
+    check = {v: k for k, v in check.items()}
+    assert mapping == {0: 13, 1: 18, 2: 17, 3: 16, 4: 15, 5: 14, 7: 23, 8: 22, 9: 21, 10: 20, 11: 19}
+
+
+def test_get_substructure_networkxgraph_3():
+
+    mol1 = molecule_from_sdf('input/phenylisoxazole.sdf')
+    mol1 = mol1.remove_atom(20)
+    mol1 = mol1.remove_atom(21)
+
+    save_mol_to_sdf(mol1, 'mol1.sdf')
+
+    inchi = 'InChI=1S/C24H22N2O/c1-16-11-12-25-23(13-16)22-10-9-20(24-17(2)26-27-18(24)3)15-21(22)14-19-7-5-4-6-8-19/h4-13,15H,14H2,1-3H3'
+
+    rdmol = Chem.MolFromInchi(inchi)
+
+    smi = Chem.MolToSmiles(rdmol)
+
+    smi = canonicalise_tautomer(smi)
+
+    mol2 = molecule_from_smiles(smi)
+
+    assert molecule_to_inchi(mol2) == inchi
+
+    save_mol_to_sdf(mol2, 'mol2.sdf')
+
+    mapping = get_substructure_networkxgraph(mol2._graph, mol1._graph)
+
+    assert mapping == {0: 13, 1: 14, 2: 11, 3: 10, 4: 15, 5: 12, 6: 34, 7: 35, 8: 36, 9: 16, 10: 37, 11: 38, 12: 39, 13: 9, 14: 17, 15: 18, 16: 6, 17: 7, 18: 8, 19: 40, 22: 32, 23: 33}
+
+    print(dict(sorted(mapping.items())))
+
+
+def test_get_substructure_networkxgraph_4():
+
+    mol1 = molecule_from_smiles('C')
+    mol2 = molecule_from_smiles('CC')
+
+    mol1 = mol1.remove_atom(4)
+
+    save_mol_to_sdf(mol1, 'mol1.sdf')
+    save_mol_to_sdf(mol2, 'mol2.sdf')
+
+    mapping = get_substructure_networkxgraph(mol2._graph, mol1._graph)
+
+    assert mapping == {0: 0, 1: 2, 2: 3, 3: 4}
+
+
+def test_map_protected():
+
+    protected = [[1,2], [10,20]]
+    parent_mapping = {1:3, 2:4, 10:30, 20:40}
+
+    protected = map_protected(protected, parent_mapping)
+
+    assert protected == [[3, 4], [30, 40]]
+
+    print(protected)

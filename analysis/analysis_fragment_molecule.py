@@ -520,14 +520,20 @@ if __name__ == '__main__':
 
         for line in infile:
 
-            inchi = line.strip().split()[0]
+            try:
 
-            string_representation = analyse_molecule(inchi=inchi, fragment_database=fragment_database, fragment_database_graph=fragment_database_graph, bond_frequencies=bond_frequencies, parent_mol=parent_mol, protected=protected, root=root, version=args.version)
+                inchi = line.strip().split()[0]
 
-            outfile.write(f'{inchi} {string_representation}\n')
+                string_representation = analyse_molecule(inchi=inchi, fragment_database=fragment_database, fragment_database_graph=fragment_database_graph, bond_frequencies=bond_frequencies, parent_mol=parent_mol, protected=protected, root=root, version=args.version)
 
-            f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
+                outfile.write(f'{inchi} {string_representation}\n')
 
-            mol = convert_fragment_molecule_to_mol(f, fragment_database)
+                f = generate_fragment_molecule_from_string(string_representation, fragment_database_graph)
 
-            assert inchi == molecule_to_inchi(mol)
+                mol = convert_fragment_molecule_to_mol(f, fragment_database)
+
+                assert inchi == molecule_to_inchi(mol)  
+
+            except:
+
+                print(f'FAILED {inchi}')

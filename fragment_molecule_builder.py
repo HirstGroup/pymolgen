@@ -595,8 +595,7 @@ def write_bond_frequencies_dict(bond_frequencies_dict, outfile):
 
     print('Writing bond frequencies dict to %s FINISHED' %outfile)
 
-
-if __name__ == '__main__':
+def main(arguments: list[str] = None):
 
     parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
 
@@ -633,7 +632,7 @@ if __name__ == '__main__':
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
 
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
 
     fragment_database = get_fragment_database(args.fragments_sdf)
 
@@ -689,3 +688,5 @@ if __name__ == '__main__':
     print('Normal termination')
 
 
+if __name__ == '__main__':
+    main()

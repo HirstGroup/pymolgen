@@ -5,6 +5,7 @@ import ast
 import copy
 import numpy as np
 import os
+import random
 import sys
 
 from multiprocessing import Pool
@@ -106,6 +107,62 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
                     output_mol_list.append(f2)
 
     return output_mol_list
+
+
+def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database_graph, depth=None, version=1):
+
+    f = copy.deepcopy(FragmentMolecule)
+
+    if depth is None:
+        depth = 999
+
+    n_fragments = len(f.list_frag_id())
+
+    while f.get_total_free_valence() > 0 and n_fragments <= depth:
+
+        free_valence_list = f.list_free_valence_points()
+        total_free_valence = f.get_total_free_valence()
+        f_build_probability = f.get_build_probability()
+
+        x = random.randrange(0, len(free_valence_list))
+
+        if len(free_valence_list[x]) == 0:
+            continue
+
+        fragment_id = f.get_frag_id(x)
+
+        atom = random.choice(free_valence_list[x])
+
+        atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
+        fragment_bonds = bond_frequencies[(fragment_id, atom_can)]
+        total_freq = sum(fragment_bonds.values())
+        
+        bond = random.choices(population=list(fragment_bonds.keys()), weights=fragment_bonds.values(), k=1)[0]
+
+        bond_freq = fragment_bonds[bond]
+
+        if version == 1:
+            factor = total_free_valence
+        elif version == 2:
+            factor = len(f.list_free_valence_points()[x]) * n_fragments
+        else:
+            raise Exception(f'Version {version} not implemented')
+        
+        attachment_probability = bond_freq / (total_freq * factor)
+
+        new_build_probability = attachment_probability * f_build_probability
+
+        j = bond[0]
+        l = bond[1]
+
+        f.bp_factor = f.bp_factor * factor
+
+        node_id = f.add_fragment(j, fragment_database_graph.fragments[j].attachment_points, fragment_database_graph.fragments[j].get_canonical_mapping())
+        f.add_bond(x, node_id, atom, l, attachment_probability)
+
+        n_fragments = len(f.list_frag_id())
+
+        yield f
 
 
 def extend_molecule_recursive(fragment_molecule, bond_frequencies, fragment_database_graph, threshold):
@@ -254,16 +311,16 @@ def extend_molecule_list_depth(FragmentMolecule_list, bond_frequencies, fragment
                         inchi = molecule_to_inchi(mol)
                         f.write('%s %s\n' %(inchi, j.get_build_probability()  ) )
 
-            if savesdf is True:
-                with open('%s-depth%s.sdf' %(output, i), 'w') as f2:
-                    for j in FragmentMolecule_list:
-                        mol = convert_fragment_molecule_to_mol(j, fragment_database)
+                if savesdf is True:
+                    with open('%s-depth%s.sdf' %(output, i), 'w') as f2:
+                        for j in FragmentMolecule_list:
+                            mol = convert_fragment_molecule_to_mol(j, fragment_database)
 
-                        lines = molecule_to_sdf(mol)
+                            lines = molecule_to_sdf(mol)
 
-                        for line in lines:
-                            f2.write(line)
-                        f2.write('$$$$\n')
+                            for line in lines:
+                                f2.write(line)
+                            f2.write('$$$$\n')
 
     if return_all is True:
         return return_all_list
@@ -568,6 +625,7 @@ def prepare_parent(bond_frequencies, fragment_database, fragment_database_graph,
     # parent_mapping will map the atoms in the parent with those atom numbers in the equivalent fragments in the database
     parent_mapping = {}
     n = 0
+
     for key, val in parent_mapping_1.items():
         parent_mapping[key] = parent_mapping_2[n][val]
         n += 1
@@ -698,7 +756,7 @@ def write_bond_frequencies_dict(bond_frequencies_dict, outfile):
     print('Writing bond frequencies dict to %s FINISHED' %outfile)
 
 
-if __name__ == '__main__':
+if main(arguments = None):
 
     parser = argparse.ArgumentParser(description='Build Molecules using the FragmentMolecule class')
 
@@ -723,11 +781,12 @@ if __name__ == '__main__':
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file', required=False)
     parser.add_argument('--depth', type=int, help='Depth to build up to', required=False)
     parser.add_argument('--not_unique', action='store_true', help='Do not obtain unique molecule set in each depth building stage', required=False)
-    parser.add_argument('-o','--output', help='Output inchi file name', required=False)
+    parser.add_argument('-o','--output', help='Output file name without extension, txt, sdf or inchi extensions will be added', required=False)
     parser.add_argument('--parallel', type=int, help='Number of processes for parallel run', required=False)
     parser.add_argument('-rd', '--read_bond_frequencies_dict', help='Read bond frequencies dict from file', required=False)
     parser.add_argument('-rf', '--read_fragment_database', help='Read fragment database from file containing attachment points and canonical mapping', required=False)
     parser.add_argument('--recursive', action='store_true', help='Build molecules using recursive function, if False extend_molecule_list_depth function will be used instead', required=False)
+    parser.add_argument('--random', type=int, help='Build N molecules using random generation, use N = 0 for no maximum number of molecules', required=False)
     parser.add_argument('--restart', type=int, help='Restart from depth', required=False)
     parser.add_argument('--restart_file', help='Restart filename containing molecules built up to restart depth', required=False)
     parser.add_argument('--saveinchi', action='store_true', default=False, help='Save generated molecules as InChi file', required=False)
@@ -740,6 +799,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     fragment_database = get_fragment_database(args.fragments_sdf)
+
+    if args.saveinchi is False and args.savesdf is True:
+        raise Exception('savesdf option requires saveinchi')
 
     if args.read_fragment_database is not None:
         fragment_database_graph = read_fragment_database_graph(args.read_fragment_database)
@@ -782,7 +844,7 @@ if __name__ == '__main__':
             raise Exception(f'Cannot run recursive with version {version}')
 
         if args.output is not None:
-            outfile = open(args.output, 'w')
+            outfile = open(f'{args.output}.txt', 'w')
 
         for i in extend_molecule_recursive(parent, bond_frequencies, fragment_database_graph, threshold=threshold):
             if args.output is not None:
@@ -790,9 +852,57 @@ if __name__ == '__main__':
             else:
                 print(i)
 
+    elif args.random is not None:
+
+        if args.random == 0:
+            max_n = np.inf
+        else:
+            max_n = args.random
+
+        if args.output is not None:
+            outfile = open(f'{args.output}.txt', 'w')
+
+        if args.saveinchi is True:
+            outfile_inchi = open(f'{args.output}.inchi', 'w')
+
+            if args.savesdf is True:
+                outfile_sdf = open(f'{args.output}.sdf', 'w')
+
+        n = 0
+
+        while n < max_n:
+
+            for mol in extend_molecule_random(FragmentMolecule=parent, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=args.depth, version=args.version):
+
+                if args.output is not None:
+
+                    outfile.write(f'{str(mol)}\n')
+
+                if args.saveinchi is True:
+
+                    mol_molecule = convert_fragment_molecule_to_mol(mol, fragment_database)
+                    inchi = molecule_to_inchi(mol_molecule)
+                    outfile_inchi.write('%s %s\n' %(inchi, mol.get_build_probability() ) )
+
+                if args.savesdf is True:
+
+                    lines = molecule_to_sdf(mol_molecule)
+
+                    for line in lines:
+                        outfile_sdf.write(line)
+                    outfile_sdf.write('$$$$\n')                    
+
+                n += 1
+
+            if n == args.random:
+                break
+
     else:
         extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, saveinchi=args.saveinchi, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique, version=args.version)
 
     print('Normal termination')
+
+if __name__ == '__main__':
+    main()
 
 

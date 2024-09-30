@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import filecmp
 import io
 import os
+import subprocess
 import sys
 
 from pymolgen.fragment_molecule_builder import *
@@ -1370,3 +1373,176 @@ def test_fragment_molecule_builder_recursive():
 
     os.system('rm parent_fragment0.sdf')
     os.system('rm parent_fragment1.sdf')
+
+
+def test_extend_molecule_random():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    ch3 = FragmentMolecule()
+
+    ch3.add_fragment(0, [0])
+
+    random.seed(100)
+
+    output_mol_list = []
+
+    check = ['0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25']
+
+    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None, version=1)):
+
+        if n == 100:
+            break
+
+        print(mol)
+
+        output_mol_list.append(mol)
+
+    print(output_mol_list)
+
+    for n in range(len(output_mol_list)):
+
+        print(f"'{str(output_mol_list[n])}',", end=' ')
+
+        assert str(output_mol_list[n]) == check[n]
+    print()
+
+
+def test_extend_molecule_random_depth():
+    # random build with max depth
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    ch3 = FragmentMolecule()
+
+    ch3.add_fragment(0, [0])
+
+    random.seed(100)
+
+    output_mol_list = []
+
+    check = ['0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0']
+
+    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=3, version=1)):
+
+        if n == 100:
+            break
+
+        print(mol)
+
+        output_mol_list.append(mol)
+
+    print(output_mol_list)
+
+    for n in range(len(output_mol_list)):
+
+        print(f"'{str(output_mol_list[n])}',", end=' ')
+
+        assert str(output_mol_list[n]) == check[n]
+    print()
+
+
+def test_extend_molecule_random_loop():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    ch3 = FragmentMolecule()
+
+    ch3.add_fragment(0, [0])
+
+    random.seed(100)
+
+    check = ['(0, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(1, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(2, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(3, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(4, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(5, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(0, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(1, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(2, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(3, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(4, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)']
+
+    output_mol_list = []
+
+    n = 0
+
+    while n < 10:
+
+        for mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None, version=1)):
+
+            n += 1
+
+            print(mol)
+
+            output_mol_list.append(mol)
+
+    for i in output_mol_list:
+
+        print(f"'{i}',", end=' ')            
+    print()
+
+    for n in range(len(output_mol_list)):
+
+        assert str(output_mol_list[n]) == check[n]
+
+
+def test_extend_molecule_random_main():
+
+    subprocess.run('python ')
+
+
+def test_random_choices():
+    # test of built-in random choices function
+
+    random.seed(100)
+
+    d = {(0,1):1, (2,3):2, (4,5):3}
+
+    choice = random.choices(list(d.keys()), weights=d.values(), k=1)[0]
+
+    assert choice == (0,1)
+
+    print(choice)
+
+    choice = random.choices(list(d.keys()), weights=d.values(), k=1)[0]
+
+    assert choice == (2,3)
+
+    print(choice)
+
+
+def test_random_main():
+
+    os.chdir('outputs')
+
+    random.seed(100)
+
+    main([
+        '-a', '~/pymolgen/datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf',
+        '-p', '../inputs/phenylisoxazole.sdf', 
+        '-x', '../inputs/benzene.sdf', '../inputs/benzene.sdf',
+        '--parent_mapping_1', '15', '0', '16', '0', 
+        '-r', '20', '21', 
+        '-R', '6', '6', 
+        '--depth', '12'
+        '-o', 'phenylisoxazole_random', 
+        '--saveinchi', 
+        '--savesdf',
+        '-rd', 
+        '~/pymolgen/datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt',
+        '-rf', '~/pymolgen/datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt',
+        '--random', '100'
+        ])
+
+    os.chdir('../')
+test_random_main()

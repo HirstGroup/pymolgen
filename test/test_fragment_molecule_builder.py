@@ -118,7 +118,7 @@ def test_extend_molecule_list_version2():
     print(output_mol_list)
 
 
-def test_extend_molecule_list_version2():
+def test_extend_molecule_list_version2_2():
 
     bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
     bond_frequencies = bond_frequencies_to_np(bond_frequencies)
@@ -147,10 +147,14 @@ def test_extend_molecule_list_version2():
 
     print(output_mol_list)
 
-    answers = ['2-1-3-0:(0, 1, 1, 2);(0, 2, 2, 2);(1, 3, 0, 0):0.08333333333333333','2-1-3-2:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 2):0.08333333333333333','2-1-3-4:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 0):0.08333333333333333','2-1-3-5:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 3):0.08333333333333333','2-1-3-6:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 1):0.08333333333333333','2-1-0-3:(0, 1, 1, 2);(1, 2, 0, 0);(0, 3, 2, 2):0.08333333333333333','2-3-1-2:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 2):0.08333333333333333','2-3-1-4:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 0):0.08333333333333333','2-3-1-5:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 3):0.08333333333333333','2-3-1-6:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 1):0.08333333333333333','2-3-1-0:(0, 1, 2, 2);(0, 2, 1, 2);(2, 3, 0, 0):0.08333333333333333','2-3-2-1:(0, 1, 2, 2);(1, 2, 2, 2);(0, 3, 1, 2):0.08333333333333333','2-3-2-1:(0, 1, 2, 2);(1, 2, 2, 2);(2, 3, 1, 2):0.08333333333333333','2-3-4-1:(0, 1, 2, 2);(1, 2, 2, 0);(0, 3, 1, 2):0.08333333333333333','2-3-4-3:(0, 1, 2, 2);(1, 2, 2, 0);(2, 3, 0, 2):0.08333333333333333','2-3-4-5:(0, 1, 2, 2);(1, 2, 2, 0);(2, 3, 0, 1):0.08333333333333333','2-3-5-1:(0, 1, 2, 2);(1, 2, 2, 3);(0, 3, 1, 2):0.08333333333333333','2-3-5-4:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 1, 0):0.027777777777777776','2-3-5-8:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 9, 0):0.027777777777777776','2-3-5-8:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 11, 0):0.027777777777777776','2-3-6-1:(0, 1, 2, 2);(1, 2, 2, 1);(0, 3, 1, 2):0.08333333333333333','2-3-6-3:(0, 1, 2, 2);(1, 2, 2, 1);(2, 3, 5, 2):0.08333333333333333','2-3-6-7:(0, 1, 2, 2);(1, 2, 2, 1);(2, 3, 5, 3):0.08333333333333333']
+    answers = ['2-1-3-0:(0, 1, 1, 2);(0, 2, 2, 2);(1, 3, 0, 0):0.08333333333333333', '2-1-3-2:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 2):0.020833333333333332', '2-1-3-4:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 0):0.020833333333333332', '2-1-3-5:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 3):0.020833333333333332', '2-1-3-6:(0, 1, 1, 2);(0, 2, 2, 2);(2, 3, 2, 1):0.020833333333333332', '2-1-0-3:(0, 1, 1, 2);(1, 2, 0, 0);(0, 3, 2, 2):0.08333333333333333', '2-3-1-2:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 2):0.020833333333333332', '2-3-1-4:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 0):0.020833333333333332', '2-3-1-5:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 3):0.020833333333333332', '2-3-1-6:(0, 1, 2, 2);(0, 2, 1, 2);(1, 3, 2, 1):0.020833333333333332', '2-3-1-0:(0, 1, 2, 2);(0, 2, 1, 2);(2, 3, 0, 0):0.08333333333333333', '2-3-2-1:(0, 1, 2, 2);(1, 2, 2, 2);(0, 3, 1, 2):0.020833333333333332', '2-3-2-1:(0, 1, 2, 2);(1, 2, 2, 2);(2, 3, 1, 2):0.020833333333333332', '2-3-4-1:(0, 1, 2, 2);(1, 2, 2, 0);(0, 3, 1, 2):0.020833333333333332', '2-3-4-3:(0, 1, 2, 2);(1, 2, 2, 0);(2, 3, 0, 2):0.010416666666666666', '2-3-4-5:(0, 1, 2, 2);(1, 2, 2, 0);(2, 3, 0, 1):0.010416666666666666', '2-3-5-1:(0, 1, 2, 2);(1, 2, 2, 3);(0, 3, 1, 2):0.020833333333333332', '2-3-5-4:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 1, 0):0.006944444444444444', '2-3-5-8:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 9, 0):0.006944444444444444', '2-3-5-8:(0, 1, 2, 2);(1, 2, 2, 3);(2, 3, 11, 0):0.006944444444444444', '2-3-6-1:(0, 1, 2, 2);(1, 2, 2, 1);(0, 3, 1, 2):0.020833333333333332', '2-3-6-3:(0, 1, 2, 2);(1, 2, 2, 1);(2, 3, 5, 2):0.010416666666666666', '2-3-6-7:(0, 1, 2, 2);(1, 2, 2, 1);(2, 3, 5, 3):0.010416666666666666']
 
     for idx, x in enumerate(output_mol_list):
+
+        print(f"'{str(x)}',", end=' ')
+
         assert str(x) == answers[idx]
+    print()
 
 
 def test_extend_molecule_list_all():
@@ -1367,12 +1371,15 @@ def test_unique3_recursive():
 
 def test_fragment_molecule_builder_recursive():
 
-    os.system('python ../fragment_molecule_builder.py -a ../datasets/database1000/fragments11-20.sdf -d ../datasets/database1000/frequencies11-20.txt -p ../datasets/database1000/benzene.sdf -x ../datasets/database1000/ch4.sdf -o outputs/test_fragment_molecule_builder_recursive.txt --parent_mapping_1 0 0 -r 11 -R 4 --recursive --threshold -2.6')
+    os.chdir('outputs')
 
-    assert filecmp.cmp('outputs/test_fragment_molecule_builder_recursive.txt', 'models/test_fragment_molecule_builder_recursive.txt')   
+    os.system('python ../../fragment_molecule_builder.py -a ../../datasets/database1000/fragments11-20.sdf -d ../../datasets/database1000/frequencies11-20.txt -p ../../datasets/database1000/benzene.sdf -x ../../datasets/database1000/ch4.sdf -o test_fragment_molecule_builder_recursive --parent_mapping_1 0 0 -r 11 -R 4 --recursive --threshold -2.6 --saveinchi --savesdf')
 
-    os.system('rm parent_fragment0.sdf')
-    os.system('rm parent_fragment1.sdf')
+    os.chdir('../')
+
+    assert filecmp.cmp('outputs/test_fragment_molecule_builder_recursive.txt', 'inputs/test_fragment_molecule_builder_recursive.txt')
+    assert filecmp.cmp('outputs/test_fragment_molecule_builder_recursive.inchi', 'inputs/test_fragment_molecule_builder_recursive.inchi')
+    assert filecmp.cmp('outputs/test_fragment_molecule_builder_recursive.sdf', 'inputs/test_fragment_molecule_builder_recursive.sdf')
 
 
 def test_extend_molecule_random():
@@ -1496,11 +1503,6 @@ def test_extend_molecule_random_loop():
         assert str(output_mol_list[n]) == check[n]
 
 
-def test_extend_molecule_random_main():
-
-    subprocess.run('python ')
-
-
 def test_random_choices():
     # test of built-in random choices function
 
@@ -1523,26 +1525,14 @@ def test_random_choices():
 
 def test_random_main():
 
+    os.system('rm outputs/*')
+
     os.chdir('outputs')
 
-    random.seed(100)
-
-    main([
-        '-a', '~/pymolgen/datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf',
-        '-p', '../inputs/phenylisoxazole.sdf', 
-        '-x', '../inputs/benzene.sdf', '../inputs/benzene.sdf',
-        '--parent_mapping_1', '15', '0', '16', '0', 
-        '-r', '20', '21', 
-        '-R', '6', '6', 
-        '--depth', '12'
-        '-o', 'phenylisoxazole_random', 
-        '--saveinchi', 
-        '--savesdf',
-        '-rd', 
-        '~/pymolgen/datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt',
-        '-rf', '~/pymolgen/datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt',
-        '--random', '100'
-        ])
+    subprocess.run('../..//fragment_molecule_builder.py -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p ../inputs/phenylisoxazole.sdf -x ../inputs/benzene.sdf ../inputs/benzene.sdf --parent_mapping_1 15 0 16 0 -r 20 21 -R 6 6 --depth 12 -o phenylisoxazole_random --saveinchi --savesdf -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt --random 100 --seed 100', check=True, shell=True)
 
     os.chdir('../')
-test_random_main()
+
+    assert filecmp.cmp('inputs/phenylisoxazole_random.txt', 'outputs/phenylisoxazole_random.txt') is True
+    assert filecmp.cmp('inputs/phenylisoxazole_random.sdf', 'outputs/phenylisoxazole_random.sdf') is True
+    assert filecmp.cmp('inputs/phenylisoxazole_random.inchi', 'outputs/phenylisoxazole_random.inchi') is True

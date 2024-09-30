@@ -392,11 +392,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
         lines = molecule_to_sdf(fragment_database[j])
 
-        with open('parent_fragment%s.sdf' %i, 'w') as outfile:
-            for line in lines:
-                outfile.write(line)
+        if verbose is True:
 
-            outfile.write('$$$$\n')
+            with open('parent_fragment%s.sdf' %i, 'w') as outfile:
+                for line in lines:
+                    outfile.write(line)
+
+                outfile.write('$$$$\n')
 
         if j is False:
             sys.exit('Parent fragment not found')

@@ -1459,7 +1459,7 @@ def test_extend_molecule_random_depth():
 
         assert str(output_mol_list[n]) == check[n]
     print()
-
+test_extend_molecule_random_depth()
 
 def test_extend_molecule_random_loop():
 

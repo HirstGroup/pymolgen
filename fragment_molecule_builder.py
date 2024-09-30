@@ -109,6 +109,29 @@ def extend_molecule_list(FragmentMolecule_list, bond_frequencies, fragment_datab
     return output_mol_list
 
 
+def check_available_bonds(f, bond_frequencies, fragment_database_graph):
+    """
+    Check that there is at least one attachment point in molecule with available bonds in bond frequencies
+    """
+
+    free_valence_list = f.list_free_valence_points()
+
+    for x in range(len(free_valence_list)):
+
+        fragment_id = f.get_frag_id(x)
+
+        for atom in free_valence_list[x]:
+
+            atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
+
+            fragment_bonds = bond_frequencies[(fragment_id, atom_can)]
+
+            if len(fragment_bonds) > 0:
+                return True
+
+    return False
+
+
 def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database_graph, depth=None, version=1):
 
     f = copy.deepcopy(FragmentMolecule)
@@ -134,7 +157,18 @@ def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database
         atom = random.choice(free_valence_list[x])
 
         atom_can = fragment_database_graph.fragments[fragment_id].get_canonical_mapping()[atom]
+        
         fragment_bonds = bond_frequencies[(fragment_id, atom_can)]
+
+        # if no available bonds check that there are available bonds in the whole molecule, otherwise break
+        if len(fragment_bonds) == 0:
+            if check_available_bonds(f, bond_frequencies, fragment_database_graph) is True:
+                print(f'No available bonds for atom {atom} in fragment {fragment_id}, but available in the rest of the molecule, continue')
+                continue
+            else:
+                print('No available bonds for whole molecule, break')
+                break
+
         total_freq = sum(fragment_bonds.values())
         
         bond = random.choices(population=list(fragment_bonds.keys()), weights=fragment_bonds.values(), k=1)[0]

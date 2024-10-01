@@ -1007,6 +1007,10 @@ if __name__ == '__main__':
 
     use_numpy = not args.no_numpy
 
+    # perform checks of compatible arguments:
+    if args.candidate_file is not None and args.unique is False:
+        raise Exception('candidate_file requires unique option')
+
     fragment_builder(fragments_sdf=args.fragments_sdf, frequencies_txt=args.frequencies_txt, fragments_txt=args.fragments_txt, parent_file=args.parent_file, parent_fragment_file_list=args.parent_fragment_file_list, parent_mapping_1=args.parent_mapping_1, remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, batch_size=args.batch_size, candidate_file=args.candidate_file, cap=args.cap, cpu=args.cpu, extra_candidate_file=args.extra_candidate_file, filters=args.filters, fragments_used_file=args.fragments_used_file, intermediates=args.intermediates, mw_check=args.mw_check, mw_threshold= args.mw_threshold, n_mol=args.n_mol, outfile_name=args.outfile_name, parallel=args.parallel, remove_hydrogens=args.remove_hydrogens, restart=args.restart, restricted=args.restricted, rules=args.rules, rules_file=args.rules_file, silent=args.silent, time_limit=args.time_limit, unique=args.unique, use_numpy=use_numpy, verbose=args.verbose)
 
     print('Normal termination')

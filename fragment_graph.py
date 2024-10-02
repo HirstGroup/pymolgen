@@ -48,7 +48,7 @@ class FragmentGraphNode:
 
 class FragmentGraph:
 
-    def __init__(self, build_probability=None):
+    def __init__(self, build_probability=None, build_probability2=None):
         self._fragments: Dict[int, FragmentGraphNode] = dict()
         self._bonds: List[Tuple(int, int, int, int)] = []
         self._attachment_point_list = []
@@ -57,6 +57,7 @@ class FragmentGraph:
             self._build_probability = build_probability
         else:
             self._build_probability = 1.0
+        self._build_probability2 = build_probability2
 
     def __len__(self):
         return len(self._fragments)
@@ -81,13 +82,17 @@ class FragmentGraph:
     def build_probability(self):
         return self._build_probability
 
+    @property
+    def build_probability2(self):
+        return self._build_probability2
+
     def add_fragment(self, id: int, attachment_points: List[int], canonical_mapping=None):
         self._fragments[id] = FragmentGraphNode(attachment_points)
         self._fragments[id].manual_canonical_mapping(canonical_mapping)
         self._attachment_point_list.append(attachment_points)
         self._free_valence_points.append(attachment_points)
 
-    def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int, attachment_probability: float = None):
+    def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int, attachment_probability: float = None, attachment_probability2: float = None):
 
         if fragment_from > fragment_to:
             # Ensure bonds are always stored 
@@ -122,6 +127,8 @@ class FragmentGraph:
         self._free_valence_points[fragment_to].remove(attach_to)
         if attachment_probability is not None:
             self._build_probability *= attachment_probability
+        if attachment_probability2 is not None:
+            self._build_probability2 *= attachment_probability2
 
     def add_node_attribute(self, node_id, atribute_name, atribute_value):
         self.fragments[node_id].set_attribute(atribute_name, atribute_value)

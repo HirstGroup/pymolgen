@@ -11,9 +11,10 @@ from pymolgen.molecule_formats import *
 
 class FragmentMolecule:
 
-    def __init__(self, build_probability=None, bp_factor=1.0):
-        self._graph = FragmentGraph(build_probability)
+    def __init__(self, build_probability=None, build_probability2=None, bp_factor=1.0, bp_factor2=1.0):
+        self._graph = FragmentGraph(build_probability, build_probability2)
         self.bp_factor = bp_factor
+        self.bp_factor2 = bp_factor2
 
     def __hash__(self):
 
@@ -35,6 +36,10 @@ class FragmentMolecule:
                 out += ';'
             out += f'{self._graph.bonds[i]}'
         out += f':{self.get_build_probability()}'
+
+        if self.get_build_probability2() is not None:
+            out += f':{self.get_build_probability2()}'
+
         return out
 
     def __repr__(self):
@@ -60,8 +65,8 @@ class FragmentMolecule:
         self._graph.add_node_attribute(node_id, "frag_id", frag_id)
         return node_id
 
-    def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int, attachment_probability: float = None):
-        self._graph.add_bond(fragment_from, fragment_to, attach_from, attach_to, attachment_probability)
+    def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int, attachment_probability: float = None, attachment_probability2: float = None):
+        self._graph.add_bond(fragment_from, fragment_to, attach_from, attach_to, attachment_probability, attachment_probability2)
 
     def list_bonds(self):
         return self._graph.bonds
@@ -89,6 +94,9 @@ class FragmentMolecule:
 
     def get_build_probability(self):
         return self._graph.build_probability
+
+    def get_build_probability2(self):
+        return self._graph.build_probability2
 
     def cap(self):
 

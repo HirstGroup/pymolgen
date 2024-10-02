@@ -1,13 +1,39 @@
 #!/usr/bin/env python
 
+import builtins
 import filecmp
+import inspect
 import io
 import os
 import subprocess
 import sys
 
+from functools import partial
+
 from pymolgen.fragment_molecule_builder import *
 from pymolgen.fragment_graph import convert_fragment_database_to_graph
+
+
+def print_with_line(*args, **kwargs):
+    """
+    Define the custom print function
+    """
+    # Get the current frame and extract the line number from the caller
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back  # Get the frame of the caller
+    line_number = caller_frame.f_lineno  # Extract the line number
+    
+    # Call the original print function with the line number prepended
+    builtins.print(f"[Line {line_number}]", *args, **kwargs)
+
+
+# Override the built-in print function using partial
+#print = partial(print_with_line)
+
+
+def remove_bp2(string):
+
+    return ':'.join(string.split(':')[:-1])
 
 
 def test_fragment_molecule_builder():
@@ -1392,7 +1418,8 @@ def test_extend_molecule_random():
 
     bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
 
-    ch3 = FragmentMolecule()
+    ch3 = FragmentMolecule(build_probability2=1.0)
+    print(ch3._graph._build_probability)
 
     ch3.add_fragment(0, [0])
 
@@ -1400,9 +1427,11 @@ def test_extend_molecule_random():
 
     output_mol_list = []
 
-    check = ['0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25']
+    check = ['0-1:(0, 1, 0, 0):1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3-2:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2):0.25', '0-1-2-3-2-1:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25',]
 
-    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None, version=1)):
+    check2 = ['0-1:(0, 1, 0, 0):1.0:1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0:0.5', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666', '0-1-2-3-2:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2):0.25:0.010416666666666666', '0-1-2-3-2-1:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2):0.25:0.0020833333333333333', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25:0.0003472222222222222']
+
+    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None)):
 
         if n == 100:
             break
@@ -1417,7 +1446,8 @@ def test_extend_molecule_random():
 
         print(f"'{str(output_mol_list[n])}',", end=' ')
 
-        assert str(output_mol_list[n]) == check[n]
+        assert remove_bp2(str(output_mol_list[n])) == check[n]
+        assert str(output_mol_list[n]) == check2[n]
     print()
 
 
@@ -1432,17 +1462,21 @@ def test_extend_molecule_random_depth():
 
     bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
 
-    ch3 = FragmentMolecule()
+    ch3 = FragmentMolecule(build_probability2=1.0)
 
     ch3.add_fragment(0, [0])
 
     random.seed(100)
 
+    check = ['0-1:(0, 1, 0, 0):1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0',]
+    check2 = ['0-1:(0, 1, 0, 0):1.0:1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0:0.5', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666']
+
+    factor_list = [1.0, 1.0, 1.0]
+    factor2_list = [1.0, 2.0, 6.0]
+
     output_mol_list = []
 
-    check = ['0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0']
-
-    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=3, version=1)):
+    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=3)):
 
         if n == 100:
             break
@@ -1453,13 +1487,76 @@ def test_extend_molecule_random_depth():
 
     print(output_mol_list)
 
+    for i in output_mol_list:
+        print(f'{i}  {i.bp_factor} {i.bp_factor2}')
+
+    with open('outputs/test_extend_molecule_random_depth.sdf', 'w') as f:
+
+        for i in output_mol_list:
+
+            mol_molecule = convert_fragment_molecule_to_mol(i, fragment_database)
+
+            lines = molecule_to_sdf(mol_molecule)
+
+            for line in lines:
+                f.write(line)
+            f.write('$$$$\n')             
+
     for n in range(len(output_mol_list)):
 
         print(f"'{str(output_mol_list[n])}',", end=' ')
 
-        assert str(output_mol_list[n]) == check[n]
+        assert remove_bp2(str(output_mol_list[n])) == check[n]
+        assert str(output_mol_list[n]) == check2[n]
+        assert output_mol_list[n].bp_factor == factor_list[n]
+        assert output_mol_list[n].bp_factor2 == factor2_list[n]
+
     print()
-test_extend_molecule_random_depth()
+
+
+def test_extend_molecule_random_depth_mindepth():
+    # random build with max depth
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    ch3 = FragmentMolecule(build_probability2=1.0)
+
+    ch3.add_fragment(0, [0])
+
+    random.seed(100)
+
+    output_mol_list = []
+
+    check = ['0-1:(0, 1, 0, 0):1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0',]
+    check2 = ['0-1:(0, 1, 0, 0):1.0:1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0:0.5', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666']
+
+    for n, mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=3, depth_min=1)):
+
+        print(mol, n)
+
+        output_mol_list.append(mol)
+
+        if n == 100:
+            break
+
+
+    print(output_mol_list)
+
+    for n in range(len(output_mol_list)):
+
+        print(f"'{str(output_mol_list[n])}',", end=' ')
+
+        assert remove_bp2(str(output_mol_list[n])) == check[n]
+        assert str(output_mol_list[n]) == check2[n]
+
+    print()
+
 
 def test_extend_molecule_random_loop():
 
@@ -1471,21 +1568,26 @@ def test_extend_molecule_random_loop():
 
     bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
 
-    ch3 = FragmentMolecule()
-
+    ch3 = FragmentMolecule(build_probability2=1.0)
+    print(ch3.get_build_probability2())
     ch3.add_fragment(0, [0])
 
     random.seed(100)
 
-    check = ['(0, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(1, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(2, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(3, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(4, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(5, 0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25)', '(0, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(1, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(2, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(3, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)', '(4, 0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125)']
+    check = ['0-1:(0, 1, 0, 0):1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3-2:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2):0.25', '0-1-2-3-2-1:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1:(0, 1, 0, 0):1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3-6:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1):0.25', '0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125']
+
+    check2 = ['0-1:(0, 1, 0, 0):1.0:1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0:0.5', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666', '0-1-2-3-2:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2):0.25:0.010416666666666666', '0-1-2-3-2-1:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2):0.25:0.0020833333333333333', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25:0.0003472222222222222', '0-1:(0, 1, 0, 0):1.0:1.0', '0-1-2:(0, 1, 0, 0);(1, 2, 2, 1):1.0:0.5', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666', '0-1-2-3-6:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1):0.25:0.010416666666666666', '0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125:0.0010416666666666667']
+
+    factor_list = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    factor2_list = [1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 1.0, 2.0, 6.0, 24.0, 120.0]
 
     output_mol_list = []
 
     n = 0
 
-    while n < 10:
+    while n < 7:
 
-        for mol in enumerate(extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None, version=1)):
+        for mol in extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None):
 
             n += 1
 
@@ -1494,13 +1596,73 @@ def test_extend_molecule_random_loop():
             output_mol_list.append(mol)
 
     for i in output_mol_list:
+        print(f'{i}  {i.bp_factor} {i.bp_factor2}')
+        #factor_list.append(i.bp_factor)
+        #factor2_list.append(i.bp_factor2)
 
-        print(f"'{i}',", end=' ')            
-    print()
+    with open('outputs/test_extend_molecule_random_loop.sdf', 'w') as f:
+
+        for i in output_mol_list:
+
+            mol_molecule = convert_fragment_molecule_to_mol(i, fragment_database)
+
+            lines = molecule_to_sdf(mol_molecule)
+
+            for line in lines:
+                f.write(line)
+            f.write('$$$$\n')   
 
     for n in range(len(output_mol_list)):
+        print(f"'{str(output_mol_list[n])}',", end=' ')
+        assert remove_bp2(str(output_mol_list[n])) == check[n]
+        assert str(output_mol_list[n]) == check2[n]
+        assert output_mol_list[n].bp_factor == factor_list[n]
+        assert output_mol_list[n].bp_factor2 == factor2_list[n]
+    print()
 
-        assert str(output_mol_list[n]) == check[n]
+    print(factor_list)
+    print(factor2_list)
+
+
+def test_extend_molecule_random_loop_mindepth():
+
+    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
+    bond_frequencies = bond_frequencies_to_np(bond_frequencies)
+
+    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
+    fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
+
+    bond_frequencies = convert_bond_freq_np_to_dict(fragment_database_graph, bond_frequencies)
+
+    ch3 = FragmentMolecule(build_probability2=1.0)
+
+    ch3.add_fragment(0, [0])
+
+    random.seed(100)
+
+    check = ['0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3-2:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2):0.25', '0-1-2-3-2-1:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2):0.25', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0', '0-1-2-3-6:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1):0.25', '0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125']
+
+    check2 = ['0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666', '0-1-2-3-2:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2):0.25:0.010416666666666666', '0-1-2-3-2-1:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2):0.25:0.0020833333333333333', '0-1-2-3-2-1-0:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 2);(4, 5, 1, 2);(5, 6, 0, 0):0.25:0.0003472222222222222', '0-1-2-3:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2):1.0:0.16666666666666666', '0-1-2-3-6:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1):0.25:0.010416666666666666', '0-1-2-3-6-7:(0, 1, 0, 0);(1, 2, 2, 1);(2, 3, 2, 2);(3, 4, 2, 1);(4, 5, 5, 3):0.125:0.0010416666666666667']
+
+    output_mol_list = []
+
+    n = 0
+
+    while n < 5:
+
+        for mol in extend_molecule_random(FragmentMolecule=ch3, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=None, depth_min=3):
+
+            n += 1
+
+            print(mol)
+
+            output_mol_list.append(mol)
+
+    for n in range(len(output_mol_list)):
+        print(f"'{str(output_mol_list[n])}',", end=' ')
+        assert remove_bp2(str(output_mol_list[n])) == check[n]
+        assert str(output_mol_list[n]) == check2[n]
+    print()
 
 
 def test_random_choices():
@@ -1529,10 +1691,25 @@ def test_random_main():
 
     os.chdir('outputs')
 
-    subprocess.run('../..//fragment_molecule_builder.py -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p ../inputs/phenylisoxazole.sdf -x ../inputs/benzene.sdf ../inputs/benzene.sdf --parent_mapping_1 15 0 16 0 -r 20 21 -R 6 6 --depth 12 -o phenylisoxazole_random --saveinchi --savesdf -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt --random 100 --seed 100', check=True, shell=True)
+    subprocess.run('../../fragment_molecule_builder.py -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p ../inputs/phenylisoxazole.sdf -x ../inputs/benzene.sdf ../inputs/benzene.sdf --parent_mapping_1 15 0 16 0 -r 20 21 -R 6 6 --depth 12 -o phenylisoxazole_random --saveinchi --savesdf -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt --random 100 --seed 100', check=True, shell=True)
 
     os.chdir('../')
 
     assert filecmp.cmp('inputs/phenylisoxazole_random.txt', 'outputs/phenylisoxazole_random.txt') is True
     assert filecmp.cmp('inputs/phenylisoxazole_random.sdf', 'outputs/phenylisoxazole_random.sdf') is True
     assert filecmp.cmp('inputs/phenylisoxazole_random.inchi', 'outputs/phenylisoxazole_random.inchi') is True
+
+
+def test_random_main_mindepth():
+
+    os.system('rm outputs/*')
+
+    os.chdir('outputs')
+
+    subprocess.run('../../fragment_molecule_builder.py -a ../../datasets/fragments/fragments_30_50k_co_10_l5_5_sorted_filter_copy.sdf -p ../inputs/phenylisoxazole.sdf -x ../inputs/benzene.sdf ../inputs/benzene.sdf --parent_mapping_1 15 0 16 0 -r 20 21 -R 6 6 --depth 12 --depth_min 3 -o phenylisoxazole_random_mindepth --saveinchi --savesdf -rd ../../datasets/fragments/bond_frequencies_30_50k_co_10_l5_5_sorted_filter_copy.txt -rf ../../datasets/fragments/fragment_database_30_50k_co_10_l5_5_sorted_filter_copy.txt --random 100 --seed 100', check=True, shell=True)
+
+    os.chdir('../')
+
+    assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth.txt', 'outputs/phenylisoxazole_random_mindepth.txt') is True
+    assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth.sdf', 'outputs/phenylisoxazole_random_mindepth.sdf') is True
+    assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth.inchi', 'outputs/phenylisoxazole_random_mindepth.inchi') is True

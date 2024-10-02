@@ -312,3 +312,20 @@ def test_generate_fragment_molecule_from_string():
     print(inchi)
 
     assert inchi == 'InChI=1S/CH4/h1H4'
+
+
+def test_build_probability():
+
+    f = FragmentMolecule(build_probability2=1.0)
+
+    id = f.add_fragment(10, [0])
+    assert id == 0
+
+    id = f.add_fragment(20, [1, 1])
+    assert id == 1
+
+    f.add_bond(0, 1, 0, 1, 0.5, 0.25)
+
+    assert f.get_build_probability() == 0.5
+    print(f.get_build_probability2())
+    assert f.get_build_probability2() == 0.25

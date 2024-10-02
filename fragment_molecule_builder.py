@@ -132,10 +132,31 @@ def check_available_bonds(f, bond_frequencies, fragment_database_graph):
     return False
 
 
-def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database_graph, depth=None, version=1):
+def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database_graph, depth=None, depth_min=1):
+    """
+    Extend single molecule by adding fragments randomly
+
+    Parameters
+    ----------
+    FragmentMolecule :  FragmentMolecule object
+        Input molecule to build from
+    bond_frequencies : dict of (int,int) to (int,int):float dict
+        Bond frequencies in dict format
+    fragment_database_graph : FragmentMolecule object
+        Fragment database in FragmentMolecule format
+    depth : int, optional
+        If set, current depth for generation
+    depth_min : int, optional
+        Minimum depth to yield molecule    
+
+    Yields
+    ------
+    f2 : FragmentMolecule object
+        Constructed molecule
+    """
 
     f = copy.deepcopy(FragmentMolecule)
-
+    
     if depth is None:
         depth = 999
 
@@ -146,6 +167,7 @@ def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database
         free_valence_list = f.list_free_valence_points()
         total_free_valence = f.get_total_free_valence()
         f_build_probability = f.get_build_probability()
+        f_build_probability2 = f.get_build_probability2()
 
         x = random.randrange(0, len(free_valence_list))
 
@@ -175,28 +197,28 @@ def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database
 
         bond_freq = fragment_bonds[bond]
 
-        if version == 1:
-            factor = total_free_valence
-        elif version == 2:
-            factor = len(f.list_free_valence_points()[x]) * n_fragments
-        else:
-            raise Exception(f'Version {version} not implemented')
+        factor = total_free_valence
+        factor2 = len(f.list_free_valence_points()[x]) * n_fragments
         
         attachment_probability = bond_freq / (total_freq * factor)
 
-        new_build_probability = attachment_probability * f_build_probability
+        attachment_probability2 = bond_freq / (total_freq * factor2)
 
         j = bond[0]
         l = bond[1]
 
         f.bp_factor = f.bp_factor * factor
+        f.bp_factor2 = f.bp_factor2 * factor2
 
         node_id = f.add_fragment(j, fragment_database_graph.fragments[j].attachment_points, fragment_database_graph.fragments[j].get_canonical_mapping())
-        f.add_bond(x, node_id, atom, l, attachment_probability)
+        f.add_bond(x, node_id, atom, l, attachment_probability, attachment_probability2)
 
         n_fragments = len(f.list_frag_id())
 
-        yield f
+        f2 = copy.deepcopy(f)
+
+        if n_fragments > depth_min:
+            yield f2
 
 
 def extend_molecule_recursive(fragment_molecule, bond_frequencies, fragment_database_graph, threshold):
@@ -808,6 +830,7 @@ def main(arguments=None):
     parser.add_argument('--count', action='store_true', default=False, help='Count total number of molecules without making them', required=False)
     parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file', required=False)
     parser.add_argument('--depth', type=int, help='Depth to build up to', required=False)
+    parser.add_argument('--depth_min', default=1, type=int, help='Minimum depth to build from, for random generation', required=False)
     parser.add_argument('--not_unique', action='store_true', help='Do not obtain unique molecule set in each depth building stage', required=False)
     parser.add_argument('-o','--output', help='Output file name without extension, txt, sdf or inchi extensions will be added', required=False)
     parser.add_argument('--parallel', type=int, help='Number of processes for parallel run', required=False)
@@ -821,6 +844,7 @@ def main(arguments=None):
     parser.add_argument('--savesdf', action='store_true', default=False, help='Save generated molecules as SDF file', required=False)
     parser.add_argument('--seed', type=int, default=False, help='Seed for random run, for test purposes', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
+    parser.add_argument('--unique', action='store_true', default=False, help='Build unique set of molecules and save in log file', required=False)
     parser.add_argument('--version', default=1, type=int, help='Version for build probability factor, version 1 gives different build probabilities according to the order of fragment addition, version 2 gives same build probabilities for any order', required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)
@@ -864,9 +888,11 @@ def main(arguments=None):
     else:
         threshold = None
 
+    # count number of possible molecules to build without generating them
     if args.count:
         extend_molecule_list_depth_count([parent], bond_frequencies, fragment_database_graph, args.depth, args.threshold, args.version)
 
+    # recursive generation
     elif args.recursive is True:
 
         if args.version != 1:
@@ -903,6 +929,7 @@ def main(arguments=None):
             else:
                 print(mol)
 
+    # random generation
     elif args.random is not None:
 
         if args.random == 0:
@@ -922,11 +949,24 @@ def main(arguments=None):
                 if args.savesdf is True:
                     outfile_sdf = open(f'{args.output}.sdf', 'w')
 
+        if args.unique is True:
+            mol_dict = dict()
+
+        # set build_probability2 (second version) for parent, done manually so that the code is backwards compatible
+        parent._graph._build_probability2 = 1.0
+
         n = 0
 
         while n < max_n:
 
-            for mol in extend_molecule_random(FragmentMolecule=parent, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=args.depth, version=args.version):
+            for mol in extend_molecule_random(FragmentMolecule=parent, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=args.depth, depth_min=args.depth_min):
+
+                if args.unique is True:
+                    if mol in mol_dict:
+                        mol_dict[mol] += 1
+                        continue
+                    else:
+                        mol_dict[mol] = 1
 
                 if args.output is not None:
 
@@ -951,10 +991,19 @@ def main(arguments=None):
             if n == args.random:
                 break
 
+        if args.unique is True:
+            mol_dict = dict(sorted(mol_dict.items(), key=lambda item: item[1], reverse=True))
+
+            print(mol_dict)
+
+            with open(f'{args.output}.log', 'w') as f:
+
+                for key, val in mol_dict.items():
+                    f.write(f'{str(key)}:{val}\n')
+
+    # systematic generation
     else:
         extend_molecule_list_depth([parent], bond_frequencies, fragment_database_graph, depth=args.depth, fragment_database=fragment_database, output=args.output, parallel=args.parallel, restart=args.restart, restart_file=args.restart_file, saveinchi=args.saveinchi, savesdf=args.savesdf, sort=False, threshold=threshold, unique=not args.not_unique, version=args.version)
-
-    print('Normal termination')
 
 
 if __name__ == '__main__':

@@ -390,7 +390,9 @@ def test_write_fragment_database_graph():
 
     fragment_database_graph = convert_fragment_database_to_graph(fragment_database)
 
-    write_fragment_database_graph(fragment_database_graph, '../datasets/database1000/fragment_database1.txt')
+    write_fragment_database_graph(fragment_database_graph, 'outputs/fragment_database1.txt')
+
+    assert filecmp.cmp('../datasets/database1000/fragment_database1.txt', 'outputs/fragment_database1.txt') is True
 
 
 def test_read_fragment_database_graph():
@@ -406,6 +408,7 @@ def test_read_fragment_database_graph():
         assert fragment_database_graph.fragments[i].get_canonical_mapping() == fragment_database_graph2.fragments[i].get_canonical_mapping()
         assert fragment_database_graph.fragments[i].attachment_points == fragment_database_graph2.fragments[i].attachment_points
         assert fragment_database_graph.fragments[i].get_attribute('frag_id') == fragment_database_graph2.fragments[i].get_attribute('frag_id')
+        assert fragment_database_graph.fragments[i].molecular_weight == fragment_database_graph2.fragments[i].molecular_weight
 
 
 def test_extend_molecule_list_model1():
@@ -1687,7 +1690,7 @@ def test_random_choices():
 
 def test_random_main():
 
-    os.system('rm outputs/*')
+    os.system('rm -f outputs/*')
 
     os.chdir('outputs')
 
@@ -1702,7 +1705,7 @@ def test_random_main():
 
 def test_random_main_mindepth():
 
-    os.system('rm outputs/*')
+    os.system('rm -f outputs/*')
 
     os.chdir('outputs')
 

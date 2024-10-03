@@ -210,7 +210,7 @@ def extend_molecule_random(FragmentMolecule, bond_frequencies, fragment_database
         f.bp_factor = f.bp_factor * factor
         f.bp_factor2 = f.bp_factor2 * factor2
 
-        node_id = f.add_fragment(j, fragment_database_graph.fragments[j].attachment_points, fragment_database_graph.fragments[j].get_canonical_mapping())
+        node_id = f.add_fragment(frag_id=j, attachment_point_list=fragment_database_graph.fragments[j].attachment_points, canonical_mapping=fragment_database_graph.fragments[j].get_canonical_mapping(), molecular_weight=fragment_database_graph.fragments[j].molecular_weight)
         f.add_bond(x, node_id, atom, l, attachment_probability, attachment_probability2)
 
         n_fragments = len(f.list_frag_id())
@@ -552,7 +552,7 @@ def save_mol_list_to_sdf(mol_list, sdffile):
 
 def read_fragment_database_graph(filename):
     """
-    Read a fragment molecule file in internal FragmentMolecule format
+    Read a fragment molecule file in internal FragmentGraph format
     """
 
     print('Reading fragment database graph ...')
@@ -562,28 +562,36 @@ def read_fragment_database_graph(filename):
 
     attach_points_sel = False
     canonical_mapping_sel = False
+    molecular_weight_sel = False
 
     attach_points_list = []
     canonical_mapping_list = []
+    molecular_weight_list = []
 
     for line in lines:
         if line.startswith('CANONICAL MAPPING'):
             attach_points_sel = False
+        if line.startswith('MOLECULAR WEIGHT'):
+            canonical_mapping_sel = False
         if attach_points_sel is True:
             attach_points_list.append(eval(line))
         if canonical_mapping_sel is True:
             canonical_mapping_list.append(eval(line))
+        if molecular_weight_sel is True:
+            molecular_weight_list.append(float(line.strip()))
         if line.startswith('ATTACHMENT POINTS'):
             attach_points_sel = True
         if line.startswith('CANONICAL MAPPING'):
             canonical_mapping_sel = True
+        if line.startswith('MOLECULAR WEIGHT'):
+            molecular_weight_sel = True
 
     f = FragmentGraph()
 
     assert len(attach_points_list) == len(canonical_mapping_list)
 
     for i in range(len(attach_points_list)):
-        f.add_fragment(i, attach_points_list[i])
+        f.add_fragment(i, attach_points_list[i], molecular_weight=molecular_weight_list[i])
         f.fragments[i].set_attribute('frag_id', i)
         f.fragments[i].manual_canonical_mapping(canonical_mapping_list[i])
 
@@ -609,6 +617,9 @@ def write_fragment_database_graph(fragment_database, filename):
         f.write('CANONICAL MAPPING\n')
         for i in range(len(fragment_database.fragments)):
             f.write(f'{fragment_database.fragments[i].get_canonical_mapping()}\n')
+        f.write('MOLECULAR WEIGHT\n')
+        for i in range(len(fragment_database.fragments)):
+            f.write(f'{fragment_database.fragments[i].molecular_weight}\n')
 
     print('Writing fragment database graph FINISHED')
 
@@ -970,7 +981,7 @@ def main(arguments=None):
 
                 if args.output is not None:
 
-                    outfile.write(f'{str(mol)}\n')
+                    outfile.write(f'{str(mol)}:{mol.molecular_weight}\n')
 
                 if args.saveinchi is True:
 

@@ -13,6 +13,7 @@ class FragmentMolecule:
 
     def __init__(self, build_probability=None, build_probability2=None, bp_factor=1.0, bp_factor2=1.0):
         self._graph = FragmentGraph(build_probability, build_probability2)
+        self._molecular_weight = 0.0
         self.bp_factor = bp_factor
         self.bp_factor2 = bp_factor2
 
@@ -59,9 +60,13 @@ class FragmentMolecule:
         else:
             return self.get_build_probability() < other.get_build_probability()
 
-    def add_fragment(self, frag_id: int, attachment_point_list, canonical_mapping=None) -> int:
+    @property
+    def molecular_weight(self):
+        return self._graph._molecular_weight
+
+    def add_fragment(self, frag_id: int, attachment_point_list, canonical_mapping=None, molecular_weight=None) -> int:
         node_id = len(self._graph.fragments)
-        self._graph.add_fragment(node_id, attachment_point_list, canonical_mapping)
+        self._graph.add_fragment(node_id, attachment_point_list, canonical_mapping, molecular_weight)
         self._graph.add_node_attribute(node_id, "frag_id", frag_id)
         return node_id
 

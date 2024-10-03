@@ -329,3 +329,14 @@ def test_build_probability():
     assert f.get_build_probability() == 0.5
     print(f.get_build_probability2())
     assert f.get_build_probability2() == 0.25
+
+
+def test_molecular_weight():
+
+    f = FragmentMolecule()
+
+    assert f.molecular_weight == 0.0
+
+    f.add_fragment(10, [0], molecular_weight=100.0)
+
+    assert f.molecular_weight == 100.0

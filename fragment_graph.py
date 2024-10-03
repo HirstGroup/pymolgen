@@ -12,15 +12,20 @@ print = partial(print, flush=True)
 
 class FragmentGraphNode:
 
-    def __init__(self, attachment_points: List[int]):
+    def __init__(self, attachment_points: List[int], molecular_weight=None):
         self._attachment_points = list(attachment_points)
         self._attributes = dict()
         self._molecule = None
         self._canonical_mapping = None
+        self._molecular_weight = molecular_weight
 
     @property
     def attachment_points(self):
         return list(self._attachment_points)
+
+    @property
+    def molecular_weight(self):
+        return self._molecular_weight
 
     def get_molecule(self, fragment_database):
         if self._molecule is None:
@@ -58,6 +63,7 @@ class FragmentGraph:
         else:
             self._build_probability = 1.0
         self._build_probability2 = build_probability2
+        self._molecular_weight = 0.0
 
     def __len__(self):
         return len(self._fragments)
@@ -86,11 +92,17 @@ class FragmentGraph:
     def build_probability2(self):
         return self._build_probability2
 
-    def add_fragment(self, id: int, attachment_points: List[int], canonical_mapping=None):
-        self._fragments[id] = FragmentGraphNode(attachment_points)
+    @property
+    def molecular_weight(self):
+        return self._molecular_weight
+
+    def add_fragment(self, id: int, attachment_points: List[int], canonical_mapping=None, molecular_weight=None):
+        self._fragments[id] = FragmentGraphNode(attachment_points, molecular_weight=molecular_weight)
         self._fragments[id].manual_canonical_mapping(canonical_mapping)
         self._attachment_point_list.append(attachment_points)
         self._free_valence_points.append(attachment_points)
+        if molecular_weight is not None:
+            self._molecular_weight += molecular_weight
 
     def add_bond(self, fragment_from: int, fragment_to: int, attach_from: int, attach_to: int, attachment_probability: float = None, attachment_probability2: float = None):
 
@@ -255,7 +267,7 @@ def convert_fragment_database_to_graph(fragment_database):
     for x in range(len(fragment_database)):
         if x % 100 == 0:
             print('%s' %x, end = ' ')
-        f.add_fragment(x, fragment_database[x].free_valence_list)
+        f.add_fragment(x, fragment_database[x].free_valence_list, molecular_weight=fragment_database[x].molecular_weight())
         f.fragments[x].set_attribute('frag_id', x)
         f.fragments[x].set_canonical_mapping(fragment_database)
 

@@ -1716,3 +1716,31 @@ def test_random_main_mindepth():
     assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth.txt', 'outputs/phenylisoxazole_random_mindepth.txt') is True
     assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth.sdf', 'outputs/phenylisoxazole_random_mindepth.sdf') is True
     assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth.inchi', 'outputs/phenylisoxazole_random_mindepth.inchi') is True
+
+
+def test_random_main_mindepth_noseed_quick():
+    # check that runs are indeed random, without seed
+
+    os.system('rm -f outputs/*')
+
+    os.chdir('outputs')
+
+    subprocess.run('../../fragment_molecule_builder.py -a ../../datasets/database1000/fragments10.sdf -p ../inputs/phenylisoxazole.sdf -x ../inputs/benzene.sdf ../inputs/benzene.sdf --parent_mapping_1 15 0 16 0 -r 20 21 -R 6 6 --depth 12 --depth_min 3 -o phenylisoxazole_random_mindepth_noseed_quick --saveinchi --savesdf -d ../../datasets/database1000/frequencies10.txt --random 100', check=True, shell=True)
+
+    os.chdir('../')
+
+    assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth_noseed_quick.txt', 'outputs/phenylisoxazole_random_mindepth_noseed_quick.txt') is False
+    assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth_noseed_quick.sdf', 'outputs/phenylisoxazole_random_mindepth_noseed_quick.sdf') is False
+    assert filecmp.cmp('inputs/phenylisoxazole_random_mindepth_noseed_quick.inchi', 'outputs/phenylisoxazole_random_mindepth_noseed_quick.inchi') is False
+
+
+def test_random_main_time():
+    # check that runs are indeed random, without seed
+
+    os.system('rm -f outputs/*')
+
+    os.chdir('outputs')
+
+    subprocess.run('../../fragment_molecule_builder.py -a ../../datasets/database1000/fragments10.sdf -p ../inputs/phenylisoxazole.sdf -x ../inputs/benzene.sdf ../inputs/benzene.sdf --parent_mapping_1 15 0 16 0 -r 20 21 -R 6 6 --depth 12 --depth_min 3 -o phenylisoxazole_random_time --saveinchi --savesdf -d ../../datasets/database1000/frequencies10.txt --random 0 --time 4', check=True, shell=True)
+
+    os.chdir('../')

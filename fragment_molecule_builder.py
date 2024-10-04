@@ -7,6 +7,7 @@ import numpy as np
 import os
 import random
 import sys
+import time
 
 from multiprocessing import Pool
 
@@ -853,8 +854,9 @@ def main(arguments=None):
     parser.add_argument('--restart_file', help='Restart filename containing molecules built up to restart depth', required=False)
     parser.add_argument('--saveinchi', action='store_true', default=False, help='Save generated molecules as InChi file', required=False)
     parser.add_argument('--savesdf', action='store_true', default=False, help='Save generated molecules as SDF file', required=False)
-    parser.add_argument('--seed', type=int, default=False, help='Seed for random run, for test purposes', required=False)
+    parser.add_argument('--seed', type=int, help='Seed for random run, for test purposes', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
+    parser.add_argument('--time', type=int, help='Time limit in seconds for random run', required=False)
     parser.add_argument('--unique', action='store_true', default=False, help='Build unique set of molecules and save in log file', required=False)
     parser.add_argument('--version', default=1, type=int, help='Version for build probability factor, version 1 gives different build probabilities according to the order of fragment addition, version 2 gives same build probabilities for any order', required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
@@ -948,6 +950,12 @@ def main(arguments=None):
         else:
             max_n = args.random
 
+        if args.time is not None:
+            time_limit = args.time
+        else:
+            time_limit = np.inf
+        timeout = time.time() + time_limit
+
         if args.seed is not None:
             random.seed(args.seed)
 
@@ -968,7 +976,7 @@ def main(arguments=None):
 
         n = 0
 
-        while n < max_n:
+        while n < max_n and time.time() < timeout:
 
             for mol in extend_molecule_random(FragmentMolecule=parent, bond_frequencies=bond_frequencies, fragment_database_graph=fragment_database_graph, depth=args.depth, depth_min=args.depth_min):
 

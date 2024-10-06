@@ -1,4 +1,4 @@
-a d1 8
-b d2 4
-c d3 4
-d d4 2
+a 8 d1
+b 4 d2
+c 4 d3
+d 2 d4

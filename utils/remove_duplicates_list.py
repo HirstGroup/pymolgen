@@ -33,10 +33,10 @@ for input in args.input:
 
             inchi = line.strip().split()[0]
 
-            depth = line.strip().split()[1]
+            depth = line.strip().split()[2]
 
             if args.read_count:
-                count = int(line.strip().split()[2])
+                count = int(line.strip().split()[1])
             else:
                 count = 1
 
@@ -51,7 +51,7 @@ for input in args.input:
         for key, val in d.items():
             inchi = key[0]
             depth = key[1]
-            outfile.write(f'{inchi} {depth} {val}\n')
+            outfile.write(f'{inchi} {val} {depth}\n')
 
     if args.delete is True:
         os.remove(input)   

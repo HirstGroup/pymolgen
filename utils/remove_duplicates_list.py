@@ -33,21 +33,25 @@ for input in args.input:
 
             inchi = line.strip().split()[0]
 
+            depth = line.strip().split()[1]
+
             if args.read_count:
-                count = int(line.strip().split()[1])
+                count = int(line.strip().split()[2])
             else:
                 count = 1
 
-            if inchi in d.keys():
-                d[inchi] += count
+            if (inchi, depth) in d.keys():
+                d[(inchi, depth)] += count
             else:
-                d[inchi] = count
+                d[(inchi, depth)] = count
 
     d = dict(sorted(d.items(), key=lambda item: item[1], reverse=True))
 
     with open(args.output, 'w') as outfile:
         for key, val in d.items():
-            outfile.write('%s %s\n' %(key, val))
+            inchi = key[0]
+            depth = key[1]
+            outfile.write(f'{inchi} {depth} {val}\n')
 
     if args.delete is True:
         os.remove(input)   

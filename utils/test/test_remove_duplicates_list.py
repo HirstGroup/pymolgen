@@ -35,4 +35,3 @@ def test_delete_nocount():
 
 	assert os.path.isfile('output/test_remove_duplicates_list_input1.txt') is False
 	assert os.path.isfile('output/test_remove_duplicates_list_input2.txt') is False
-

@@ -1,10 +1,38 @@
 import filecmp
 import os
+import shutil
+import subprocess
 import sys
 
-def test_probabilities():
+def test1():
 
-	os.system('python ../remove_duplicates_list.py -i test_remove_duplicates_list_input.txt -o test_remove_duplicates_list_output.txt')
+	subprocess.run('python ../remove_duplicates_list.py -i input/test_remove_duplicates_list_input2.txt input/test_remove_duplicates_list_input3.txt -o output/test_remove_duplicates_list_output1.txt --read_count', check=True, shell=True)
 
-	assert filecmp.cmp('test_remove_duplicates_list_model.txt', 'test_remove_duplicates_list_output.txt') is True
+	assert filecmp.cmp('input/test_remove_duplicates_list_output1.txt', 'output/test_remove_duplicates_list_output1.txt') is True
+
+
+def test_delete():
+
+	shutil.copy('input/test_remove_duplicates_list_input2.txt', 'output')
+	shutil.copy('input/test_remove_duplicates_list_input3.txt', 'output')
+
+	subprocess.run('python ../remove_duplicates_list.py -i output/test_remove_duplicates_list_input2.txt output/test_remove_duplicates_list_input3.txt -o output/test_remove_duplicates_list_output1.txt --delete --read_count', check=True, shell=True)
+
+	assert filecmp.cmp('input/test_remove_duplicates_list_output1.txt', 'output/test_remove_duplicates_list_output1.txt') is True
+
+	assert os.path.isfile('output/test_remove_duplicates_list_input1.txt') is False
+	assert os.path.isfile('output/test_remove_duplicates_list_input2.txt') is False
+
+
+def test_delete_nocount():
+
+	shutil.copy('input/test_remove_duplicates_list_input2.txt', 'output')
+	shutil.copy('input/test_remove_duplicates_list_input3.txt', 'output')
+
+	subprocess.run('python ../remove_duplicates_list.py -i output/test_remove_duplicates_list_input2.txt output/test_remove_duplicates_list_input3.txt -o output/test_remove_duplicates_list_output2.txt --delete', check=True, shell=True)
+
+	assert filecmp.cmp('input/test_remove_duplicates_list_output2.txt', 'output/test_remove_duplicates_list_output2.txt') is True
+
+	assert os.path.isfile('output/test_remove_duplicates_list_input1.txt') is False
+	assert os.path.isfile('output/test_remove_duplicates_list_input2.txt') is False
 

@@ -1,6 +1,10 @@
 import argparse
 import os
 
+from functools import partial
+
+print = partial(print, flush=True)
+
 parser = argparse.ArgumentParser(description='Split inchi file into separate files according to depth')
 
 # required arguments

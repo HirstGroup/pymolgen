@@ -47,6 +47,8 @@ for input in args.input:
 
     d = dict(sorted(d.items(), key=lambda item: item[1], reverse=True))
 
+    print(len(d))
+
     with open(args.output, 'w') as outfile:
         for key, val in d.items():
             inchi = key[0]

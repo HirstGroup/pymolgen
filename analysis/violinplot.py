@@ -50,6 +50,9 @@ df = pd.DataFrame()
 
 # Append data directly to the existing DataFrame in a loop
 for file in args.input:
+
+    print(file)
+
     temp_df = pd.read_csv(file, sep=':', header=None, names=['fragments', 'bonds', 'bp1', 'bp2', 'mw'])  # Read file into a temporary DataFrame
     df = pd.concat([df, temp_df], ignore_index=True)  # Concatenate into combined_df
 

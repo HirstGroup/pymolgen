@@ -35,6 +35,8 @@ parser.add_argument('-o','--output', help='Output File Name',required=True)
 
 args = parser.parse_args()
 
+print(args.input, args.output)
+
 if args.input == args.output:
 	sys.exit('ERROR: same input and output')
 
@@ -62,3 +64,9 @@ plt.ylabel('log(Build Probability)')
 
 # Show the plot
 plt.savefig(args.output)
+
+# Calculate the mean and standard deviation for each depth
+grouped_stats = df.groupby('depth')['bp1'].agg(['mean', 'std'])
+
+# Print the result
+print(grouped_stats)

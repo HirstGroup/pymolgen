@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 import numpy as np
 import pandas as pd
@@ -34,6 +35,8 @@ parser.add_argument('-o','--output', help='Output File Name',required=True)
 
 args = parser.parse_args()
 
+if args.input == args.output:
+	sys.exit('ERROR: same input and output')
 
 def count_depth(row):
 

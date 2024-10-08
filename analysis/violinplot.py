@@ -30,7 +30,7 @@ df = pd.DataFrame({
 parser = argparse.ArgumentParser(description="Make violin plot")
 
 # Required arguments
-parser.add_argument('-i','--input', help='Input txt file from pymolgen',required=True)
+parser.add_argument('-i','--input', nargs='+', help='Input txt file from pymolgen',required=True)
 parser.add_argument('-o','--output', help='Output File Name',required=True)
 
 args = parser.parse_args()
@@ -45,11 +45,18 @@ def count_depth(row):
 	return len(row['fragments'].split('-')) - 1
 
 
-df = pd.read_csv(args.input, sep=':', header=None, names=['fragments', 'bonds', 'bp1', 'bp2', 'mw'])
+# Initialize an empty DataFrame
+df = pd.DataFrame()
+
+# Append data directly to the existing DataFrame in a loop
+for file in args.input:
+    temp_df = pd.read_csv(file, sep=':', header=None, names=['fragments', 'bonds', 'bp1', 'bp2', 'mw'])  # Read file into a temporary DataFrame
+    df = pd.concat([df, temp_df], ignore_index=True)  # Concatenate into combined_df
 
 df['depth'] = df.apply(count_depth, axis=1)
 
 df['log-bp1'] = np.log(df['bp1'])
+df['log-bp2'] = np.log(df['bp2'])
 
 print(df)
 
@@ -63,10 +70,46 @@ plt.xlabel('Depth')
 plt.ylabel('log(Build Probability)')
 
 # Show the plot
-plt.savefig(args.output)
+plt.savefig(f'{args.output}_bp1.pdf')
 
 # Calculate the mean and standard deviation for each depth
-grouped_stats = df.groupby('depth')['bp1'].agg(['mean', 'std'])
+grouped_stats = df.groupby('depth')['log-bp1'].agg(['mean', 'std'])
+
+# Print the result
+print(grouped_stats)
+
+# Create the violin plot
+plt.figure(figsize=(10, 6))
+sns.violinplot(x='depth', y='log-bp2', data=df)
+
+# Customize the plot
+plt.title('Build Probabilities at Different Depths')
+plt.xlabel('Depth')
+plt.ylabel('log(Build Probability)')
+
+# Show the plot
+plt.savefig(f'{args.output}_bp2.pdf')
+
+# Calculate the mean and standard deviation for each depth
+grouped_stats = df.groupby('depth')['log-bp2'].agg(['mean', 'std'])
+
+# Print the result
+print(grouped_stats)
+
+# Create the violin plot
+plt.figure(figsize=(10, 6))
+sns.violinplot(x='depth', y='mw', data=df)
+
+# Customize the plot
+plt.title('Molecular Weights at Different Depths')
+plt.xlabel('Depth')
+plt.ylabel('MW (Da)')
+
+# Show the plot
+plt.savefig(f'{args.output}_mw.pdf')
+
+# Calculate the mean and standard deviation for each depth
+grouped_stats = df.groupby('depth')['mw'].agg(['mean', 'std'])
 
 # Print the result
 print(grouped_stats)

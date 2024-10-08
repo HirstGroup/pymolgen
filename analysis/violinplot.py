@@ -6,6 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from functools import partial
+
+print = partial(print, flush=True)
+
 """
 # Example data: Y-values for each depth ranging from -20 to 0
 np.random.seed(42)  # For reproducibility

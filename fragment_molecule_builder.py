@@ -857,7 +857,7 @@ def main(arguments=None):
     parser.add_argument('--seed', type=int, help='Seed for random run, for test purposes', required=False)
     parser.add_argument('-t','--threshold', help='Log10 of build probability threshold of molecules to be built', type=float, required=False)
     parser.add_argument('--time', type=int, help='Time limit in seconds for random run', required=False)
-    parser.add_argument('--unique', action='store_true', default=False, help='Build unique set of molecules and save in log file', required=False)
+    parser.add_argument('--unique', action='store_true', default=False, help='Build unique set of molecules and save in log file, for random run', required=False)
     parser.add_argument('--version', default=1, type=int, help='Version for build probability factor, version 1 gives different build probabilities according to the order of fragment addition, version 2 gives same build probabilities for any order', required=False)
     parser.add_argument('-wf', '--write_fragment_database', help='Write fragment database to file containing attachment points and canonical mapping', required=False)
     parser.add_argument('-wd', '--write_bond_frequencies_dict', help='Write bond frequencies dict to file', required=False)

@@ -14,6 +14,7 @@ parser.add_argument('-o', '--output', help='Output inchi file', required=True)
 
 # optional arguments
 parser.add_argument('--delete', action='store_true', help='Delete input file after succesful run', required=False)
+parser.add_argument('--depth', action='store_true', help='Read depth from input file', required=False)
 parser.add_argument('--read_count', action='store_true', help='Read count from input file', required=False)
 
 args = parser.parse_args()
@@ -33,7 +34,10 @@ for input in args.input:
 
             inchi = line.strip().split()[0]
 
-            depth = line.strip().split()[2]
+            if args.depth:
+                depth = line.strip().split()[2]
+            else:
+                depth = 'X'
 
             if args.read_count:
                 count = int(line.strip().split()[1])

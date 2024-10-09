@@ -44,11 +44,11 @@ if __name__ == '__main__':
 	parser.add_argument('-i','--input', help='Input txt file', required=True)
 
 	# optional arguments
-	parser.add_argument('--mw_threshold', type=float, help='Molecular weight threshold', required=False)
+	parser.add_argument('-mw', '--mw_threshold', type=float, help='Molecular weight threshold', required=False)
 
 	args = parser.parse_args()
 
-	depth_count = count_fragments_txt(args.input, mw=args.mw_threshold)
+	depth_count = count_fragments_txt(args.input, mw_threshold=args.mw_threshold)
 
 	print(args.input, depth_count)
 

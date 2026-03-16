@@ -30,3 +30,20 @@ python ~/pymolgen/fragment_builder.py --fragments_sdf ~/pymolgen/datasets/databa
 To generate a fragment database from an SDF file of molecules:
 
 python ~/pymolgen/fragment_mol.py -i ~/pymolgen/datasets/database1000/database1000.sdf -o 1000 -v
+
+Tests
+------
+
+The PyMolGen package uses pytest for testing. Main tests can be found in the `test/` directory. All core molecular generation functionality of the package can be tested with the basic `env_pymolgen.yml` enviroment. Tests involving molecule filtering require the openeye and Lilly's MedChem Rules installed. Tests involving the ML scoring model of generated molecules described in the original PyMolGen publication require the installation of that ML code. 
+
+Structure of the package and main entry points
+-----------------------------------------------
+
+The main entry points are located in the root directory. They provide the functionality for the derivation of the fragment database and the generation of new molecules based on that database.
+
+* `fragment_mol.py`: derive the fragment combination rules from a database
+* `fragment_mol_combine.py`: allows for combining the fragment combination rules if performed in parts in an original database (for performance purposes)
+* `fragment_builder.py`: generate new molecules from a fragment database, using the all-atom description of fragments
+* `fragment_molecule_builder.py`: generate new molecules from a fragment database, using the fragment graph description of fragments, allowing for faster performance and the use of build probabilities for random and systematic generation
+
+`datasets/` contains the fragment database derived from ChEMBL, `analysis/` and `utils/` provide useful scripts for the analysis and manipulation of fragment databases, with tests located in their corresponding `test/` subdirectories. Main tests are located in `test/`. 

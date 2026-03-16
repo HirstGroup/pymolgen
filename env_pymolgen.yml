@@ -2,10 +2,9 @@ name: pymolgen
 channels:
   - conda-forge
   - rdkit
-  - openeye
 dependencies:
-  - networkx
-  - rdkit
-  - numpy
-  - pandas
-  - openeye-toolkits
+  - networkx=2.8.8
+  - numpy=1.23.2
+  - pandas=1.5.2
+  - pytest
+  - rdkit=2022.09.1

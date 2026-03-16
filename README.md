@@ -1,4 +1,23 @@
-# pymolgen
+PyMolGen
+=================================================================================================================
+
+Installation
+-------------
+
+1. Install [Conda](https://conda.io/projects/conda/en/latest/index.html)
+2. Clone this Git repository
+3. Open a shell, and go to the repository and create the Conda environment:
+   
+        $ conda env create -f env_pymolgen.yml
+
+4. Activate the environment:
+   
+        $ conda activate pymolgen
+
+5. Use the tool.
+
+Examples
+---------
 
 Example runs, please remove the -v or --verbose option for long runs
 

@@ -36,7 +36,7 @@ def test_load_patterns():
 
 	pattern_list = ['smarts', '[cH]1[cH]c(-*)[cH][cH]c1-c2c(-[CH3])onc2-[CH3]']
 
-	pattern_list_objects = load_patterns(pattern_list)
+	pattern_list_objects = load_patterns(pattern_list, 'smarts')
 
 
 def test_read_input_inchi():
@@ -80,7 +80,7 @@ def test_read_input_smi():
 def test_find_substructure():
 
 	mol_list = read_input('input/inchi10.inchi', 'inchi')
-	pattern_list_objects = load_patterns(['smarts', '[cH]1c(-*)[cH][cH][cH]c1-c2c(-[CH3])onc2-[CH3]'])
+	pattern_list_objects = load_patterns(['[cH]1c(-*)[cH][cH][cH]c1-c2c(-[CH3])onc2-[CH3]'], 'smarts')
 
 	output_false, output_true = find_substructure(mol_list, pattern_list_objects)
 
@@ -94,10 +94,7 @@ def test_find_substructure():
 
 def test_find_substructure2():
 
-	#pattern = '[#6]-[#6]-1-[#8]-[#7]=[#6](-[#6])-[#6]-1-[#6]-1=[#6]-[#6]=[#6]-[#6]=[#6]-1'
 	pattern = '[#6]-[#6]-[#8]-[#7]=[#6](-[#6])-[#6]~[#6]~[#6]~[#6]~[#6]~[#6]~[#6]'
-	#pattern = 'CC1ON=C(C)C1C1=CC=CC=C1'
-	#pattern = 'CC1ON=C(C)C1C1~CC~CC~C1'
 
 	mol_list = read_input('input/inchi10.inchi', 'inchi')
 	pattern_list_objects = load_patterns([pattern], 'smarts')
@@ -106,5 +103,3 @@ def test_find_substructure2():
 
 	print(output_false)
 	print(output_true)
-
-test_find_substructure2()

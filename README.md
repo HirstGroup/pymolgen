@@ -10,11 +10,13 @@ Installation
    
         $ conda env create -f env_pymolgen.yml
 
-4. Activate the environment:
+4. Optionally install [openeye][https://docs.eyesopen.com/toolkits/python/quickstart-python/install.html] python toolkits and [Lilly's MedChem Rules][https://github.com/IanAWatson/Lilly-Medchem-Rules/] to filter molecules.
+
+5. Activate the environment:
    
         $ conda activate pymolgen
 
-5. Use the tool.
+6. Use the package.
 
 Examples
 ---------
